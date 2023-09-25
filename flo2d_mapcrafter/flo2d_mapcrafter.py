@@ -21,15 +21,42 @@
  *                                                                         *
  ***************************************************************************/
 """
+import numpy as np
+from PyQt5.QtGui import QColor
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QMessageBox
+from osgeo import gdal, osr
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction
+from qgis._core import (
+    QgsCoordinateReferenceSystem,
+    QgsRasterBandStats,
+    QgsColorRampShader,
+    QgsRasterShader,
+    QgsSingleBandPseudoColorRenderer,
+    QgsRasterLayer,
+    QgsProject,
+    QgsLineSymbol,
+    QgsSimpleLineSymbolLayer,
+    QgsVectorLayer,
+    QgsSymbol,
+    QgsSimpleFillSymbolLayer,
+    QgsFillSymbol,
+    QgsMessageLog,
+    QgsUnitTypes,
+    QgsCategorizedSymbolRenderer,
+    QgsRendererCategory,
+    QgsColorRamp, QgsVectorFileWriter,
+)
 
 # Initialize Qt resources from file resources.py
 from .resources import *
+
 # Import the code for the dialog
 from .flo2d_mapcrafter_dialog import FLO2DMapCrafterDialog
 import os.path
+import processing
 
 
 class FLO2DMapCrafter:
@@ -45,14 +72,14 @@ class FLO2DMapCrafter:
         """
         # Save reference to the QGIS interface
         self.iface = iface
+        self.dlg = FLO2DMapCrafterDialog()
         # initialize plugin directory
         self.plugin_dir = os.path.dirname(__file__)
         # initialize locale
-        locale = QSettings().value('locale/userLocale')[0:2]
+        locale = QSettings().value("locale/userLocale")[0:2]
         locale_path = os.path.join(
-            self.plugin_dir,
-            'i18n',
-            'FLO2DMapCrafter_{}.qm'.format(locale))
+            self.plugin_dir, "i18n", "FLO2DMapCrafter_{}.qm".format(locale)
+        )
 
         if os.path.exists(locale_path):
             self.translator = QTranslator()
@@ -61,11 +88,27 @@ class FLO2DMapCrafter:
 
         # Declare instance attributes
         self.actions = []
-        self.menu = self.tr(u'&FLO-2D MapCrafter ')
+        self.menu = self.tr("&FLO-2D MapCrafter ")
 
         # Check if plugin was started the first time in current QGIS session
         # Must be set in initGui() to survive plugin reloads
         self.first_start = None
+
+        # Adjust CRS
+        self.crs = QgsCoordinateReferenceSystem("EPSG:4326")
+        self.dlg.crsselector.setCrs(self.crs)
+
+        # Adjust Cell size
+        self.cellSize = None
+
+        # Run button
+        self.dlg.runButton.clicked.connect(self.run)
+
+        # Close button
+        self.dlg.cancelButton.clicked.connect(self.closeDialog)
+
+        # Select export folder
+        self.dlg.flo2d_out_folder.fileChanged.connect(self.check_files)
 
     # noinspection PyMethodMayBeStatic
     def tr(self, message):
@@ -80,8 +123,7 @@ class FLO2DMapCrafter:
         :rtype: QString
         """
         # noinspection PyTypeChecker,PyArgumentList,PyCallByClass
-        return QCoreApplication.translate('FLO2DMapCrafter', message)
-
+        return QCoreApplication.translate("FLO2DMapCrafter", message)
 
     def add_action(
         self,
@@ -93,7 +135,8 @@ class FLO2DMapCrafter:
         add_to_toolbar=True,
         status_tip=None,
         whats_this=None,
-        parent=None):
+        parent=None,
+    ):
         """Add a toolbar icon to the toolbar.
 
         :param icon_path: Path to the icon for this action. Can be a resource
@@ -149,9 +192,7 @@ class FLO2DMapCrafter:
             self.iface.addToolBarIcon(action)
 
         if add_to_menu:
-            self.iface.addPluginToMenu(
-                self.menu,
-                action)
+            self.iface.addPluginToMenu(self.menu, action)
 
         self.actions.append(action)
 
@@ -160,41 +201,724 @@ class FLO2DMapCrafter:
     def initGui(self):
         """Create the menu entries and toolbar icons inside the QGIS GUI."""
 
-        icon_path = ':/plugins/flo2d_mapcrafter/icon.png'
+        icon_path = ":/plugins/flo2d_mapcrafter/icon.png"
         self.add_action(
             icon_path,
-            text=self.tr(u'FLO-2D MapCrafter'),
-            callback=self.run,
-            parent=self.iface.mainWindow())
+            text=self.tr("FLO-2D MapCrafter"),
+            callback=self.open,
+            parent=self.iface.mainWindow(),
+        )
 
         # will be set False in run()
         self.first_start = True
 
-
     def unload(self):
         """Removes the plugin menu item and icon from QGIS GUI."""
         for action in self.actions:
-            self.iface.removePluginMenu(
-                self.tr(u'&FLO-2D MapCrafter '),
-                action)
+            self.iface.removePluginMenu(self.tr("&FLO-2D MapCrafter "), action)
             self.iface.removeToolBarIcon(action)
 
+    # Opening the dialog
+    def open(self):
+        """Shows the dialog"""
+        self.dlg.show()
+
+    def closeDialog(self):
+        """Closes the Dialog"""
+        checkboxes = [
+            self.dlg.hr_cb,
+            self.dlg.fs_cb,
+            self.dlg.fd_cb,
+            self.dlg.ft_cb,
+            self.dlg.fe_cb,
+            self.dlg.me_cb,
+            self.dlg.md_cb,
+            self.dlg.ms_cb,
+            self.dlg.ce_cb,
+            self.dlg.cfe_cb,
+            self.dlg.cfd_cb,
+            self.dlg.cfs_cb,
+            self.dlg.cfe_cb,
+            self.dlg.cfd_cb,
+            self.dlg.cfs_cb,
+            self.dlg.cme_cb,
+            self.dlg.cmd_cb,
+            self.dlg.cms_cb
+        ]
+        for checkBox in checkboxes:
+            checkBox.setChecked(False)
+
+        self.dlg.close()
+
+    def check_files(self):
+        """Function to check the type of files present on the simulation"""
+
+        # Look for flood files
+        # DEPTH.OUT for Flood Extent and Flood Depth
+        # FLOODWAVETIME.OUT for Flood Arrival Time
+        # VELFP.OUT for Flood Speed
+        f_files = [
+            "DEPTH.OUT",
+            "FLOODWAVETIME.OUT",
+            "VELFP.OUT",
+        ]
+
+        # Look for combined files
+        # DEPTHMAX_2PHASE_COMBINED.OUT for combined extent
+        # DEPTHMAX_2PHASE_COMBINED.OUT for combined depth
+        # COMBINED SPEED???
+        c_files = [
+            "DEPTHMAX_2PHASE_COMBINED.OUT",
+            "DEPFPMAX_MUD.OUT",
+            "VELFP_MUD.OUT",
+            "DEPTH.OUT",
+            "VELFP.OUT",
+        ]
+
+        # Look for risk files
+        # DEPTH.OUT & VELFP.OUT for Hydrodynamic Risk (ARR)
+        r_files = [
+            "DEPTH.OUT",
+            "VELFP.OUT"
+        ]
+
+        # check if simulation was run and calculate the cell size
+        files_in_directory = os.listdir(self.dlg.flo2d_out_folder.filePath())
+
+        # In future version, calculate the Cell size from the DEPTH.OUT file
+        if "DEPTH.OUT" in files_in_directory:
+            self.dlg.crsselector.setEnabled(True)
+            self.dlg.runButton.setEnabled(True)
+            self.dlg.label_4.setEnabled(True)
+            self.dlg.label_3.setEnabled(True)
+            self.dlg.cellSize.setEnabled(True)
+            self.dlg.label_2.setEnabled(True)
+            self.dlg.mapper_out_folder.setEnabled(True)
+        else:
+            msg_box = QMessageBox()
+            msg_box.setIcon(QMessageBox.Warning)
+            msg_box.setWindowTitle("Warning")
+            msg_box.setText("No *.OUT files were found in this directory!")
+            msg_box.exec_()
+            return
+
+        all_flood_files_present = all(filename in files_in_directory for filename in f_files)
+        if all_flood_files_present:
+            # Check if it was a mudflow simulation
+            with open(self.dlg.flo2d_out_folder.filePath() + r"\CONT.DAT", 'r') as file:
+                lines = file.readlines()
+                elements = lines[2].split()
+                mud_simulation = elements[3]
+                if mud_simulation == "1":
+                    self.dlg.mud_grp.setEnabled(True)
+                    self.dlg.flood_grp.setEnabled(False)
+                else:
+                    self.dlg.mud_grp.setEnabled(False)
+                    self.dlg.flood_grp.setEnabled(True)
+
+        all_2phase_files_present = all(filename in files_in_directory for filename in c_files)
+        if all_2phase_files_present:
+            self.dlg.twophase_grp.setEnabled(True)
+            self.dlg.flood_grp.setEnabled(False)
+        else:
+            self.dlg.twophase_grp.setEnabled(False)
+
+        all_risk_files_present = all(filename in files_in_directory for filename in r_files)
+        if all_risk_files_present:
+            self.dlg.risk_grp.setEnabled(True)
+        else:
+            self.dlg.risk_grp.setEnabled(False)
 
     def run(self):
         """Run method that performs all the real work"""
 
-        # Create the dialog with elements (after translation) and keep reference
-        # Only create GUI ONCE in callback, so that it will only load when the plugin is started
-        if self.first_start == True:
-            self.first_start = False
-            self.dlg = FLO2DMapCrafterDialog()
+        # input & output directories
+        flo2d_results_dir = self.dlg.flo2d_out_folder.filePath()
+        map_output_dir = self.dlg.mapper_out_folder.filePath()
+        if map_output_dir == "":
+            msg_box = QMessageBox()
+            msg_box.setIcon(QMessageBox.Warning)
+            msg_box.setWindowTitle("Warning")
+            msg_box.setText("Please, select the output folder.")
+            msg_box.exec_()
+            return
 
-        # show the dialog
-        self.dlg.show()
-        # Run the dialog event loop
-        result = self.dlg.exec_()
-        # See if OK was pressed
-        if result:
-            # Do something useful here - delete the line containing pass and
-            # substitute with your code.
-            pass
+        # project information
+        self.crs = self.dlg.crsselector.crs()
+        if self.dlg.cellSize.text() == "":
+            msg_box = QMessageBox()
+            msg_box.setIcon(QMessageBox.Warning)
+            msg_box.setWindowTitle("Warning")
+            msg_box.setText("Please, set the cell size.")
+            msg_box.exec_()
+            return
+        else:
+            self.cellSize = int(self.dlg.cellSize.text())
+
+        checkboxes = [
+            self.dlg.hr_cb,
+            self.dlg.fs_cb,
+            self.dlg.fd_cb,
+            self.dlg.ft_cb,
+            self.dlg.fe_cb,
+            self.dlg.me_cb,
+            self.dlg.md_cb,
+            self.dlg.ms_cb,
+            self.dlg.ce_cb,
+            self.dlg.cfe_cb,
+            self.dlg.cfd_cb,
+            self.dlg.cfs_cb,
+            self.dlg.cfe_cb,
+            self.dlg.cfd_cb,
+            self.dlg.cfs_cb,
+            self.dlg.cme_cb,
+            self.dlg.cmd_cb,
+            self.dlg.cms_cb
+        ]
+
+        # Check if all checkboxes are unchecked (set to True)
+        none_checked = not any(checkbox.isChecked() for checkbox in checkboxes)
+
+        if none_checked:
+            msg_box = QMessageBox()
+            msg_box.setIcon(QMessageBox.Warning)
+            msg_box.setWindowTitle("Warning")
+            msg_box.setText("Check at least one map option!")
+            msg_box.exec_()
+            return
+
+        """        
+        FLOOD MAPS        
+        """
+
+        if self.dlg.fe_cb.isChecked():
+            flood_extent_raster = map_output_dir + r"\FLOOD_EXTENT.tif"
+            flood_extent_vector = map_output_dir + r"\FLOOD_EXTENT.shp"
+            depth_file = flo2d_results_dir + r"\DEPTH.OUT"
+
+            self.remove_layer("FLOOD_EXTENT")
+
+            files = os.listdir(map_output_dir)
+            for file in files:
+                if file.startswith("FLOOD_EXTENT"):
+                    file_path = os.path.join(map_output_dir, file)
+                    os.remove(file_path)
+
+            raster = self.read_ASCII(
+                depth_file, flood_extent_raster, "FLOOD_EXTENT_RASTER"
+            )
+
+            flood_extent = self.get_extent(raster, flood_extent_vector, "FLOOD_EXTENT")
+            self.set_vector_style(flood_extent, 0)
+            QgsProject.instance().addMapLayer(flood_extent)
+
+        if self.dlg.ft_cb.isChecked():
+            flood_time = map_output_dir + r"\FLOOD_ARRIVAL_TIME.tif"
+            time_file = flo2d_results_dir + r"\FLOODWAVETIME.OUT"
+
+            raster = self.read_ASCII(time_file, flood_time, "FLOODWAVETIME")
+            QgsProject.instance().addMapLayer(raster)
+
+            self.set_raster_style(raster, 3)
+
+        if self.dlg.fd_cb.isChecked():
+            flood_depth = map_output_dir + r"\FLOOD_DEPTH.tif"
+            depth_file = flo2d_results_dir + r"\DEPTH.OUT"
+
+            raster = self.read_ASCII(depth_file, flood_depth, "FLOOD_DEPTH")
+            QgsProject.instance().addMapLayer(raster)
+
+            self.set_raster_style(raster, 0)
+
+        if self.dlg.fs_cb.isChecked():
+            flow_speed = map_output_dir + r"\FLOW_SPEED.tif"
+            vel_file = flo2d_results_dir + r"\VELFP.OUT"
+
+            raster = self.read_ASCII(vel_file, flow_speed, "FLOW_SPEED")
+            QgsProject.instance().addMapLayer(raster)
+
+            self.set_raster_style(raster, 1)
+
+        """
+        HYDRODYNAMIC RISK MAPS
+        """
+
+        if self.dlg.hr_cb.isChecked():
+            hydro_risk = map_output_dir + r"\HYDRODYNAMIC_RISK.tif"
+            depth_file = flo2d_results_dir + r"\DEPTH.OUT"
+            vel_file = flo2d_results_dir + r"\VELFP.OUT"
+
+            hydro_risk_raster = self.create_hydro_risk(
+                map_output_dir, hydro_risk, depth_file, vel_file
+            )
+            QgsProject.instance().addMapLayer(hydro_risk_raster)
+            self.set_raster_style(hydro_risk_raster, 2)
+
+        """"
+        MUDFLOW MAPS
+        """
+
+        if self.dlg.me_cb.isChecked():
+            mud_extent_raster = map_output_dir + r"\MUDFLOW_EXTENT.tif"
+            mud_extent_vector = map_output_dir + r"\MUDFLOW_EXTENT.shp"
+            depth_file = flo2d_results_dir + r"\DEPTH.OUT"
+
+            self.remove_layer("MUDFLOW")
+
+            files = os.listdir(map_output_dir)
+            for file in files:
+                if file.startswith("MUDFLOW"):
+                    file_path = os.path.join(map_output_dir, file)
+                    os.remove(file_path)
+
+            raster = self.read_ASCII(
+                depth_file, mud_extent_raster, "MUDFLOW_EXTENT_RASTER"
+            )
+
+            mud_extent = self.get_extent(raster, mud_extent_vector, "MUDFLOW_EXTENT")
+            self.set_vector_style(mud_extent, 0)
+            QgsProject.instance().addMapLayer(mud_extent)
+
+        if self.dlg.md_cb.isChecked():
+            mud_depth = map_output_dir + r"\MUDFLOW_DEPTH.tif"
+            depth_file = flo2d_results_dir + r"\DEPTH.OUT"
+
+            raster = self.read_ASCII(depth_file, mud_depth, "MUDFLOW_DEPTH")
+            QgsProject.instance().addMapLayer(raster)
+
+            self.set_raster_style(raster, 5)
+
+        if self.dlg.ms_cb.isChecked():
+            mud_speed = map_output_dir + r"\MUDFLOW_SPEED.tif"
+            vel_file = flo2d_results_dir + r"\VELFP.OUT"
+
+            raster = self.read_ASCII(vel_file, mud_speed, "MUDFLOW_SPEED")
+            QgsProject.instance().addMapLayer(raster)
+
+            self.set_raster_style(raster, 1)
+
+
+        """"
+        TWO-PHASE MAPS
+        """
+
+        if self.dlg.ce_cb.isChecked():
+            combined_extent_raster = map_output_dir + r"\TWO-PHASE_EXTENT.tif"
+            combined_extent_vector = map_output_dir + r"\TWO-PHASE_EXTENT.shp"
+            depth_file = flo2d_results_dir + r"\DEPTHMAX_2PHASE_COMBINED.OUT"
+
+            self.remove_layer("TWO-PHASE_EXTENT")
+
+            files = os.listdir(map_output_dir)
+            for file in files:
+                if file.startswith("TWO-PHASE_EXTENT"):
+                    file_path = os.path.join(map_output_dir, file)
+                    os.remove(file_path)
+
+            raster = self.read_ASCII(
+                depth_file, combined_extent_raster, "TWO-PHASE_EXTENT"
+            )
+
+            combined_extent = self.get_extent(raster, combined_extent_vector, "TWO-PHASE_EXTENT")
+            self.set_vector_style(combined_extent, 0)
+            QgsProject.instance().addMapLayer(combined_extent)
+
+        if self.dlg.cme_cb.isChecked():
+            mud_extent_raster = map_output_dir + r"\MUDFLOW_EXTENT.tif"
+            mud_extent_vector = map_output_dir + r"\MUDFLOW_EXTENT.shp"
+            depth_file = flo2d_results_dir + r"\DEPFPMAX_MUD.OUT"
+
+            self.remove_layer("MUDFLOW_EXTENT")
+
+            files = os.listdir(map_output_dir)
+            for file in files:
+                if file.startswith("MUDFLOW_EXTENT"):
+                    file_path = os.path.join(map_output_dir, file)
+                    os.remove(file_path)
+
+            raster = self.read_ASCII(
+                depth_file, mud_extent_raster, "MUDFLOW_EXTENT"
+            )
+
+            combined_extent = self.get_extent(raster, mud_extent_vector, "MUDFLOW_EXTENT")
+            self.set_vector_style(combined_extent, 2)
+            QgsProject.instance().addMapLayer(combined_extent)
+
+        if self.dlg.cfe_cb.isChecked():
+            flood_extent_raster = map_output_dir + r"\FLOOD_EXTENT.tif"
+            flood_extent_vector = map_output_dir + r"\FLOOD_EXTENT.shp"
+            depth_file = flo2d_results_dir + r"\DEPTH.OUT"
+
+            self.remove_layer("FLOOD_EXTENT")
+
+            files = os.listdir(map_output_dir)
+            for file in files:
+                if file.startswith("FLOOD_EXTENT"):
+                    file_path = os.path.join(map_output_dir, file)
+                    os.remove(file_path)
+
+            raster = self.read_ASCII(
+                depth_file, flood_extent_raster, "FLOOD_EXTENT"
+            )
+
+            combined_extent = self.get_extent(raster, flood_extent_vector, "FLOOD_EXTENT")
+            self.set_vector_style(combined_extent, 1)
+            QgsProject.instance().addMapLayer(combined_extent)
+
+        if self.dlg.cfd_cb.isChecked():
+            flood_depth = map_output_dir + r"\FLOOD_DEPTH.tif"
+            depth_file = flo2d_results_dir + r"\DEPTH.OUT"
+
+            raster = self.read_ASCII(depth_file, flood_depth, "FLOOD_DEPTH")
+            QgsProject.instance().addMapLayer(raster)
+
+            self.set_raster_style(raster, 0)
+
+        if self.dlg.cfs_cb.isChecked():
+            flow_speed = map_output_dir + r"\FLOW_SPEED.tif"
+            vel_file = flo2d_results_dir + r"\VELFP.OUT"
+
+            raster = self.read_ASCII(vel_file, flow_speed, "FLOW_SPEED")
+            QgsProject.instance().addMapLayer(raster)
+
+            self.set_raster_style(raster, 1)
+
+        if self.dlg.cmd_cb.isChecked():
+            mud_depth = map_output_dir + r"\MUDFLOW_DEPTH.tif"
+            depth_file = flo2d_results_dir + r"\DEPFPMAX_MUD.OUT"
+
+            raster = self.read_ASCII(depth_file, mud_depth, "MUDFLOW_DEPTH")
+            QgsProject.instance().addMapLayer(raster)
+
+            self.set_raster_style(raster, 5)
+
+        if self.dlg.cms_cb.isChecked():
+            mud_speed = map_output_dir + r"\MUDFLOW_SPEED.tif"
+            vel_file = flo2d_results_dir + r"\VELFP_MUD.OUT"
+
+            raster = self.read_ASCII(vel_file, mud_speed, "MUDFLOW_SPEED")
+            QgsProject.instance().addMapLayer(raster)
+
+            self.set_raster_style(raster, 1)
+
+        msg_box = QMessageBox()
+        msg_box.setIcon(QMessageBox.Information)
+        msg_box.setWindowTitle("Mapping complete!")
+        msg_box.setText("The selected maps were created and added to the Map Canvas.")
+        msg_box.exec_()
+
+        self.closeDialog()
+
+
+    def read_ASCII(self, file_path, output_path, name):
+        """Read ASCII file and extract the required fields"""
+
+        # check if there is already a file on the output
+        layers = QgsProject.instance().mapLayersByName(name)
+        if layers:
+            # Remove the layer if it exists
+            for layer in layers:
+                QgsProject.instance().removeMapLayer(layer)
+        if os.path.isfile(output_path):
+            try:
+                os.remove(output_path)
+            except OSError as e:
+                print(f"Error deleting {output_path}: {str(e)}")
+
+        values = []
+        with open(file_path, "r") as file:
+            for line in file:
+                line = line.strip()
+                fields = line.split()
+                if fields[0].isnumeric():
+                    cell, x, y, value = (
+                        float(fields[0]),
+                        float(fields[1]),
+                        float(fields[2]),
+                        float(fields[3]),
+                    )
+                    values.append((x, y, value))
+
+        # Get the extent and number of rows and columns
+        min_x = min(point[0] for point in values)
+        max_x = max(point[0] for point in values)
+        min_y = min(point[1] for point in values)
+        max_y = max(point[1] for point in values)
+        num_cols = int((max_x - min_x) / self.cellSize) + 1
+        num_rows = int((max_y - min_y) / self.cellSize) + 1
+
+        # Convert the list of values to an array.
+        raster_data = np.full((num_rows, num_cols), -9999, dtype=np.float32)
+        for point in values:
+            if point[2] != 0:
+                col = int((point[0] - min_x) / self.cellSize)
+                row = int((max_y - point[1]) / self.cellSize)
+                raster_data[row, col] = point[2]
+
+        # Initialize the raster
+        driver = gdal.GetDriverByName("GTiff")
+        raster = driver.Create(output_path, num_cols, num_rows, 1, gdal.GDT_Float32)
+        raster.SetGeoTransform((min_x, self.cellSize, 0, max_y, 0, -self.cellSize))
+        raster.SetProjection(self.crs.toWkt())
+
+        band = raster.GetRasterBand(1)
+        band.SetNoDataValue(-9999)  # Set a no-data value if needed
+        band.WriteArray(raster_data)
+
+        raster.FlushCache()
+
+        layer = QgsRasterLayer(output_path, name)
+
+        return layer
+
+    def set_raster_style(self, layer, style):
+        """Define the raster styles"""
+        colDic = {
+            "white": "#ffffff",
+            "lightblue": "#9ecae1",
+            "blue": "#4292c6",
+            "darkblue": "#08306b",
+            "lightgreen": "#a1d99b",
+            "green": "#41ab5d",
+            "darkgreen": "#006d2c",
+            "black": "#000000",
+            "grey": "#808080",
+            "red": "#FF0000",
+            "yellow": "#FFFF00",
+            "risk_red": "#FF0000",
+            "risk_orange": "#FFC000",
+            "risk_lightgreen": "#92D050",
+            "risk_green": "#006600",
+            "risk_lightblue": "#BDD6EE",
+            "risk_blue": "#0033CC",
+            "mud_lightbrown": "#be4d24",
+            "mud_brown": "#752c12",
+            "mud_darkbrown": "#2c0c00"
+        }
+
+        provider = layer.dataProvider()
+        extent = layer.extent()
+
+        # Hydrodynamic Risk
+        if style == 2:
+            script_directory = os.path.dirname(os.path.realpath(__file__))
+            style_directory = script_directory + r"/raster_styles"
+            layer.loadNamedStyle(style_directory + r"/hydro_risk.qml")
+
+        # Other styles
+        else:
+            stats = provider.bandStatistics(1, QgsRasterBandStats.All, extent, 0)
+            if stats.minimumValue <= 0.01:
+                min = 0.01
+            else:
+                min = stats.minimumValue
+
+            max = stats.maximumValue
+            range = max - min
+            add = range / 2
+            interval = min + add
+            valueList = [min, interval, max]
+
+            dep_lst = [
+                QgsColorRampShader.ColorRampItem(
+                    valueList[0], QColor(colDic["lightblue"])
+                ),
+                QgsColorRampShader.ColorRampItem(valueList[1], QColor(colDic["blue"])),
+                QgsColorRampShader.ColorRampItem(
+                    valueList[2], QColor(colDic["darkblue"])
+                ),
+            ]
+
+            vel_lst = [
+                QgsColorRampShader.ColorRampItem(
+                    valueList[0], QColor(colDic["lightgreen"])
+                ),
+                QgsColorRampShader.ColorRampItem(valueList[1], QColor(colDic["green"])),
+                QgsColorRampShader.ColorRampItem(
+                    valueList[2], QColor(colDic["darkgreen"])
+                ),
+            ]
+
+            time_lst = [
+                QgsColorRampShader.ColorRampItem(valueList[0], QColor(colDic["green"])),
+                QgsColorRampShader.ColorRampItem(
+                    valueList[1], QColor(colDic["yellow"])
+                ),
+                QgsColorRampShader.ColorRampItem(valueList[2], QColor(colDic["red"])),
+            ]
+
+            q_lst = [
+                QgsColorRampShader.ColorRampItem(valueList[0], QColor(colDic["white"])),
+                QgsColorRampShader.ColorRampItem(
+                    valueList[1], QColor(colDic["lightblue"])
+                ),
+                QgsColorRampShader.ColorRampItem(valueList[2], QColor(colDic["blue"])),
+            ]
+
+            mud_lst = [
+                QgsColorRampShader.ColorRampItem(valueList[0], QColor(colDic["mud_lightbrown"])),
+                QgsColorRampShader.ColorRampItem(
+                    valueList[1], QColor(colDic["mud_brown"])
+                ),
+                QgsColorRampShader.ColorRampItem(valueList[2], QColor(colDic["mud_darkbrown"])),
+            ]
+
+            style_dict = {
+                0: dep_lst,
+                1: vel_lst,
+                5: mud_lst,
+                3: time_lst,
+                4: q_lst,
+            }
+
+            myRasterShader = QgsRasterShader()
+            myColorRamp = QgsColorRampShader(minimumValue=min, maximumValue=max)
+
+            myColorRamp.setColorRampItemList(style_dict[style])
+            myColorRamp.setColorRampType(QgsColorRampShader.Interpolated)
+            myColorRamp.setClip(True)
+
+            myRasterShader.setRasterShaderFunction(myColorRamp)
+
+            myPseudoRenderer = QgsSingleBandPseudoColorRenderer(
+                layer.dataProvider(), layer.type(), myRasterShader
+            )
+
+            layer.setRenderer(myPseudoRenderer)
+
+        layer.triggerRepaint()
+
+    def set_vector_style(self, layer, style):
+        """Define the vector styles"""
+
+        script_directory = os.path.dirname(os.path.realpath(__file__))
+        style_directory = script_directory + r"/vector_styles"
+
+        # Extent red
+        if style == 0:
+            layer.loadNamedStyle(style_directory + r"/extent.qml")
+
+        # Extent blue
+        if style == 1:
+            layer.loadNamedStyle(style_directory + r"/fluid_extent.qml")
+
+        # Extent brown
+        if style == 2:
+            layer.loadNamedStyle(style_directory + r"/mud_extent.qml")
+
+    def create_hydro_risk(self, map_output_dir, hydro_risk, depth_file, vel_file):
+        """Create the hydrodynamic risk map"""
+
+        # Check flood depth and flow speed files
+        flow_speed = map_output_dir + r"\FLOW_SPEED.tif"
+        flood_depth = map_output_dir + r"\FLOOD_DEPTH.tif"
+
+        if not os.path.isfile(flood_depth):
+            self.read_ASCII(depth_file, flood_depth, "FLOOD_DEPTH")
+
+        if not os.path.isfile(flow_speed):
+            self.read_ASCII(vel_file, flow_speed, "FLOW_SPEED")
+
+        if os.path.isfile(hydro_risk):
+            try:
+                os.remove(hydro_risk)
+            except OSError as e:
+                print(f"Error deleting {hydro_risk}: {str(e)}")
+
+        self.remove_layer("HYDRODYNAMIC_RISK")
+
+        vel_layer = QgsProject.instance().mapLayersByName("FLOW_SPEED")
+        if not vel_layer:
+            flow_speed_layer = QgsRasterLayer(flow_speed, "FLOW_SPEED")
+            QgsProject.instance().addMapLayer(flow_speed_layer)
+            self.set_raster_style(flow_speed_layer, 1)
+        depth_layer = QgsProject.instance().mapLayersByName("FLOOD_DEPTH")
+        if not depth_layer:
+            flood_depth_layer = QgsRasterLayer(flood_depth, "FLOOD_DEPTH")
+            QgsProject.instance().addMapLayer(flood_depth_layer)
+            self.set_raster_style(flood_depth_layer, 0)
+
+        # Create the depth * flow raster
+        product_raster = processing.run(
+            "qgis:rastercalculator",
+            {
+                "EXPRESSION": '("FLOOD_DEPTH@1" * "FLOW_SPEED@1")',
+                "LAYERS": [flood_depth],
+                "CELLSIZE": 0,
+                "EXTENT": None,
+                "CRS": self.crs,
+                "OUTPUT": "TEMPORARY_OUTPUT",
+            },
+        )["OUTPUT"]
+
+        QgsProject.instance().addMapLayer(QgsRasterLayer(product_raster, "HxV"))
+
+        # adjust units
+        if self.crs.mapUnits() == QgsUnitTypes.DistanceMeters:
+            uc = 1
+        elif self.crs.mapUnits() == QgsUnitTypes.DistanceFeet:
+            uc = 3.28
+        else:
+            QMessageBox.critical(
+                self.iface.mainWindow(),
+                "Error",
+                "Unknown map units. Choose a different projection!",
+            )
+            return
+
+        r1_e = f'"HxV@1" <= {0.3 * uc} AND "FLOOD_DEPTH@1" < {0.3 * uc} AND "FLOW_SPEED@1" < {2 * uc}'
+        r2_e = f'"HxV@1" <= {0.6 * uc} AND "FLOOD_DEPTH@1" < {0.5 * uc} AND "FLOW_SPEED@1" < {2 * uc}'
+        r3_e = f'"HxV@1" <= {0.6 * uc} AND "FLOOD_DEPTH@1" < {1.2 * uc} AND "FLOW_SPEED@1" < {2 * uc}'
+        r4_e = f'"HxV@1" <= {1.0 * uc} AND "FLOOD_DEPTH@1" < {2.0 * uc} AND "FLOW_SPEED@1" < {2 * uc}'
+        r5_e = f'"HxV@1" <= {4.0 * uc} AND "FLOOD_DEPTH@1" < {4.0 * uc} AND "FLOW_SPEED@1" < {4 * uc}'
+        r6_e = f'"HxV@1" > {4.0 * uc} OR "FLOOD_DEPTH@1" >= {4.0 * uc} OR "FLOW_SPEED@1" >= {4 * uc}'
+
+        # Australian Rainfall and Runoff Classification
+        arr_class = processing.run(
+            "qgis:rastercalculator",
+            {
+                "EXPRESSION": f"IF({r1_e},1,if({r2_e},2,if({r3_e},3,if({r4_e},4,if({r5_e},5,if({r6_e},6,0))))))",
+                "LAYERS": [flood_depth],
+                "CELLSIZE": 0,
+                "EXTENT": None,
+                "CRS": self.crs,
+                "OUTPUT": hydro_risk,
+            },
+        )["OUTPUT"]
+
+        self.remove_layer("HxV")
+
+        return QgsRasterLayer(arr_class, "HYDRODYNAMIC_RISK")
+
+    def remove_layer(self, layer_name):
+        """Function to remove layer name based on name"""
+        for layer in QgsProject.instance().mapLayers().values():
+            if layer.name() == layer_name:
+                QgsProject.instance().removeMapLayers([layer.id()])
+
+    def get_extent(self, raster, flood_extent_vector, name):
+        """Function to get the extent of a raster layer"""
+        vectorized = processing.run(
+            "gdal:polygonize",
+            {
+                "INPUT": raster,
+                "BAND": 1,
+                "FIELD": "DN",
+                "EIGHT_CONNECTEDNESS": False,
+                "EXTRA": "",
+                "OUTPUT": "TEMPORARY_OUTPUT",
+            },
+        )["OUTPUT"]
+
+        processing.run(
+            "native:dissolve",
+            {
+                "INPUT": vectorized,
+                "FIELD": [],
+                "SEPARATE_DISJOINT": False,
+                "OUTPUT": flood_extent_vector,
+            },
+        )
+        extent = QgsVectorLayer(flood_extent_vector, name)
+
+        return extent
