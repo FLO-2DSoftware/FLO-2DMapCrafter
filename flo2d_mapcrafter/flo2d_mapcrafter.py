@@ -286,8 +286,6 @@ class FLO2DMapCrafter:
             self.dlg.crsselector.setEnabled(True)
             self.dlg.runButton.setEnabled(True)
             self.dlg.label_4.setEnabled(True)
-            self.dlg.label_3.setEnabled(True)
-            self.dlg.cellSize.setEnabled(True)
             self.dlg.label_2.setEnabled(True)
             self.dlg.mapper_out_folder.setEnabled(True)
         else:
@@ -332,11 +330,6 @@ class FLO2DMapCrafter:
         flo2d_results_dir = self.dlg.flo2d_out_folder.filePath()
         map_output_dir = self.dlg.mapper_out_folder.filePath()
         self.crs = self.dlg.crsselector.crs()
-
-        if not self.check_input(self.dlg.cellSize.text(), "Please, set the cell size."):
-            return
-        else:
-            self.cellSize = int(self.dlg.cellSize.text())
 
         if not self.check_input(map_output_dir, "Please, select the output folder."):
             return
@@ -683,6 +676,7 @@ class FLO2DMapCrafter:
                 print(f"Error deleting {output_path}: {str(e)}")
 
         values = []
+        cellSize_data = []
         with open(file_path, "r") as file:
             for line in file:
                 line = line.strip()
@@ -695,6 +689,17 @@ class FLO2DMapCrafter:
                         float(fields[3]),
                     )
                     values.append((x, y, value))
+                    if len(cellSize_data) < 2:
+                        cellSize_data.append((x, y))
+
+        # Calculate the differences in X and Y coordinates
+        dx = cellSize_data[1][0] - cellSize_data[0][0]
+        dy = cellSize_data[1][1] - cellSize_data[0][1]
+
+        if dx != 0:
+            self.cellSize = int(abs(dx))
+        if dy != 0:
+            self.cellSize = int(abs(dy))
 
         # Get the extent and number of rows and columns
         min_x = min(point[0] for point in values)

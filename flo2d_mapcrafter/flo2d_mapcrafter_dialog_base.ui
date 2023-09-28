@@ -16,40 +16,7 @@
   <layout class="QGridLayout" name="gridLayout">
    <item row="0" column="0" rowspan="2">
     <layout class="QGridLayout" name="gridLayout_2">
-     <item row="3" column="0" colspan="6">
-      <widget class="Line" name="line_2">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="4" colspan="2">
-      <widget class="QLineEdit" name="cellSize">
-       <property name="enabled">
-        <bool>false</bool>
-       </property>
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="inputMethodHints">
-        <set>Qt::ImhPreferNumbers</set>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="2" colspan="2">
-      <widget class="QLabel" name="label_3">
-       <property name="enabled">
-        <bool>false</bool>
-       </property>
-       <property name="text">
-        <string>Cell Size</string>
-       </property>
-      </widget>
-     </item>
-     <item row="7" column="0" colspan="6">
+     <item row="7" column="0" colspan="5">
       <widget class="QGroupBox" name="risk_grp">
        <property name="enabled">
         <bool>false</bool>
@@ -68,24 +35,94 @@
        </layout>
       </widget>
      </item>
-     <item row="1" column="1">
-      <widget class="QgsProjectionSelectionWidget" name="crsselector">
-       <property name="enabled">
-        <bool>false</bool>
+     <item row="8" column="0" colspan="5">
+      <widget class="Line" name="line">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
        </property>
       </widget>
      </item>
-     <item row="10" column="2" colspan="3">
-      <widget class="QPushButton" name="runButton">
+     <item row="1" column="0">
+      <widget class="QLabel" name="label_4">
        <property name="enabled">
         <bool>false</bool>
        </property>
        <property name="text">
-        <string>Create maps</string>
+        <string>CRS</string>
        </property>
       </widget>
      </item>
-     <item row="4" column="0" colspan="6">
+     <item row="9" column="1" colspan="4">
+      <widget class="QgsFileWidget" name="mapper_out_folder">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="storageMode">
+        <enum>QgsFileWidget::GetDirectory</enum>
+       </property>
+       <property name="options">
+        <set>QFileDialog::ShowDirsOnly</set>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1" colspan="4">
+      <widget class="QgsFileWidget" name="flo2d_out_folder">
+       <property name="storageMode">
+        <enum>QgsFileWidget::GetDirectory</enum>
+       </property>
+      </widget>
+     </item>
+     <item row="10" column="4">
+      <widget class="QPushButton" name="cancelButton">
+       <property name="enabled">
+        <bool>true</bool>
+       </property>
+       <property name="text">
+        <string>Cancel</string>
+       </property>
+      </widget>
+     </item>
+     <item row="5" column="0" colspan="5">
+      <widget class="QGroupBox" name="mud_grp">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="title">
+        <string>Mudflow Maps</string>
+       </property>
+       <layout class="QGridLayout" name="gridLayout_6">
+        <item row="0" column="0">
+         <widget class="QCheckBox" name="me_cb">
+          <property name="text">
+           <string>Mudflow Extent</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="QCheckBox" name="md_cb">
+          <property name="text">
+           <string>Mudflow Depth</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0">
+         <widget class="QCheckBox" name="ms_cb">
+          <property name="text">
+           <string>Mudflow Speed</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="2">
+         <widget class="QCheckBox" name="mt_cb">
+          <property name="text">
+           <string>Mudflow Arrival Time</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </item>
+     <item row="4" column="0" colspan="5">
       <widget class="QGroupBox" name="flood_grp">
        <property name="enabled">
         <bool>false</bool>
@@ -131,104 +168,7 @@
        </layout>
       </widget>
      </item>
-     <item row="1" column="0">
-      <widget class="QLabel" name="label_4">
-       <property name="enabled">
-        <bool>false</bool>
-       </property>
-       <property name="text">
-        <string>CRS</string>
-       </property>
-      </widget>
-     </item>
-     <item row="9" column="0">
-      <widget class="QLabel" name="label_2">
-       <property name="enabled">
-        <bool>false</bool>
-       </property>
-       <property name="text">
-        <string>FLO-2D Mapper Output Folder</string>
-       </property>
-      </widget>
-     </item>
-     <item row="10" column="5">
-      <widget class="QPushButton" name="cancelButton">
-       <property name="enabled">
-        <bool>true</bool>
-       </property>
-       <property name="text">
-        <string>Cancel</string>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="0">
-      <widget class="QLabel" name="label">
-       <property name="text">
-        <string>FLO-2D Export Folder</string>
-       </property>
-      </widget>
-     </item>
-     <item row="5" column="0" colspan="6">
-      <widget class="QGroupBox" name="mud_grp">
-       <property name="enabled">
-        <bool>false</bool>
-       </property>
-       <property name="title">
-        <string>Mudflow Maps</string>
-       </property>
-       <layout class="QGridLayout" name="gridLayout_6">
-        <item row="0" column="0">
-         <widget class="QCheckBox" name="me_cb">
-          <property name="text">
-           <string>Mudflow Extent</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="1">
-         <widget class="QCheckBox" name="md_cb">
-          <property name="text">
-           <string>Mudflow Depth</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="0">
-         <widget class="QCheckBox" name="ms_cb">
-          <property name="text">
-           <string>Mudflow Speed</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="2">
-         <widget class="QCheckBox" name="mt_cb">
-          <property name="text">
-           <string>Mudflow Arrival Time</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </widget>
-     </item>
-     <item row="9" column="1" colspan="5">
-      <widget class="QgsFileWidget" name="mapper_out_folder">
-       <property name="enabled">
-        <bool>false</bool>
-       </property>
-       <property name="storageMode">
-        <enum>QgsFileWidget::GetDirectory</enum>
-       </property>
-       <property name="options">
-        <set>QFileDialog::ShowDirsOnly</set>
-       </property>
-      </widget>
-     </item>
-     <item row="8" column="0" colspan="6">
-      <widget class="Line" name="line">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-      </widget>
-     </item>
-     <item row="6" column="0" colspan="6">
+     <item row="6" column="0" colspan="5">
       <widget class="QGroupBox" name="twophase_grp">
        <property name="enabled">
         <bool>false</bool>
@@ -296,10 +236,44 @@
        </layout>
       </widget>
      </item>
-     <item row="0" column="1" colspan="5">
-      <widget class="QgsFileWidget" name="flo2d_out_folder">
-       <property name="storageMode">
-        <enum>QgsFileWidget::GetDirectory</enum>
+     <item row="3" column="0" colspan="5">
+      <widget class="Line" name="line_2">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+      </widget>
+     </item>
+     <item row="9" column="0">
+      <widget class="QLabel" name="label_2">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="text">
+        <string>FLO-2D Mapper Output Folder</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="0">
+      <widget class="QLabel" name="label">
+       <property name="text">
+        <string>FLO-2D Export Folder</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1" colspan="4">
+      <widget class="QgsProjectionSelectionWidget" name="crsselector">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="10" column="0" colspan="4">
+      <widget class="QPushButton" name="runButton">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="text">
+        <string>Create maps</string>
        </property>
       </widget>
      </item>
