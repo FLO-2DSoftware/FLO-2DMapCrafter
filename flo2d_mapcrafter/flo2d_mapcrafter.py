@@ -310,18 +310,19 @@ class FLO2DMapCrafter:
                     self.dlg.mud_grp.setEnabled(False)
                     self.dlg.flood_grp.setEnabled(True)
 
-        all_2phase_files_present = all(filename in files_in_directory for filename in c_files)
-        if all_2phase_files_present:
-            self.dlg.twophase_grp.setEnabled(True)
-            self.dlg.flood_grp.setEnabled(False)
-        else:
-            self.dlg.twophase_grp.setEnabled(False)
-
         all_risk_files_present = all(filename in files_in_directory for filename in r_files)
         if all_risk_files_present:
             self.dlg.risk_grp.setEnabled(True)
         else:
             self.dlg.risk_grp.setEnabled(False)
+
+        all_2phase_files_present = all(filename in files_in_directory for filename in c_files)
+        if all_2phase_files_present:
+            self.dlg.twophase_grp.setEnabled(True)
+            self.dlg.flood_grp.setEnabled(False)
+            self.dlg.risk_grp.setEnabled(False)
+        else:
+            self.dlg.twophase_grp.setEnabled(False)
 
     def run(self):
         """Run method that performs all the real work"""
@@ -876,13 +877,31 @@ class FLO2DMapCrafter:
         flood_depth = map_output_dir + r"\FLOOD_DEPTH.tif"
         h_x_v = map_output_dir + r"\HxV.tif"
 
-        if not os.path.isfile(flood_depth):
+        if os.path.isfile(flood_depth):
+            try:
+                os.remove(flood_depth)
+                self.read_ASCII(depth_file, flood_depth, "FLOOD_DEPTH")
+            except OSError as e:
+                print(f"Error deleting {flood_depth}: {str(e)}")
+        else:
             self.read_ASCII(depth_file, flood_depth, "FLOOD_DEPTH")
 
-        if not os.path.isfile(flow_speed):
+        if os.path.isfile(flow_speed):
+            try:
+                os.remove(flow_speed)
+                self.read_ASCII(vel_file, flow_speed, "FLOW_SPEED")
+            except OSError as e:
+                print(f"Error deleting {flow_speed}: {str(e)}")
+        else:
             self.read_ASCII(vel_file, flow_speed, "FLOW_SPEED")
 
-        if not os.path.isfile(h_x_v):
+        if os.path.isfile(h_x_v):
+            try:
+                os.remove(h_x_v)
+                self.read_ASCII(vel_x_depth_file, h_x_v, "HxV")
+            except OSError as e:
+                print(f"Error deleting {h_x_v}: {str(e)}")
+        else:
             self.read_ASCII(vel_x_depth_file, h_x_v, "HxV")
 
         if os.path.isfile(hydro_risk):
