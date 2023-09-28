@@ -95,7 +95,7 @@ class FLO2DMapCrafter:
         self.first_start = None
 
         # Adjust CRS
-        self.crs = QgsCoordinateReferenceSystem("EPSG:4326")
+        self.crs = QgsCoordinateReferenceSystem(QgsProject.instance().crs().authid())
         self.dlg.crsselector.setCrs(self.crs)
 
         # Adjust Cell size
@@ -221,6 +221,8 @@ class FLO2DMapCrafter:
     # Opening the dialog
     def open(self):
         """Shows the dialog"""
+        self.crs = QgsCoordinateReferenceSystem(QgsProject.instance().crs().authid())
+        self.dlg.crsselector.setCrs(self.crs)
         self.dlg.show()
 
     def closeDialog(self):
