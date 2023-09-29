@@ -723,7 +723,7 @@ class FLO2DMapCrafter:
         # Initialize the raster
         driver = gdal.GetDriverByName("GTiff")
         raster = driver.Create(output_path, num_cols, num_rows, 1, gdal.GDT_Float32)
-        raster.SetGeoTransform((min_x, self.cellSize, 0, max_y, 0, -self.cellSize))
+        raster.SetGeoTransform((min_x - self.cellSize / 2, self.cellSize, 0, max_y + self.cellSize / 2, 0, -self.cellSize))
         raster.SetProjection(self.crs.toWkt())
 
         band = raster.GetRasterBand(1)
