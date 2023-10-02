@@ -25,6 +25,7 @@ import numpy as np
 from PyQt5.QtGui import QColor
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QMessageBox
+from PyQt5.QtXml import QDomDocument
 from osgeo import gdal, osr
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication
 from qgis.PyQt.QtGui import QIcon
@@ -47,7 +48,8 @@ from qgis._core import (
     QgsUnitTypes,
     QgsCategorizedSymbolRenderer,
     QgsRendererCategory,
-    QgsColorRamp, QgsVectorFileWriter,
+    QgsColorRamp,
+    QgsVectorFileWriter, QgsPrintLayout, QgsReadWriteContext,
 )
 
 # Initialize Qt resources from file resources.py
@@ -101,14 +103,22 @@ class FLO2DMapCrafter:
         # Adjust Cell size
         self.cellSize = None
 
-        # Run button
-        self.dlg.runButton.clicked.connect(self.run)
+        # Run buttons
+        self.dlg.runButton.clicked.connect(self.run_map_creator)
+        self.dlg.runButton_2.clicked.connect(self.run_open_layout)
 
-        # Close button
+        # Close buttons
         self.dlg.cancelButton.clicked.connect(self.closeDialog)
+        self.dlg.cancelButton_2.clicked.connect(self.closeDialog)
 
         # Select export folder
         self.dlg.flo2d_out_folder.fileChanged.connect(self.check_files)
+
+        # DEBUG Map layouts
+        self.dlg.map_title_le.setText("Mudflow")
+        self.dlg.map_description.setPlainText(
+            "This map is a visual representation of the areas that are likely to be submerged or covered by floodwaters during a specific flood event."
+        )
 
     # noinspection PyMethodMayBeStatic
     def tr(self, message):
@@ -126,16 +136,16 @@ class FLO2DMapCrafter:
         return QCoreApplication.translate("FLO2DMapCrafter", message)
 
     def add_action(
-            self,
-            icon_path,
-            text,
-            callback,
-            enabled_flag=True,
-            add_to_menu=True,
-            add_to_toolbar=True,
-            status_tip=None,
-            whats_this=None,
-            parent=None,
+        self,
+        icon_path,
+        text,
+        callback,
+        enabled_flag=True,
+        add_to_menu=True,
+        add_to_toolbar=True,
+        status_tip=None,
+        whats_this=None,
+        parent=None,
     ):
         """Add a toolbar icon to the toolbar.
 
@@ -247,7 +257,7 @@ class FLO2DMapCrafter:
             self.dlg.cfs_cb,
             self.dlg.cme_cb,
             self.dlg.cmd_cb,
-            self.dlg.cms_cb
+            self.dlg.cms_cb,
         ]
         for checkBox in checkboxes:
             checkBox.setChecked(False)
@@ -274,11 +284,7 @@ class FLO2DMapCrafter:
         ]
 
         # Look for risk files
-        r_files = [
-            "DEPTH.OUT",
-            "VELFP.OUT",
-            "VEL_X_DEPTH.OUT"
-        ]
+        r_files = ["DEPTH.OUT", "VELFP.OUT", "VEL_X_DEPTH.OUT"]
 
         # check if simulation was run and calculate the cell size
         files_in_directory = os.listdir(self.dlg.flo2d_out_folder.filePath())
@@ -298,10 +304,12 @@ class FLO2DMapCrafter:
             msg_box.exec_()
             return
 
-        all_flood_files_present = all(filename in files_in_directory for filename in f_files)
+        all_flood_files_present = all(
+            filename in files_in_directory for filename in f_files
+        )
         if all_flood_files_present:
             # Check if it was a mudflow simulation
-            with open(self.dlg.flo2d_out_folder.filePath() + r"\CONT.DAT", 'r') as file:
+            with open(self.dlg.flo2d_out_folder.filePath() + r"\CONT.DAT", "r") as file:
                 lines = file.readlines()
                 elements = lines[2].split()
                 mud_simulation = elements[3]
@@ -312,13 +320,17 @@ class FLO2DMapCrafter:
                     self.dlg.mud_grp.setEnabled(False)
                     self.dlg.flood_grp.setEnabled(True)
 
-        all_risk_files_present = all(filename in files_in_directory for filename in r_files)
+        all_risk_files_present = all(
+            filename in files_in_directory for filename in r_files
+        )
         if all_risk_files_present:
             self.dlg.risk_grp.setEnabled(True)
         else:
             self.dlg.risk_grp.setEnabled(False)
 
-        all_2phase_files_present = all(filename in files_in_directory for filename in c_files)
+        all_2phase_files_present = all(
+            filename in files_in_directory for filename in c_files
+        )
         if all_2phase_files_present:
             self.dlg.twophase_grp.setEnabled(True)
             self.dlg.flood_grp.setEnabled(False)
@@ -326,7 +338,7 @@ class FLO2DMapCrafter:
         else:
             self.dlg.twophase_grp.setEnabled(False)
 
-    def run(self):
+    def run_map_creator(self):
         """Run method that performs all the real work"""
 
         # input & output directories
@@ -529,7 +541,9 @@ class FLO2DMapCrafter:
                 depth_file, combined_extent_raster, "TWO-PHASE_EXTENT"
             )
 
-            combined_extent = self.get_extent(raster, combined_extent_vector, "TWO-PHASE_EXTENT")
+            combined_extent = self.get_extent(
+                raster, combined_extent_vector, "TWO-PHASE_EXTENT"
+            )
 
             QgsProject.instance().addMapLayer(combined_extent, False)
             self.set_vector_style(combined_extent, 0)
@@ -564,11 +578,11 @@ class FLO2DMapCrafter:
                     file_path = os.path.join(map_output_dir, file)
                     os.remove(file_path)
 
-            raster = self.read_ASCII(
-                depth_file, flood_extent_raster, "FLOOD_EXTENT"
-            )
+            raster = self.read_ASCII(depth_file, flood_extent_raster, "FLOOD_EXTENT")
 
-            combined_extent = self.get_extent(raster, flood_extent_vector, "FLOOD_EXTENT")
+            combined_extent = self.get_extent(
+                raster, flood_extent_vector, "FLOOD_EXTENT"
+            )
 
             QgsProject.instance().addMapLayer(combined_extent, False)
             self.set_vector_style(combined_extent, 1)
@@ -616,11 +630,11 @@ class FLO2DMapCrafter:
                     file_path = os.path.join(map_output_dir, file)
                     os.remove(file_path)
 
-            raster = self.read_ASCII(
-                depth_file, mud_extent_raster, "MUDFLOW_EXTENT"
-            )
+            raster = self.read_ASCII(depth_file, mud_extent_raster, "MUDFLOW_EXTENT")
 
-            combined_extent = self.get_extent(raster, mud_extent_vector, "MUDFLOW_EXTENT")
+            combined_extent = self.get_extent(
+                raster, mud_extent_vector, "MUDFLOW_EXTENT"
+            )
 
             QgsProject.instance().addMapLayer(combined_extent, False)
             self.set_vector_style(combined_extent, 2)
@@ -723,7 +737,16 @@ class FLO2DMapCrafter:
         # Initialize the raster
         driver = gdal.GetDriverByName("GTiff")
         raster = driver.Create(output_path, num_cols, num_rows, 1, gdal.GDT_Float32)
-        raster.SetGeoTransform((min_x - self.cellSize / 2, self.cellSize, 0, max_y + self.cellSize / 2, 0, -self.cellSize))
+        raster.SetGeoTransform(
+            (
+                min_x - self.cellSize / 2,
+                self.cellSize,
+                0,
+                max_y + self.cellSize / 2,
+                0,
+                -self.cellSize,
+            )
+        )
         raster.SetProjection(self.crs.toWkt())
 
         band = raster.GetRasterBand(1)
@@ -758,7 +781,7 @@ class FLO2DMapCrafter:
             "risk_blue": "#0033CC",
             "mud_lightbrown": "#be4d24",
             "mud_brown": "#752c12",
-            "mud_darkbrown": "#2c0c00"
+            "mud_darkbrown": "#2c0c00",
         }
 
         provider = layer.dataProvider()
@@ -821,11 +844,15 @@ class FLO2DMapCrafter:
             ]
 
             mud_lst = [
-                QgsColorRampShader.ColorRampItem(valueList[0], QColor(colDic["mud_lightbrown"])),
+                QgsColorRampShader.ColorRampItem(
+                    valueList[0], QColor(colDic["mud_lightbrown"])
+                ),
                 QgsColorRampShader.ColorRampItem(
                     valueList[1], QColor(colDic["mud_brown"])
                 ),
-                QgsColorRampShader.ColorRampItem(valueList[2], QColor(colDic["mud_darkbrown"])),
+                QgsColorRampShader.ColorRampItem(
+                    valueList[2], QColor(colDic["mud_darkbrown"])
+                ),
             ]
 
             style_dict = {
@@ -871,7 +898,9 @@ class FLO2DMapCrafter:
         if style == 2:
             layer.loadNamedStyle(style_directory + r"/mud_extent.qml")
 
-    def create_hydro_risk(self, map_output_dir, hydro_risk, depth_file, vel_file, vel_x_depth_file):
+    def create_hydro_risk(
+        self, map_output_dir, hydro_risk, depth_file, vel_file, vel_x_depth_file
+    ):
         """Create the hydrodynamic risk map"""
 
         # Check flood depth and flow speed files
@@ -1031,12 +1060,7 @@ class FLO2DMapCrafter:
 
         flood_checked = any(checkbox.isChecked() for checkbox in flood_cbs)
 
-        mud_cbs = [
-            self.dlg.me_cb,
-            self.dlg.md_cb,
-            self.dlg.ms_cb,
-            self.dlg.mt_cb
-        ]
+        mud_cbs = [self.dlg.me_cb, self.dlg.md_cb, self.dlg.ms_cb, self.dlg.mt_cb]
 
         mud_checked = any(checkbox.isChecked() for checkbox in mud_cbs)
 
@@ -1056,9 +1080,7 @@ class FLO2DMapCrafter:
 
         twophase_checked = any(checkbox.isChecked() for checkbox in twophase_cbs)
 
-        risk_cbs = [
-            self.dlg.hr_cb
-        ]
+        risk_cbs = [self.dlg.hr_cb]
 
         risk_checked = any(checkbox.isChecked() for checkbox in risk_cbs)
 
@@ -1096,7 +1118,7 @@ class FLO2DMapCrafter:
             self.dlg.cfs_cb,
             self.dlg.cme_cb,
             self.dlg.cmd_cb,
-            self.dlg.cms_cb
+            self.dlg.cms_cb,
         ]
 
         none_checked = not any(checkbox.isChecked() for checkbox in checkboxes)
@@ -1110,3 +1132,89 @@ class FLO2DMapCrafter:
             return False
         else:
             return True
+
+    def run_open_layout(self):
+        """Function to open the selected layout"""
+
+        map_title = self.dlg.map_title_le.text()
+        map_description = self.dlg.map_description.toPlainText()
+        layer_extent = self.dlg.layer_extent_cb.currentLayer()
+
+        lm = QgsProject.instance().layoutManager()
+        l = QgsPrintLayout(QgsProject.instance())
+        l.initializeDefaults()
+
+        script_directory = os.path.dirname(os.path.realpath(__file__))
+        template_directory = script_directory + r"/layout_templates"
+        template_source = ""
+        if self.dlg.a4_land.isChecked():
+            template_source = template_directory + r"/FLO-2D A4 Landscape.qpt"
+            layout_name = self.layout_exists("FLO-2D A4 Landscape")
+
+        if self.dlg.a4_port.isChecked():
+            template_source = template_directory + r"/FLO-2D A4 Portrait.qpt"
+            layout_name = self.layout_exists("FLO-2D A4 Portrait")
+
+        # if self.dlg.a4_land.isChecked():
+        #
+        # if self.dlg.a4_land.isChecked():
+
+        if template_source == "":
+            msg = QMessageBox()
+            msg.setIcon(QMessageBox.Warning)
+            msg.setText("Please, select a layout.")
+            msg.exec_()
+            return
+
+        #template_source = template_directory + r"/FLO-2D A4 Landscape.qpt"
+
+        template_file = open(template_source, 'r+', encoding='utf-8')
+        template_content = template_file.read()
+        template_file.close()
+        document = QDomDocument()
+        document.setContent(template_content)
+        context = QgsReadWriteContext()
+        l.loadFromTemplate(document, context)
+
+        l.setName(layout_name)
+
+        # canvas = self.iface.mapCanvas()
+        for item in l.items():
+            #QgsMessageLog.logMessage(str(item))
+            if item.type() == 65639:  # Map
+                item.zoomToExtent(layer_extent.extent())
+            if item.type() == 65641:  # Label
+                item.setText(item.text().replace('{{title}}', map_title))
+                item.setText(item.text().replace('{{description}}', map_description))
+
+        # Add layout to layout manager
+        l.refresh()
+        lm.addLayout(l)
+
+        # Open and show the layout in designer
+        # try:
+        self.iface.openLayoutDesigner(l)
+        # except:
+        #     msg = QMessageBox()
+        #     msg.setIcon(QMessageBox.Warning)
+        #     msg.setText(self.tr(
+        #         f'Error trying to open the layout ({l.name()}) returned errors.'
+        #             ))
+        #     msg.exec_()
+
+    def layout_exists(self, layout_name):
+        """Check if a layout already exists and return a correct name"""
+        lm = QgsProject.instance().layoutManager()
+        layouts = []
+        n_layouts = 0
+        for l in lm.layouts():
+            layouts.append(l.name())
+        if layout_name in layouts:
+            n_layouts = sum(layout_name in s for s in layouts)
+
+        if n_layouts == 0:
+            return layout_name
+        else:
+            return layout_name + f" ({n_layouts})"
+
+
