@@ -764,12 +764,14 @@ class FLO2DMapCrafter:
         provider = layer.dataProvider()
         extent = layer.extent()
 
+        script_directory = os.path.dirname(os.path.realpath(__file__))
+        style_directory = script_directory + r"/raster_styles"
+
         # Hydrodynamic Risk
         if style == 2:
-            script_directory = os.path.dirname(os.path.realpath(__file__))
-            style_directory = script_directory + r"/raster_styles"
             layer.loadNamedStyle(style_directory + r"/hydro_risk.qml")
-
+        elif style == 3:
+            layer.loadNamedStyle(style_directory + r"/timeoneft.qml")
         # Other styles
         else:
             stats = provider.bandStatistics(1, QgsRasterBandStats.All, extent, 0)
