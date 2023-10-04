@@ -121,10 +121,7 @@ class FLO2DMapCrafter:
         #     "This map is a visual representation of the areas that are likely to be submerged or covered by floodwaters during a specific flood event."
         # )
 
-        # Adjust the QgsMapLayerComboboxes
-        self.dlg.layer_basemap_cb.setFilters(QgsMapLayerProxyModel.RasterLayer)
-        # self.dlg.layer_extent_cb.setFilters(QgsMapLayerProxyModel.HasGeometry)
-        # self.dlg.layer_mapping_cb.setFilters(QgsMapLayerProxyModel.HasGeometry)
+
 
     # noinspection PyMethodMayBeStatic
     def tr(self, message):
