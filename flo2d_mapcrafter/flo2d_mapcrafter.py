@@ -49,8 +49,9 @@ from qgis._core import (
     QgsCategorizedSymbolRenderer,
     QgsRendererCategory,
     QgsColorRamp,
-    QgsVectorFileWriter, QgsPrintLayout, QgsReadWriteContext,
+    QgsVectorFileWriter, QgsPrintLayout, QgsReadWriteContext, QgsMapLayerProxyModel,
 )
+from qgis._gui import QgsMapLayerComboBox
 
 # Initialize Qt resources from file resources.py
 from .resources import *
@@ -115,10 +116,15 @@ class FLO2DMapCrafter:
         self.dlg.flo2d_out_folder.fileChanged.connect(self.check_files)
 
         # DEBUG Map layouts
-        self.dlg.map_title_le.setText("Mudflow")
-        self.dlg.map_description.setPlainText(
-            "This map is a visual representation of the areas that are likely to be submerged or covered by floodwaters during a specific flood event."
-        )
+        # self.dlg.map_title_le.setText("Mudflow")
+        # self.dlg.map_description.setPlainText(
+        #     "This map is a visual representation of the areas that are likely to be submerged or covered by floodwaters during a specific flood event."
+        # )
+
+        # Adjust the QgsMapLayerComboboxes
+        self.dlg.layer_basemap_cb.setFilters(QgsMapLayerProxyModel.RasterLayer)
+        # self.dlg.layer_extent_cb.setFilters(QgsMapLayerProxyModel.HasGeometry)
+        # self.dlg.layer_mapping_cb.setFilters(QgsMapLayerProxyModel.HasGeometry)
 
     # noinspection PyMethodMayBeStatic
     def tr(self, message):
@@ -231,8 +237,17 @@ class FLO2DMapCrafter:
     # Opening the dialog
     def open(self):
         """Shows the dialog"""
+
+        # Adjust the CRS
         self.crs = QgsCoordinateReferenceSystem(QgsProject.instance().crs().authid())
         self.dlg.crsselector.setCrs(self.crs)
+
+        # Set the grid layer as extent, if it exists
+        layer = QgsProject.instance().mapLayersByName('Grid')
+        if layer:
+            # Add the layer to the QgsMapLayerComboBox
+            self.dlg.layer_extent_cb.setLayer(layer[0])
+
         self.dlg.show()
 
     def closeDialog(self):
@@ -1155,9 +1170,13 @@ class FLO2DMapCrafter:
             template_source = template_directory + r"/FLO-2D A4 Portrait.qpt"
             layout_name = self.layout_exists("FLO-2D A4 Portrait")
 
-        # if self.dlg.a4_land.isChecked():
-        #
-        # if self.dlg.a4_land.isChecked():
+        if self.dlg.a3_land.isChecked():
+            template_source = template_directory + r"/FLO-2D A3 Landscape.qpt"
+            layout_name = self.layout_exists("FLO-2D A3 Landscape")
+
+        if self.dlg.a3_port.isChecked():
+            template_source = template_directory + r"/FLO-2D A3 Portrait.qpt"
+            layout_name = self.layout_exists("FLO-2D A3 Portrait")
 
         if template_source == "":
             msg = QMessageBox()
