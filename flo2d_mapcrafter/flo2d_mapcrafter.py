@@ -23,10 +23,9 @@
 """
 import numpy as np
 from PyQt5.QtGui import QColor
-from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QMessageBox
 from PyQt5.QtXml import QDomDocument
-from osgeo import gdal, osr
+from osgeo import gdal
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction
@@ -38,25 +37,17 @@ from qgis._core import (
     QgsSingleBandPseudoColorRenderer,
     QgsRasterLayer,
     QgsProject,
-    QgsLineSymbol,
-    QgsSimpleLineSymbolLayer,
     QgsVectorLayer,
-    QgsSymbol,
-    QgsSimpleFillSymbolLayer,
-    QgsFillSymbol,
-    QgsMessageLog,
     QgsUnitTypes,
-    QgsCategorizedSymbolRenderer,
-    QgsRendererCategory,
-    QgsColorRamp,
-    QgsVectorFileWriter, QgsPrintLayout, QgsReadWriteContext, QgsMapLayerProxyModel,
+    QgsPrintLayout,
+    QgsReadWriteContext,
+    QgsMessageLog,
 )
-from qgis._gui import QgsMapLayerComboBox
 
-# Initialize Qt resources from file resources.py
+from .mapping.flood import FloodMaps
+from .mapping.mudflow import MudflowMaps
+from .mapping.twophase import TwophaseMaps
 from .resources import *
-
-# Import the code for the dialog
 from .flo2d_mapcrafter_dialog import FLO2DMapCrafterDialog
 import os.path
 import processing
@@ -99,21 +90,15 @@ class FLO2DMapCrafter:
 
         # Adjust CRS
         self.crs = QgsCoordinateReferenceSystem(QgsProject.instance().crs().authid())
-        self.dlg.crsselector.setCrs(self.crs)
-
-        # Adjust Cell size
-        self.cellSize = None
-
-        # Run buttons
-        self.dlg.runButton.clicked.connect(self.run_map_creator)
-        self.dlg.runButton_2.clicked.connect(self.run_open_layout)
-
-        # Close buttons
-        self.dlg.cancelButton.clicked.connect(self.closeDialog)
-        self.dlg.cancelButton_2.clicked.connect(self.closeDialog)
 
         # Select export folder
         self.dlg.flo2d_out_folder.fileChanged.connect(self.check_files)
+
+        # Run Button
+        self.dlg.runButton.clicked.connect(self.run_map_creator)
+
+        # Cancel Button
+        self.dlg.cancelButton.clicked.connect(self.closeDialog)
 
         # DEBUG Map layouts
         # self.dlg.map_title_le.setText("Mudflow")
@@ -121,9 +106,6 @@ class FLO2DMapCrafter:
         #     "This map is a visual representation of the areas that are likely to be submerged or covered by floodwaters during a specific flood event."
         # )
 
-
-
-    # noinspection PyMethodMayBeStatic
     def tr(self, message):
         """Get the translation for a string using Qt translation API.
 
@@ -240,7 +222,7 @@ class FLO2DMapCrafter:
         self.dlg.crsselector.setCrs(self.crs)
 
         # Set the grid layer as extent, if it exists
-        layer = QgsProject.instance().mapLayersByName('Grid')
+        layer = QgsProject.instance().mapLayersByName("Grid")
         if layer:
             # Add the layer to the QgsMapLayerComboBox
             self.dlg.layer_extent_cb.setLayer(layer[0])
@@ -279,76 +261,84 @@ class FLO2DMapCrafter:
     def check_files(self):
         """Function to check the type of files present on the simulation"""
 
-        # Look for flood files
-        f_files = [
-            "DEPTH.OUT",
-            "TIMEONEFT.OUT",
-            "VELFP.OUT",
-        ]
-
-        # Look for combined files
-        c_files = [
-            "DEPTHMAX_2PHASE_COMBINED.OUT",
-            "DEPFPMAX_MUD.OUT",
-            "VELFP_MUD.OUT",
-            "DEPTH.OUT",
-            "VELFP.OUT",
-        ]
-
-        # Look for risk files
-        r_files = ["DEPTH.OUT", "VELFP.OUT", "VEL_X_DEPTH.OUT"]
-
-        # check if simulation was run and calculate the cell size
+        # check if simulation was run
         files_in_directory = os.listdir(self.dlg.flo2d_out_folder.filePath())
 
         # In future version, calculate the Cell size from the DEPTH.OUT file
-        if "DEPTH.OUT" in files_in_directory:
-            self.dlg.crsselector.setEnabled(True)
+        if "DEPTH.OUT" in files_in_directory and "CONT.DAT" in files_in_directory:
             self.dlg.runButton.setEnabled(True)
-            self.dlg.label_4.setEnabled(True)
             self.dlg.label_2.setEnabled(True)
             self.dlg.mapper_out_folder.setEnabled(True)
+            self.dlg.tab4.setEnabled(True)
         else:
             msg_box = QMessageBox()
             msg_box.setIcon(QMessageBox.Warning)
             msg_box.setWindowTitle("Warning")
-            msg_box.setText("No *.OUT files were found in this directory!")
+            msg_box.setText("No CONT.DAT and *.OUT files were found in this directory!")
             msg_box.exec_()
             return
 
-        all_flood_files_present = all(
-            filename in files_in_directory for filename in f_files
-        )
-        if all_flood_files_present:
-            # Check if it was a mudflow simulation
-            with open(self.dlg.flo2d_out_folder.filePath() + r"\CONT.DAT", "r") as file:
-                lines = file.readlines()
-                elements = lines[2].split()
-                mud_simulation = elements[3]
-                if mud_simulation == "1":
-                    self.dlg.mud_grp.setEnabled(True)
-                    self.dlg.flood_grp.setEnabled(False)
+        output_directory = self.dlg.flo2d_out_folder.filePath()
+
+        with open(output_directory + r"\CONT.DAT", "r") as file:
+            lines = file.readlines()
+            elements = lines[2].split()
+            mud_switch = elements[3]
+            file.close()
+
+        # Flood simulation
+        if mud_switch == "0":
+            self.dlg.tab1.setEnabled(True)
+            self.dlg.tab2.setEnabled(False)
+            self.dlg.tab3.setEnabled(False)
+            self.dlg.tabs.setCurrentIndex(0)
+
+            flood_maps = FloodMaps()
+            flood_files_dict = flood_maps.check_flood_files(output_directory)
+
+            flood_rbs = {
+                r"TOPO.DAT": self.dlg.ge_cw_cb,
+                r"DEPTH.OUT": self.dlg.md_cw_cb,
+                r"VELFP.OUT": self.dlg.mv_cw_cb,
+                r"MAXWSELEV.OUT": self.dlg.mwse_cw_cb,
+                r"FINALDEP.OUT": self.dlg.fd_cw_cb,
+                r"FINALVEL.OUT": self.dlg.fv_cw_cb,
+                r"VEL_X_DEPTH.OUT": self.dlg.dv_cw_cb,
+                r"TIMEONEFT.OUT": self.dlg.t1ft_cw_cb,
+                r"TIMETWOFT.OUT": self.dlg.t2ft_cw_cb,
+                r"TIMETOPEAK.OUT": self.dlg.tmax_cw_cb,
+                r"DEPCH.OUT": self.dlg.cd_cw_cb,
+                r"VELCHFINAL.OUT": self.dlg.cv_cw_cb,
+                r"VELOC.OUT": self.dlg.fcd_cw_cb,
+                r"DEPCHFINAL.OUT": self.dlg.fcv_cw_cb,
+                r"LEVEEDEFIC.OUT": self.dlg.ld_cw_cb,
+                r"SPECENERGY.OUT": self.dlg.se_cw_cb,
+                r"STATICPRESS.OUT": self.dlg.sp_cw_cb,
+            }
+
+            for key, value in flood_files_dict.items():
+                if value:
+                    flood_rbs[key].setEnabled(True)
                 else:
-                    self.dlg.mud_grp.setEnabled(False)
-                    self.dlg.flood_grp.setEnabled(True)
+                    flood_rbs[key].setEnabled(False)
 
-        all_risk_files_present = all(
-            filename in files_in_directory for filename in r_files
-        )
-        if all_risk_files_present:
-            self.dlg.risk_grp.setEnabled(True)
-        else:
-            self.dlg.risk_grp.setEnabled(False)
+        # Mudflow simulation
+        if mud_switch == "1":
+            self.dlg.tab1.setEnabled(False)
+            self.dlg.tab2.setEnabled(True)
+            self.dlg.tab3.setEnabled(False)
+            self.dlg.tabs.setCurrentIndex(1)
 
-        all_2phase_files_present = all(
-            filename in files_in_directory for filename in c_files
-        )
-        if all_2phase_files_present:
-            self.dlg.twophase_grp.setEnabled(True)
-            self.dlg.flood_grp.setEnabled(False)
-            self.dlg.risk_grp.setEnabled(False)
-        else:
-            self.dlg.twophase_grp.setEnabled(False)
+            mudflow_maps = MudflowMaps()
+
+        # Two-phase simulation
+        if mud_switch == "2":
+            self.dlg.tab1.setEnabled(False)
+            self.dlg.tab2.setEnabled(False)
+            self.dlg.tab3.setEnabled(True)
+            self.dlg.tabs.setCurrentIndex(2)
+
+            twophase_maps = TwophaseMaps()
 
     def run_map_creator(self):
         """Run method that performs all the real work"""
@@ -358,24 +348,59 @@ class FLO2DMapCrafter:
         map_output_dir = self.dlg.mapper_out_folder.filePath()
         self.crs = self.dlg.crsselector.crs()
 
-        if not self.check_input(map_output_dir, "Please, select the output folder."):
-            return
+        # if not self.check_input(map_output_dir, "Please, select the output folder."):
+        #     return
+        #
+        # if not self.check_checkboxes():
+        #     return
 
-        if not self.check_checkboxes():
-            return
+        with open(flo2d_results_dir + r"\CONT.DAT", "r") as file:
+            lines = file.readlines()
+            elements = lines[2].split()
+            mud_switch = elements[3]
+            file.close()
 
         """
         GROUPS CREATION
         """
 
-        self.create_groups()
-
         root = QgsProject.instance().layerTreeRoot()
-        mapping_group = root.findGroup("FLO-2D MapCrafter")
+
+        mapping_group_name = "FLO-2D MapCrafter"
+        if root.findGroup(mapping_group_name):
+            mapping_group = root.findGroup(mapping_group_name)
+        else:
+            mapping_group = root.insertGroup(0, mapping_group_name)
 
         """        
         FLOOD MAPS        
         """
+
+        if mud_switch == "0":
+            flood_rbs = {
+                r"TOPO.DAT": self.dlg.ge_cw_cb.isChecked(),
+                r"DEPTH.OUT": self.dlg.md_cw_cb.isChecked(),
+                r"VELFP.OUT": self.dlg.mv_cw_cb.isChecked(),
+                r"MAXWSELEV.OUT": self.dlg.mwse_cw_cb.isChecked(),
+                r"FINALDEP.OUT": self.dlg.fd_cw_cb.isChecked(),
+                r"FINALVEL.OUT": self.dlg.fv_cw_cb.isChecked(),
+                r"VEL_X_DEPTH.OUT": self.dlg.dv_cw_cb.isChecked(),
+                r"TIMEONEFT.OUT": self.dlg.t1ft_cw_cb.isChecked(),
+                r"TIMETWOFT.OUT": self.dlg.t2ft_cw_cb.isChecked(),
+                r"TIMETOPEAK.OUT": self.dlg.tmax_cw_cb.isChecked(),
+                r"DEPCH.OUT": self.dlg.cd_cw_cb.isChecked(),
+                r"VELCHFINAL.OUT": self.dlg.cv_cw_cb.isChecked(),
+                r"VELOC.OUT": self.dlg.fcd_cw_cb.isChecked(),
+                r"DEPCHFINAL.OUT": self.dlg.fcv_cw_cb.isChecked(),
+                r"LEVEEDEFIC.OUT": self.dlg.ld_cw_cb.isChecked(),
+                r"SPECENERGY.OUT": self.dlg.se_cw_cb.isChecked(),
+                r"STATICPRESS.OUT": self.dlg.sp_cw_cb.isChecked(),
+            }
+
+            flood_maps = FloodMaps()
+            flood_files_dict = flood_maps.create_maps(
+                flood_rbs, flo2d_results_dir, map_output_dir, mapping_group, self.crs
+            )
 
         if self.dlg.fe_cb.isChecked():
             flood_extent_raster = map_output_dir + r"\FLOOD_EXTENT.tif"
@@ -689,88 +714,6 @@ class FLO2DMapCrafter:
 
         self.closeDialog()
 
-    def read_ASCII(self, file_path, output_path, name):
-        """Read ASCII file and extract the required fields"""
-
-        # check if there is already a file on the output
-        layers = QgsProject.instance().mapLayersByName(name)
-        if layers:
-            # Remove the layer if it exists
-            for layer in layers:
-                QgsProject.instance().removeMapLayer(layer)
-        if os.path.isfile(output_path):
-            try:
-                os.remove(output_path)
-            except OSError as e:
-                print(f"Error deleting {output_path}: {str(e)}")
-
-        values = []
-        cellSize_data = []
-        with open(file_path, "r") as file:
-            for line in file:
-                line = line.strip()
-                fields = line.split()
-                if fields[0].isnumeric():
-                    cell, x, y, value = (
-                        float(fields[0]),
-                        float(fields[1]),
-                        float(fields[2]),
-                        float(fields[3]),
-                    )
-                    values.append((x, y, value))
-                    if len(cellSize_data) < 2:
-                        cellSize_data.append((x, y))
-
-        # Calculate the differences in X and Y coordinates
-        dx = cellSize_data[1][0] - cellSize_data[0][0]
-        dy = cellSize_data[1][1] - cellSize_data[0][1]
-
-        if dx != 0:
-            self.cellSize = int(abs(dx))
-        if dy != 0:
-            self.cellSize = int(abs(dy))
-
-        # Get the extent and number of rows and columns
-        min_x = min(point[0] for point in values)
-        max_x = max(point[0] for point in values)
-        min_y = min(point[1] for point in values)
-        max_y = max(point[1] for point in values)
-        num_cols = int((max_x - min_x) / self.cellSize) + 1
-        num_rows = int((max_y - min_y) / self.cellSize) + 1
-
-        # Convert the list of values to an array.
-        raster_data = np.full((num_rows, num_cols), -9999, dtype=np.float32)
-        for point in values:
-            if point[2] != 0:
-                col = int((point[0] - min_x) / self.cellSize)
-                row = int((max_y - point[1]) / self.cellSize)
-                raster_data[row, col] = point[2]
-
-        # Initialize the raster
-        driver = gdal.GetDriverByName("GTiff")
-        raster = driver.Create(output_path, num_cols, num_rows, 1, gdal.GDT_Float32)
-        raster.SetGeoTransform(
-            (
-                min_x - self.cellSize / 2,
-                self.cellSize,
-                0,
-                max_y + self.cellSize / 2,
-                0,
-                -self.cellSize,
-            )
-        )
-        raster.SetProjection(self.crs.toWkt())
-
-        band = raster.GetRasterBand(1)
-        band.SetNoDataValue(-9999)  # Set a no-data value if needed
-        band.WriteArray(raster_data)
-
-        raster.FlushCache()
-
-        layer = QgsRasterLayer(output_path, name)
-
-        return layer
-
     def set_raster_style(self, layer, style):
         """Define the raster styles"""
         colDic = {
@@ -1054,61 +997,61 @@ class FLO2DMapCrafter:
         else:
             return True
 
-    def create_groups(self):
-        """Function to check if groups were already created and, if not, create the groups"""
+    # def create_groups(self):
+    #     """Function to check if groups were already created and, if not, create the groups"""
+    #
+    #     root = QgsProject.instance().layerTreeRoot()
+    #
+    #     mapping_group_name = "FLO-2D MapCrafter"
+    #     if root.findGroup(mapping_group_name):
+    #         mapping_group = root.findGroup(mapping_group_name)
+    #     else:
+    #         mapping_group = root.insertGroup(0, mapping_group_name)
 
-        root = QgsProject.instance().layerTreeRoot()
-
-        mapping_group_name = "FLO-2D MapCrafter"
-        if root.findGroup(mapping_group_name):
-            mapping_group = root.findGroup(mapping_group_name)
-        else:
-            mapping_group = root.insertGroup(0, mapping_group_name)
-
-        flood_cbs = [
-            self.dlg.fs_cb,
-            self.dlg.fd_cb,
-            self.dlg.ft_cb,
-            self.dlg.fe_cb,
-        ]
-
-        flood_checked = any(checkbox.isChecked() for checkbox in flood_cbs)
-
-        mud_cbs = [self.dlg.me_cb, self.dlg.md_cb, self.dlg.ms_cb, self.dlg.mt_cb]
-
-        mud_checked = any(checkbox.isChecked() for checkbox in mud_cbs)
-
-        twophase_cbs = [
-            self.dlg.cfe_cb,
-            self.dlg.cfd_cb,
-            self.dlg.cfs_cb,
-            self.dlg.cfe_cb,
-            self.dlg.cfd_cb,
-            self.dlg.cfs_cb,
-            self.dlg.cme_cb,
-            self.dlg.cmd_cb,
-            self.dlg.cms_cb,
-            self.dlg.ce_cb,
-            self.dlg.ct_cb,
-        ]
-
-        twophase_checked = any(checkbox.isChecked() for checkbox in twophase_cbs)
-
-        risk_cbs = [self.dlg.hr_cb]
-
-        risk_checked = any(checkbox.isChecked() for checkbox in risk_cbs)
-
-        group_names = {
-            "Flood Maps": flood_checked,
-            "Mudflow Maps": mud_checked,
-            "Two-phase Maps": twophase_checked,
-            "Risk Maps": risk_checked,
-        }
-
-        for name, checked in group_names.items():
-            if checked:
-                if not mapping_group.findGroup(name):
-                    mapping_group.addGroup(name)
+        # flood_cbs = [
+        #     self.dlg.fs_cb,
+        #     self.dlg.fd_cb,
+        #     self.dlg.ft_cb,
+        #     self.dlg.fe_cb,
+        # ]
+        #
+        # flood_checked = any(checkbox.isChecked() for checkbox in flood_cbs)
+        #
+        # mud_cbs = [self.dlg.me_cb, self.dlg.md_cb, self.dlg.ms_cb, self.dlg.mt_cb]
+        #
+        # mud_checked = any(checkbox.isChecked() for checkbox in mud_cbs)
+        #
+        # twophase_cbs = [
+        #     self.dlg.cfe_cb,
+        #     self.dlg.cfd_cb,
+        #     self.dlg.cfs_cb,
+        #     self.dlg.cfe_cb,
+        #     self.dlg.cfd_cb,
+        #     self.dlg.cfs_cb,
+        #     self.dlg.cme_cb,
+        #     self.dlg.cmd_cb,
+        #     self.dlg.cms_cb,
+        #     self.dlg.ce_cb,
+        #     self.dlg.ct_cb,
+        # ]
+        #
+        # twophase_checked = any(checkbox.isChecked() for checkbox in twophase_cbs)
+        #
+        # risk_cbs = [self.dlg.hr_cb]
+        #
+        # risk_checked = any(checkbox.isChecked() for checkbox in risk_cbs)
+        #
+        # group_names = {
+        #     "Flood Maps": flood_checked,
+        #     "Mudflow Maps": mud_checked,
+        #     "Two-phase Maps": twophase_checked,
+        #     "Risk Maps": risk_checked,
+        # }
+        #
+        # for name, checked in group_names.items():
+        #     if checked:
+        #         if not mapping_group.findGroup(name):
+        #             mapping_group.addGroup(name)
 
     def check_checkboxes(self):
         """Function to check if at least one map checkbox was checked"""
@@ -1137,15 +1080,15 @@ class FLO2DMapCrafter:
 
         none_checked = not any(checkbox.isChecked() for checkbox in checkboxes)
 
-        if none_checked:
-            msg_box = QMessageBox()
-            msg_box.setIcon(QMessageBox.Warning)
-            msg_box.setWindowTitle("Warning")
-            msg_box.setText("Check at least one map option!")
-            msg_box.exec_()
-            return False
-        else:
-            return True
+        # if none_checked:
+        #     msg_box = QMessageBox()
+        #     msg_box.setIcon(QMessageBox.Warning)
+        #     msg_box.setWindowTitle("Warning")
+        #     msg_box.setText("Check at least one map option!")
+        #     msg_box.exec_()
+        #     return False
+        # else:
+        #     return True
 
     def run_open_layout(self):
         """Function to open the selected layout"""
@@ -1184,9 +1127,9 @@ class FLO2DMapCrafter:
             msg.exec_()
             return
 
-        #template_source = template_directory + r"/FLO-2D A4 Landscape.qpt"
+        # template_source = template_directory + r"/FLO-2D A4 Landscape.qpt"
 
-        template_file = open(template_source, 'r+', encoding='utf-8')
+        template_file = open(template_source, "r+", encoding="utf-8")
         template_content = template_file.read()
         template_file.close()
         document = QDomDocument()
@@ -1198,12 +1141,12 @@ class FLO2DMapCrafter:
 
         # canvas = self.iface.mapCanvas()
         for item in l.items():
-            #QgsMessageLog.logMessage(str(item))
+            # QgsMessageLog.logMessage(str(item))
             if item.type() == 65639:  # Map
                 item.zoomToExtent(layer_extent.extent())
             if item.type() == 65641:  # Label
-                item.setText(item.text().replace('{{title}}', map_title))
-                item.setText(item.text().replace('{{description}}', map_description))
+                item.setText(item.text().replace("{{title}}", map_title))
+                item.setText(item.text().replace("{{description}}", map_description))
 
         # Add layout to layout manager
         l.refresh()
@@ -1234,5 +1177,3 @@ class FLO2DMapCrafter:
             return layout_name
         else:
             return layout_name + f" ({n_layouts})"
-
-
