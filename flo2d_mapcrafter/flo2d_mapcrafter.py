@@ -100,6 +100,10 @@ class FLO2DMapCrafter:
         # Cancel Button
         self.dlg.cancelButton.clicked.connect(self.closeDialog)
 
+        # Check all available maps
+        self.dlg.check_cw_cb.stateChanged.connect(self.check_cw)
+        self.dlg.check_mf_cb.stateChanged.connect(self.check_mf)
+
         # DEBUG Map layouts
         # self.dlg.map_title_le.setText("Mudflow")
         # self.dlg.map_description.setPlainText(
@@ -330,6 +334,35 @@ class FLO2DMapCrafter:
             self.dlg.tabs.setCurrentIndex(1)
 
             mudflow_maps = MudflowMaps()
+            mudflow_files_dict = mudflow_maps.check_mudflow_files(output_directory)
+
+            mudflow_rbs = {
+                r"TOPO.DAT": self.dlg.ge_mf_cb,
+                r"DEPTH.OUT": self.dlg.md_mf_cb,
+                r"VELFP.OUT": self.dlg.mv_mf_cb,
+                r"MAXWSELEV.OUT": self.dlg.mwse_mf_cb,
+                r"FINALDEP.OUT": self.dlg.fd_mf_cb,
+                r"FINALVEL.OUT": self.dlg.fv_mf_cb,
+                r"VEL_X_DEPTH.OUT": self.dlg.dv_mf_cb,
+                r"TIMEONEFT.OUT": self.dlg.t1ft_mf_cb,
+                r"TIMETWOFT.OUT": self.dlg.t2ft_mf_cb,
+                r"TIMETOPEAK.OUT": self.dlg.tmax_mf_cb,
+                r"DEPCH.OUT": self.dlg.cd_mf_cb,
+                r"VELCHFINAL.OUT": self.dlg.cv_mf_cb,
+                r"VELOC.OUT": self.dlg.fcd_mf_cb,
+                r"DEPCHFINAL.OUT": self.dlg.fcv_mf_cb,
+                r"LEVEEDEFIC.OUT": self.dlg.ld_mf_cb,
+                r"SPECENERGY.OUT": self.dlg.se_mf_cb,
+                r"STATICPRESS.OUT": self.dlg.sp_mf_cb,
+                r"CVFPMAX.OUT": self.dlg.ms_mf_cb,
+                r"FINALCVFP.OUT": self.dlg.fs_mf_cb,
+            }
+
+            for key, value in mudflow_files_dict.items():
+                if value:
+                    mudflow_rbs[key].setEnabled(True)
+                else:
+                    mudflow_rbs[key].setEnabled(False)
 
         # Two-phase simulation
         if mud_switch == "2":
@@ -398,9 +431,38 @@ class FLO2DMapCrafter:
             }
 
             flood_maps = FloodMaps()
-            flood_files_dict = flood_maps.create_maps(
+            flood_maps.create_maps(
                 flood_rbs, flo2d_results_dir, map_output_dir, mapping_group, self.crs
             )
+
+        if mud_switch == "1":
+            mudflow_rbs = {
+                r"TOPO.DAT": self.dlg.ge_mf_cb.isChecked(),
+                r"DEPTH.OUT": self.dlg.md_mf_cb.isChecked(),
+                r"VELFP.OUT": self.dlg.mv_mf_cb.isChecked(),
+                r"MAXWSELEV.OUT": self.dlg.mwse_mf_cb.isChecked(),
+                r"FINALDEP.OUT": self.dlg.fd_mf_cb.isChecked(),
+                r"FINALVEL.OUT": self.dlg.fv_mf_cb.isChecked(),
+                r"VEL_X_DEPTH.OUT": self.dlg.dv_mf_cb.isChecked(),
+                r"TIMEONEFT.OUT": self.dlg.t1ft_mf_cb.isChecked(),
+                r"TIMETWOFT.OUT": self.dlg.t2ft_mf_cb.isChecked(),
+                r"TIMETOPEAK.OUT": self.dlg.tmax_mf_cb.isChecked(),
+                r"DEPCH.OUT": self.dlg.cd_mf_cb.isChecked(),
+                r"VELCHFINAL.OUT": self.dlg.cv_mf_cb.isChecked(),
+                r"VELOC.OUT": self.dlg.fcd_mf_cb.isChecked(),
+                r"DEPCHFINAL.OUT": self.dlg.fcv_mf_cb.isChecked(),
+                r"LEVEEDEFIC.OUT": self.dlg.ld_mf_cb.isChecked(),
+                r"SPECENERGY.OUT": self.dlg.se_mf_cb.isChecked(),
+                r"STATICPRESS.OUT": self.dlg.sp_mf_cb.isChecked(),
+                r"CVFPMAX.OUT": self.dlg.ms_mf_cb.isChecked(),
+                r"FINALCVFP.OUT": self.dlg.fs_mf_cb.isChecked(),
+            }
+
+            mudflow_maps = MudflowMaps()
+            mudflow_maps.create_maps(
+                mudflow_rbs, flo2d_results_dir, map_output_dir, mapping_group, self.crs
+            )
+
 
         if self.dlg.fe_cb.isChecked():
             flood_extent_raster = map_output_dir + r"\FLOOD_EXTENT.tif"
@@ -1177,3 +1239,73 @@ class FLO2DMapCrafter:
             return layout_name
         else:
             return layout_name + f" ({n_layouts})"
+
+    def check_cw(self):
+        """
+        Function to check all available flood maps
+        """
+        flood_rbs = [
+            self.dlg.ge_cw_cb,
+            self.dlg.md_cw_cb,
+            self.dlg.mv_cw_cb,
+            self.dlg.mwse_cw_cb,
+            self.dlg.fd_cw_cb,
+            self.dlg.fv_cw_cb,
+            self.dlg.dv_cw_cb,
+            self.dlg.t1ft_cw_cb,
+            self.dlg.t2ft_cw_cb,
+            self.dlg.tmax_cw_cb,
+            self.dlg.cd_cw_cb,
+            self.dlg.cv_cw_cb,
+            self.dlg.fcd_cw_cb,
+            self.dlg.fcv_cw_cb,
+            self.dlg.ld_cw_cb,
+            self.dlg.se_cw_cb,
+            self.dlg.sp_cw_cb,
+        ]
+
+        if self.dlg.check_cw_cb.isChecked():
+            for cb in flood_rbs:
+                if cb.isEnabled():
+                    cb.setChecked(True)
+                else:
+                    cb.setChecked(False)
+        else:
+            for cb in flood_rbs:
+                cb.setChecked(False)
+
+    def check_mf(self):
+        """
+        Function to check all available mudflow maps
+        """
+        mudflow_rbs = [
+            self.dlg.ge_mf_cb,
+            self.dlg.md_mf_cb,
+            self.dlg.mv_mf_cb,
+            self.dlg.mwse_mf_cb,
+            self.dlg.fd_mf_cb,
+            self.dlg.fv_mf_cb,
+            self.dlg.dv_mf_cb,
+            self.dlg.t1ft_mf_cb,
+            self.dlg.t2ft_mf_cb,
+            self.dlg.tmax_mf_cb,
+            self.dlg.cd_mf_cb,
+            self.dlg.cv_mf_cb,
+            self.dlg.fcd_mf_cb,
+            self.dlg.fcv_mf_cb,
+            self.dlg.ld_mf_cb,
+            self.dlg.se_mf_cb,
+            self.dlg.sp_mf_cb,
+            self.dlg.ms_mf_cb,
+            self.dlg.fs_mf_cb,
+        ]
+
+        if self.dlg.check_mf_cb.isChecked():
+            for cb in mudflow_rbs:
+                if cb.isEnabled():
+                    cb.setChecked(True)
+                else:
+                    cb.setChecked(False)
+        else:
+            for cb in mudflow_rbs:
+                cb.setChecked(False)

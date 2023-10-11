@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>575</width>
-    <height>630</height>
+    <height>823</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -16,20 +16,6 @@
   <layout class="QGridLayout" name="gridLayout">
    <item row="0" column="0">
     <layout class="QGridLayout" name="gridLayout_43">
-     <item row="0" column="0">
-      <widget class="QLabel" name="label_12">
-       <property name="text">
-        <string>FLO-2D Export Folder</string>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="1">
-      <widget class="QgsFileWidget" name="flo2d_out_folder">
-       <property name="storageMode">
-        <enum>QgsFileWidget::GetDirectory</enum>
-       </property>
-      </widget>
-     </item>
      <item row="1" column="0">
       <widget class="QLabel" name="label_10">
        <property name="enabled">
@@ -44,6 +30,20 @@
       <widget class="QgsProjectionSelectionWidget" name="crsselector">
        <property name="enabled">
         <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="0">
+      <widget class="QLabel" name="label_12">
+       <property name="text">
+        <string>FLO-2D Export Folder</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QgsFileWidget" name="flo2d_out_folder">
+       <property name="storageMode">
+        <enum>QgsFileWidget::GetDirectory</enum>
        </property>
       </widget>
      </item>
@@ -108,7 +108,7 @@
       <enum>QTabWidget::Triangular</enum>
      </property>
      <property name="currentIndex">
-      <number>0</number>
+      <number>1</number>
      </property>
      <property name="elideMode">
       <enum>Qt::ElideNone</enum>
@@ -132,7 +132,7 @@
       <layout class="QGridLayout" name="gridLayout_32">
        <item row="0" column="1">
         <layout class="QGridLayout" name="gridLayout_27">
-         <item row="1" column="0">
+         <item row="2" column="0">
           <widget class="QgsCollapsibleGroupBox" name="bv_cw_cgo">
            <property name="title">
             <string>Basic</string>
@@ -183,7 +183,7 @@
            </layout>
           </widget>
          </item>
-         <item row="2" column="0">
+         <item row="3" column="0">
           <widget class="QgsCollapsibleGroupBox" name="dv_cw_cgb">
            <property name="title">
             <string>Derived</string>
@@ -220,7 +220,107 @@
            </layout>
           </widget>
          </item>
-         <item row="3" column="0">
+         <item row="6" column="0">
+          <widget class="QgsCollapsibleGroupBox" name="sv_cw_cgb">
+           <property name="title">
+            <string>Structures</string>
+           </property>
+           <property name="collapsed">
+            <bool>false</bool>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_34">
+            <item row="0" column="0">
+             <layout class="QGridLayout" name="gridLayout_40">
+              <item row="0" column="2">
+               <widget class="QLabel" name="label_9">
+                <property name="text">
+                 <string/>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="1">
+               <widget class="QLabel" name="label_8">
+                <property name="text">
+                 <string/>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="0">
+               <widget class="QCheckBox" name="ld_cw_cb">
+                <property name="text">
+                 <string>Levee Deficit</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QgsCollapsibleGroupBox" name="sc_cw_cgb">
+           <property name="title">
+            <string>Site Characteristics</string>
+           </property>
+           <property name="flat">
+            <bool>false</bool>
+           </property>
+           <property name="collapsed">
+            <bool>false</bool>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_28">
+            <item row="0" column="0">
+             <layout class="QGridLayout" name="gridLayout_37">
+              <item row="0" column="0">
+               <widget class="QCheckBox" name="ge_cw_cb">
+                <property name="text">
+                 <string>Ground Elevation</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item row="7" column="0">
+          <widget class="QgsCollapsibleGroupBox" name="hp_cw_cgb">
+           <property name="title">
+            <string>Hydraulics</string>
+           </property>
+           <property name="collapsed">
+            <bool>false</bool>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_35">
+            <item row="0" column="0">
+             <layout class="QGridLayout" name="gridLayout_41">
+              <item row="0" column="0">
+               <widget class="QCheckBox" name="se_cw_cb">
+                <property name="text">
+                 <string>Specific Energy</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="2">
+               <widget class="QLabel" name="label_18">
+                <property name="text">
+                 <string/>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="1">
+               <widget class="QCheckBox" name="sp_cw_cb">
+                <property name="text">
+                 <string>Static Pressure</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item row="4" column="0">
           <widget class="QgsCollapsibleGroupBox" name="tv_cw_cgb">
            <property name="title">
             <string>Time</string>
@@ -258,119 +358,6 @@
           </widget>
          </item>
          <item row="5" column="0">
-          <widget class="QgsCollapsibleGroupBox" name="sv_cw_cgb">
-           <property name="title">
-            <string>Structures</string>
-           </property>
-           <property name="collapsed">
-            <bool>false</bool>
-           </property>
-           <layout class="QGridLayout" name="gridLayout_34">
-            <item row="0" column="0">
-             <layout class="QGridLayout" name="gridLayout_40">
-              <item row="0" column="2">
-               <widget class="QLabel" name="label_9">
-                <property name="text">
-                 <string/>
-                </property>
-               </widget>
-              </item>
-              <item row="0" column="1">
-               <widget class="QLabel" name="label_8">
-                <property name="text">
-                 <string/>
-                </property>
-               </widget>
-              </item>
-              <item row="0" column="0">
-               <widget class="QCheckBox" name="ld_cw_cb">
-                <property name="text">
-                 <string>Levee Deficit</string>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </item>
-           </layout>
-          </widget>
-         </item>
-         <item row="0" column="0">
-          <widget class="QgsCollapsibleGroupBox" name="sc_cw_cgb">
-           <property name="title">
-            <string>Site Characteristics</string>
-           </property>
-           <property name="flat">
-            <bool>false</bool>
-           </property>
-           <property name="collapsed">
-            <bool>false</bool>
-           </property>
-           <layout class="QGridLayout" name="gridLayout_28">
-            <item row="0" column="0">
-             <layout class="QGridLayout" name="gridLayout_37">
-              <item row="0" column="0">
-               <widget class="QCheckBox" name="ge_cw_cb">
-                <property name="text">
-                 <string>Ground Elevation</string>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </item>
-           </layout>
-          </widget>
-         </item>
-         <item row="6" column="0">
-          <widget class="QgsCollapsibleGroupBox" name="hp_cw_cgb">
-           <property name="title">
-            <string>Hydraulics</string>
-           </property>
-           <property name="collapsed">
-            <bool>false</bool>
-           </property>
-           <layout class="QGridLayout" name="gridLayout_35">
-            <item row="0" column="0">
-             <layout class="QGridLayout" name="gridLayout_41">
-              <item row="0" column="0">
-               <widget class="QCheckBox" name="se_cw_cb">
-                <property name="text">
-                 <string>Specific Energy</string>
-                </property>
-               </widget>
-              </item>
-              <item row="0" column="2">
-               <widget class="QLabel" name="label_18">
-                <property name="text">
-                 <string/>
-                </property>
-               </widget>
-              </item>
-              <item row="0" column="1">
-               <widget class="QCheckBox" name="sp_cw_cb">
-                <property name="text">
-                 <string>Static Pressure</string>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </item>
-            <item row="1" column="0">
-             <spacer name="verticalSpacer_2">
-              <property name="orientation">
-               <enum>Qt::Vertical</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>20</width>
-                <height>40</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-           </layout>
-          </widget>
-         </item>
-         <item row="4" column="0">
           <widget class="QgsCollapsibleGroupBox" name="ch_cw_cgb">
            <property name="title">
             <string>Channel</string>
@@ -420,7 +407,7 @@
          </item>
         </layout>
        </item>
-       <item row="1" column="1">
+       <item row="2" column="1">
         <spacer name="verticalSpacer_3">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
@@ -433,6 +420,16 @@
          </property>
         </spacer>
        </item>
+       <item row="3" column="1">
+        <widget class="QCheckBox" name="check_cw_cb">
+         <property name="layoutDirection">
+          <enum>Qt::RightToLeft</enum>
+         </property>
+         <property name="text">
+          <string>Check all available maps</string>
+         </property>
+        </widget>
+       </item>
       </layout>
      </widget>
      <widget class="QWidget" name="tab2">
@@ -443,8 +440,205 @@
        <string>Mudflow Maps</string>
       </attribute>
       <layout class="QGridLayout" name="gridLayout_20">
+       <item row="1" column="0">
+        <spacer name="verticalSpacer">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
        <item row="0" column="0">
         <layout class="QGridLayout" name="gridLayout_14">
+         <item row="3" column="0">
+          <widget class="QgsCollapsibleGroupBox" name="tv_mf_cgb">
+           <property name="title">
+            <string>Time</string>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_48">
+            <item row="0" column="0">
+             <layout class="QGridLayout" name="gridLayout_47">
+              <item row="0" column="1">
+               <widget class="QCheckBox" name="t2ft_mf_cb">
+                <property name="text">
+                 <string>Time to 2 ft</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="0">
+               <widget class="QCheckBox" name="t1ft_mf_cb">
+                <property name="text">
+                 <string>Time to 1 ft</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="2">
+               <widget class="QCheckBox" name="tmax_mf_cb">
+                <property name="text">
+                 <string>Time to Max</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QgsCollapsibleGroupBox" name="bv_mf_cgb">
+           <property name="title">
+            <string>Basic</string>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_23">
+            <item row="0" column="0">
+             <layout class="QGridLayout" name="gridLayout_22">
+              <item row="0" column="1">
+               <widget class="QCheckBox" name="mv_mf_cb">
+                <property name="text">
+                 <string>Maximum Velocity</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="2">
+               <widget class="QCheckBox" name="mwse_mf_cb">
+                <property name="text">
+                 <string>Maximum WSE</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="0">
+               <widget class="QCheckBox" name="md_mf_cb">
+                <property name="text">
+                 <string>Maximum Depth</string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="0">
+               <widget class="QCheckBox" name="fd_mf_cb">
+                <property name="text">
+                 <string>Final Depth</string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="1">
+               <widget class="QCheckBox" name="fv_mf_cb">
+                <property name="text">
+                 <string>Final Velocity</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item row="6" column="0">
+          <widget class="QgsCollapsibleGroupBox" name="sv_mf_cgb">
+           <property name="title">
+            <string>Structures</string>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_52">
+            <item row="0" column="0">
+             <layout class="QGridLayout" name="gridLayout_51">
+              <item row="0" column="0">
+               <widget class="QCheckBox" name="ld_mf_cb">
+                <property name="text">
+                 <string>Levee Deficit</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item row="8" column="0">
+          <widget class="QgsCollapsibleGroupBox" name="hp_mf_cgb">
+           <property name="title">
+            <string>Hydraulics</string>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_54">
+            <item row="0" column="0">
+             <layout class="QGridLayout" name="gridLayout_53">
+              <item row="0" column="0">
+               <widget class="QCheckBox" name="se_mf_cb">
+                <property name="text">
+                 <string>Specific Energy</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="1">
+               <widget class="QCheckBox" name="sp_mf_cb">
+                <property name="text">
+                 <string>Static Pressure</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="2">
+               <widget class="QLabel" name="label_4">
+                <property name="text">
+                 <string/>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item row="4" column="0">
+          <widget class="QgsCollapsibleGroupBox" name="ch_mf_cgb">
+           <property name="title">
+            <string>Channel</string>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_50">
+            <item row="0" column="0">
+             <layout class="QGridLayout" name="gridLayout_49">
+              <item row="0" column="0">
+               <widget class="QCheckBox" name="cd_mf_cb">
+                <property name="text">
+                 <string>Maximum Channel Depth</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="1">
+               <widget class="QCheckBox" name="cv_mf_cb">
+                <property name="text">
+                 <string>Maximum Channel Velocity</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="2">
+               <widget class="QLabel" name="label">
+                <property name="text">
+                 <string/>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="0">
+               <widget class="QCheckBox" name="fcd_mf_cb">
+                <property name="text">
+                 <string>Final Channel Depth</string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="1">
+               <widget class="QCheckBox" name="fcv_mf_cb">
+                <property name="text">
+                 <string>Final Channel Velocity</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+           </layout>
+          </widget>
+         </item>
          <item row="0" column="0">
           <widget class="QgsCollapsibleGroupBox" name="sc_mf_cgb">
            <property name="title">
@@ -465,7 +659,78 @@
            </layout>
           </widget>
          </item>
+         <item row="2" column="0">
+          <widget class="QgsCollapsibleGroupBox" name="dv_mf_cgb">
+           <property name="title">
+            <string>Derived</string>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_25">
+            <item row="0" column="0">
+             <layout class="QGridLayout" name="gridLayout_24">
+              <item row="0" column="0">
+               <widget class="QCheckBox" name="dv_mf_cb">
+                <property name="text">
+                 <string>Depth x Velocity</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item row="5" column="0">
+          <widget class="QgsCollapsibleGroupBox" name="mf_mf_cgb">
+           <property name="title">
+            <string>Mudflow</string>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_56">
+            <item row="0" column="0">
+             <layout class="QGridLayout" name="gridLayout_55">
+              <item row="1" column="0">
+               <widget class="QCheckBox" name="fs_mf_cb">
+                <property name="text">
+                 <string>Final Sediment Con.</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="0">
+               <widget class="QCheckBox" name="ms_mf_cb">
+                <property name="text">
+                 <string>Maximum Sediment Con.</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="2">
+               <widget class="QLabel" name="label_11">
+                <property name="text">
+                 <string/>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="1">
+               <widget class="QLabel" name="label_13">
+                <property name="text">
+                 <string/>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+           </layout>
+          </widget>
+         </item>
         </layout>
+       </item>
+       <item row="2" column="0">
+        <widget class="QCheckBox" name="check_mf_cb">
+         <property name="layoutDirection">
+          <enum>Qt::RightToLeft</enum>
+         </property>
+         <property name="text">
+          <string>Check all available maps</string>
+         </property>
+        </widget>
        </item>
       </layout>
      </widget>

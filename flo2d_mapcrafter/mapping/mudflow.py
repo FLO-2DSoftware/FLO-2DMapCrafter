@@ -23,6 +23,10 @@
 """
 import os
 
+from qgis._core import QgsProject
+
+from flo2d_mapcrafter.mapping.scripts import read_ASCII, set_raster_style
+
 
 class MudflowMaps():
 
@@ -30,4 +34,196 @@ class MudflowMaps():
         """
         Function to check the mudflow files and return a dictionary with the available maps
         """
-        pass
+
+        mudflow_files = {
+            r"TOPO.DAT": False,
+            r"DEPTH.OUT": False,
+            r"VELFP.OUT": False,
+            r"MAXWSELEV.OUT": False,
+            r"FINALDEP.OUT": False,
+            r"FINALVEL.OUT": False,
+            r"VEL_X_DEPTH.OUT": False,
+            r"TIMEONEFT.OUT": False,
+            r"TIMETWOFT.OUT": False,
+            r"TIMETOPEAK.OUT": False,
+            r"DEPCH.OUT": False,
+            r"VELCHFINAL.OUT": False,
+            r"VELOC.OUT": False,
+            r"DEPCHFINAL.OUT": False,
+            r"LEVEEDEFIC.OUT": False,
+            r"SPECENERGY.OUT": False,
+            r"STATICPRESS.OUT": False,
+            r"CVFPMAX.OUT": False,
+            r"FINALCVFP.OUT": False,
+        }
+
+        files = os.listdir(output_dir)
+        for file in files:
+            for key, value in mudflow_files.items():
+                if file.startswith(key):
+                    mudflow_files[key] = True
+
+        return mudflow_files
+
+    def create_maps(self, mudflow_rbs, flo2d_results_dir, map_output_dir, mapping_group, crs):
+        """
+        Function to create the maps
+        """
+
+        mapping_group_name = "Mudflow Maps"
+
+        if mapping_group.findGroup(mapping_group_name):
+            mapping_group = mapping_group.findGroup(mapping_group_name)
+        else:
+            mapping_group = mapping_group.insertGroup(0, mapping_group_name)
+
+        vector_style_directory = os.path.dirname(os.path.realpath(__file__))[:-8] + r"\vector_styles"
+        raster_style_directory = os.path.dirname(os.path.realpath(__file__))[:-8] + r"\raster_styles"
+
+        # Ground elevation
+        if mudflow_rbs.get(r"TOPO.DAT"):
+            name = "GROUND_ELEVATION"
+            raster = map_output_dir + r"\GROUND_ELEVATION.tif"
+            file = flo2d_results_dir + r"\TOPO.DAT"
+            self.process_maps(name, raster, file, crs, mapping_group, 6)
+
+        # Maximum Depth
+        if mudflow_rbs.get(r"DEPTH.OUT"):
+            name = "MAXIMUM_DEPTH"
+            raster = map_output_dir + r"\MAXIMUM_DEPTH.tif"
+            file = flo2d_results_dir + r"\DEPTH.OUT"
+            self.process_maps(name, raster, file, crs, mapping_group, 5)
+
+        # Maximum Velocity
+        if mudflow_rbs.get(r"VELFP.OUT"):
+            name = "MAXIMUM_VELOCITY"
+            raster = map_output_dir + r"\MAXIMUM_VELOCITY.tif"
+            file = flo2d_results_dir + r"\VELFP.OUT"
+            self.process_maps(name, raster, file, crs, mapping_group, 1)
+
+        # Maximum WSE - CHECK
+        if mudflow_rbs.get(r"MAXWSELEV.OUT"):
+            name = "MAXIMUM_WSE"
+            raster = map_output_dir + r"\MAXIMUM_WSE.tif"
+            file = flo2d_results_dir + r"\MAXWSELEV.OUT"
+            self.process_maps(name, raster, file, crs, mapping_group, 6)
+
+        # Final Depth
+        if mudflow_rbs.get(r"FINALDEP.OUT"):
+            name = "FINAL_DEPTH"
+            raster = map_output_dir + r"\FINAL_DEPTH.tif"
+            file = flo2d_results_dir + r"\FINALDEP.OUT"
+            self.process_maps(name, raster, file, crs, mapping_group, 5)
+
+        # Final Velocity
+        if mudflow_rbs.get(r"FINALVEL.OUT"):
+            name = "FINAL_VELOCITY"
+            raster = map_output_dir + r"\FINAL_VELOCITY.tif"
+            file = flo2d_results_dir + r"\FINALVEL.OUT"
+            self.process_maps(name, raster, file, crs, mapping_group, 1)
+
+        # Depth x Velocity
+        if mudflow_rbs.get(r"VEL_X_DEPTH.OUT"):
+            name = "DEPTH_X_VELOCITY"
+            raster = map_output_dir + r"\DEPTH_X_VELOCITY.tif"
+            file = flo2d_results_dir + r"\VEL_X_DEPTH.OUT"
+            self.process_maps(name, raster, file, crs, mapping_group, 7)
+
+        # Time to one ft
+        if mudflow_rbs.get(r"TIMEONEFT.OUT"):
+            name = "TIME_ONE_FT"
+            raster = map_output_dir + r"\TIME_ONE_FT.tif"
+            file = flo2d_results_dir + r"\TIMEONEFT.OUT"
+            self.process_maps(name, raster, file, crs, mapping_group, 3)
+
+        # Time to two ft
+        if mudflow_rbs.get(r"TIMETOPEAK.OUT"):
+            name = "TIME_TWO_FT"
+            raster = map_output_dir + r"\TIME_TWO_FT.tif"
+            file = flo2d_results_dir + r"\TIMETWOFT.OUT"
+            self.process_maps(name, raster, file, crs, mapping_group, 3)
+
+        # Time to peak
+        if mudflow_rbs.get(r"TIMETOPEAK.OUT"):
+            name = "TIME_TO_MAX"
+            raster = map_output_dir + r"\TIME_TO_MAX.tif"
+            file = flo2d_results_dir + r"\TIMETOPEAK.OUT"
+            self.process_maps(name, raster, file, crs, mapping_group, 3)
+
+        # Static pressure
+        if mudflow_rbs.get(r"STATICPRESS.OUT"):
+            name = "STATIC_PRESSURE"
+            raster = map_output_dir + r"\STATIC_PRESSURE.tif"
+            file = flo2d_results_dir + r"\STATICPRESS.OUT"
+            self.process_maps(name, raster, file, crs, mapping_group, 8)
+
+        # Static pressure
+        if mudflow_rbs.get(r"SPECENERGY.OUT"):
+            name = "SPECIFIC_ENERGY"
+            raster = map_output_dir + r"\SPECIFIC_ENERGY.tif"
+            file = flo2d_results_dir + r"\SPECENERGY.OUT"
+            self.process_maps(name, raster, file, crs, mapping_group, 9)
+
+        # Maximum channel depth
+        if mudflow_rbs.get(r"DEPCH.OUT"):
+            name = "MAXIMUM_CHANNEL_DEPTH"
+            raster = map_output_dir + r"\MAXIMUM_CHANNEL_DEPTH.tif"
+            file = flo2d_results_dir + r"\DEPCH.OUT"
+            self.process_maps(name, raster, file, crs, mapping_group, 5)
+
+        # Final channel depth
+        if mudflow_rbs.get(r"DEPCHFINAL.OUT"):
+            name = "FINAL_CHANNEL_DEPTH"
+            raster = map_output_dir + r"\FINAL_CHANNEL_DEPTH.tif"
+            file = flo2d_results_dir + r"\DEPCHFINAL.OUT"
+            self.process_maps(name, raster, file, crs, mapping_group, 5)
+
+        # Maximum channel velocity
+        if mudflow_rbs.get(r"VELOC.OUT"):
+            name = "MAXIMUM_CHANNEL_VELOCITY"
+            raster = map_output_dir + r"\MAXIMUM_CHANNEL_VELOCITY.tif"
+            file = flo2d_results_dir + r"\VELOC.OUT"
+            self.process_maps(name, raster, file, crs, mapping_group, 1)
+
+        # Final channel velocity
+        if mudflow_rbs.get(r"VELCHFINAL.OUT"):
+            name = "FINAL_CHANNEL_VELOCITY"
+            raster = map_output_dir + r"\FINAL_CHANNEL_VELOCITY.tif"
+            file = flo2d_results_dir + r"\VELCHFINAL.OUT"
+            self.process_maps(name, raster, file, crs, mapping_group, 1)
+
+        # Levee Deficit
+        if mudflow_rbs.get(r"LEVEEDEFIC.OUT"):
+            name = "LEVEE_DEFICIT"
+            raster = map_output_dir + r"\LEVEE_DEFICIT.tif"
+            file = flo2d_results_dir + r"\LEVEEDEFIC.OUT"
+            self.process_maps(name, raster, file, crs, mapping_group, 1)
+
+        # Maximum Sediment Concentration
+        if mudflow_rbs.get(r"CVFPMAX.OUT"):
+            name = "MAXIMUM_SEDIMENT_CONCENTRATION"
+            raster = map_output_dir + r"\MAXIMUM_SEDIMENT_CONCENTRATION.tif"
+            file = flo2d_results_dir + r"\CVFPMAX.OUT"
+            self.process_maps(name, raster, file, crs, mapping_group, 10)
+
+        # Final Sediment Concentration
+        if mudflow_rbs.get(r"FINALCVFP.OUT"):
+            name = "FINAL_SEDIMENT_CONCENTRATION"
+            raster = map_output_dir + r"\FINAL_SEDIMENT_CONCENTRATION.tif"
+            file = flo2d_results_dir + r"\FINALCVFP.OUT"
+            self.process_maps(name, raster, file, crs, mapping_group, 10)
+
+
+    def process_maps(self, name, raster, file, crs, mapping_group, style):
+        """
+        Function to process the maps
+        """
+
+        raster_processed = read_ASCII(
+            file, raster, name, crs
+        )
+
+        QgsProject.instance().addMapLayer(raster_processed, False)
+        set_raster_style(raster_processed, style)
+
+        mapping_group.insertLayer(0, raster_processed)

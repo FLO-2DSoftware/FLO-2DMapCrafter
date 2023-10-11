@@ -195,6 +195,9 @@ def set_raster_style(layer, style):
         "dv1": "#fde725",
         "dv2": "#20928c",
         "dv3": "#440154",
+        "sed1": "#440154",
+        "sed2": "#27808e",
+        "sed3": "#fde725"
     }
 
     provider = layer.dataProvider()
@@ -293,6 +296,12 @@ def set_raster_style(layer, style):
             QgsColorRampShader.ColorRampItem(valueList[2], QColor(colDic["red"])),
         ]
 
+        sed_lst =[
+            QgsColorRampShader.ColorRampItem(valueList[0], QColor(colDic["sed1"])),
+            QgsColorRampShader.ColorRampItem(valueList[1], QColor(colDic["sed2"])),
+            QgsColorRampShader.ColorRampItem(valueList[2], QColor(colDic["sed3"])),
+        ]
+
         style_dict = {
             0: dep_lst,
             1: vel_lst,
@@ -302,7 +311,8 @@ def set_raster_style(layer, style):
             6: ge_lst,
             7: dv_lst,
             8: sp_lst,
-            9: se_lst
+            9: se_lst,
+            10: sed_lst
         }
 
         myRasterShader = QgsRasterShader()
