@@ -86,7 +86,7 @@ class FloodMaps():
             self.process_maps(name, raster, file, crs, mapping_group, 6)
 
         # Maximum Depth
-        if flood_rbs.get(r"DEPFP.OUT"):
+        if flood_rbs.get(r"DEPTH.OUT"):
             name = "MAXIMUM_DEPTH"
             raster = map_output_dir + r"\MAXIMUM_DEPTH.tif"
             file = flo2d_results_dir + r"\DEPFP.OUT"

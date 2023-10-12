@@ -23,6 +23,10 @@
 """
 import os
 
+from qgis._core import QgsProject
+
+from flo2d_mapcrafter.mapping.scripts import read_ASCII, set_raster_style
+
 
 class TwophaseMaps():
 
@@ -30,4 +34,246 @@ class TwophaseMaps():
         """
         Function to check the two-phase files and return a dictionary with the available maps
         """
-        pass
+
+        twophase_files = {
+            r"TOPO.DAT": None,
+            r"DEPTH.OUT": None,
+            r"DEPFPMAX_MUD.OUT": None,
+            r"DEPTHMAX_2PHASE_COMBINED.OUT": None,
+            r"VELFP.OUT": None,
+            r"VELFP_MUD.OUT": None,
+            r"CVFPMAX.OUT": None,
+            r"CVFPMAX_MUD.OUT": None,
+            #r"FINALCVFP.OUT": None,
+            r"FINALCVFP_MUD.OUT": None,
+            #r"MAXWSELEV.OUT": None,
+            r"FINALDEP.OUT": None,
+            r"FINALDEP_MUD.OUT": None,
+            r"FINALDEP_COMBO.OUT": None,
+            r"FINALVEL.OUT": None,
+            r"FINALVEL_MUD.OUT": None,
+            r"VEL_X_DEPTH.OUT": None,
+            r"TIMEONEFT.OUT": None,
+            r"TIMETWOFT.OUT": None,
+            r"TIMETOPEAK.OUT": None,
+            r"DEPCH.OUT": None,
+            r"VELCHFINAL.OUT": None,
+            r"VELOC.OUT": None,
+            r"DEPCHFINAL.OUT": None,
+            r"LEVEEDEFIC.OUT": None,
+            r"SPECENERGY.OUT": None,
+            r"STATICPRESS.OUT": None,
+        }
+
+        files = os.listdir(output_dir)
+        for file in files:
+            for key, value in twophase_files.items():
+                if file.startswith(key):
+                    twophase_files[key] = True
+
+        return twophase_files
+
+    def create_maps(self, twophase_rbs, flo2d_results_dir, map_output_dir, mapping_group, crs):
+        """
+        Function to create the maps
+        """
+
+        mapping_group_name = "Two-phase Maps"
+
+        if mapping_group.findGroup(mapping_group_name):
+            mapping_group = mapping_group.findGroup(mapping_group_name)
+        else:
+            mapping_group = mapping_group.insertGroup(0, mapping_group_name)
+
+        vector_style_directory = os.path.dirname(os.path.realpath(__file__))[:-8] + r"\vector_styles"
+        raster_style_directory = os.path.dirname(os.path.realpath(__file__))[:-8] + r"\raster_styles"
+
+        # Ground elevation
+        if twophase_rbs.get(r"TOPO.DAT"):
+            name = "GROUND_ELEVATION"
+            raster = map_output_dir + r"\GROUND_ELEVATION.tif"
+            file = flo2d_results_dir + r"\TOPO.DAT"
+            self.process_maps(name, raster, file, crs, mapping_group, 6)
+
+        # Maximum Flood Depth
+        if twophase_rbs.get(r"DEPTH.OUT"):
+            name = "MAXIMUM_FLOOD_DEPTH"
+            raster = map_output_dir + r"\MAXIMUM_FLOOD_DEPTH.tif"
+            file = flo2d_results_dir + r"\DEPTH.OUT"
+            self.process_maps(name, raster, file, crs, mapping_group, 0)
+
+        # Maximum Mudflow Depth
+        if twophase_rbs.get(r"DEPFPMAX_MUD.OUT"):
+            name = "MAXIMUM_MUDFLOW_DEPTH"
+            raster = map_output_dir + r"\MAXIMUM_MUDFLOW_DEPTH.tif"
+            file = flo2d_results_dir + r"\DEPFPMAX_MUD.OUT"
+            self.process_maps(name, raster, file, crs, mapping_group, 5)
+
+        # Maximum Combined Depth
+        if twophase_rbs.get(r"DEPTHMAX_2PHASE_COMBINED.OUT"):
+            name = "MAXIMUM_COMBINED_DEPTH"
+            raster = map_output_dir + r"\MAXIMUM_COMBINED_DEPTH.tif"
+            file = flo2d_results_dir + r"\DEPTHMAX_2PHASE_COMBINED.OUT"
+            self.process_maps(name, raster, file, crs, mapping_group, 5)
+
+        # Maximum Flood Velocity
+        if twophase_rbs.get(r"VELFP.OUT"):
+            name = "MAXIMUM_FLOOD_VELOCITY"
+            raster = map_output_dir + r"\MAXIMUM_FLOOD_VELOCITY.tif"
+            file = flo2d_results_dir + r"\VELFP.OUT"
+            self.process_maps(name, raster, file, crs, mapping_group, 1)
+
+        # Maximum Mudflow Velocity
+        if twophase_rbs.get(r"VELFP_MUD.OUT"):
+            name = "MAXIMUM_MUDFLOW_VELOCITY"
+            raster = map_output_dir + r"\MAXIMUM_MUDFLOW_VELOCITY.tif"
+            file = flo2d_results_dir + r"\VELFP_MUD.OUT"
+            self.process_maps(name, raster, file, crs, mapping_group, 1)
+
+        # Maximum Flood Sediment Concentration
+        if twophase_rbs.get(r"CVFPMAX.OUT"):
+            name = "MAXIMUM_FLOOD_SEDIMENT_CONCENTRATION"
+            raster = map_output_dir + r"\MAXIMUM_FLOOD_SEDIMENT_CONCENTRATION.tif"
+            file = flo2d_results_dir + r"\CVFPMAX.OUT"
+            self.process_maps(name, raster, file, crs, mapping_group, 10)
+
+        # Maximum Mudflow Sediment Concentration
+        if twophase_rbs.get(r"CVFPMAX_MUD.OUT"):
+            name = "MAXIMUM_MUDFLOW_SEDIMENT_CONCENTRATION"
+            raster = map_output_dir + r"\MAXIMUM_MUDFLOW_SEDIMENT_CONCENTRATION.tif"
+            file = flo2d_results_dir + r"\CVFPMAX_MUD.OUT"
+            self.process_maps(name, raster, file, crs, mapping_group, 10)
+
+        # Final Flood Depth
+        if twophase_rbs.get(r"FINALDEP.OUT"):
+            name = "FINAL_FLOOD_DEPTH"
+            raster = map_output_dir + r"\FINAL_FLOOD_DEPTH.tif"
+            file = flo2d_results_dir + r"\FINALDEP.OUT"
+            self.process_maps(name, raster, file, crs, mapping_group, 0)
+
+        # Final Mudflow Depth
+        if twophase_rbs.get(r"FINALDEP_MUD.OUT"):
+            name = "FINAL_MUDFLOW_DEPTH"
+            raster = map_output_dir + r"\FINAL_MUDFLOW_DEPTH.tif"
+            file = flo2d_results_dir + r"\FINALDEP_MUD.OUT"
+            self.process_maps(name, raster, file, crs, mapping_group, 5)
+
+        # Final Combined Depth
+        if twophase_rbs.get(r"FINALDEP_COMBO.OUT"):
+            name = "FINAL_COMBINED_DEPTH"
+            raster = map_output_dir + r"\FINAL_COMBINED_DEPTH.tif"
+            file = flo2d_results_dir + r"\FINALDEP_COMBO.OUT"
+            self.process_maps(name, raster, file, crs, mapping_group, 5)
+
+        # Final Flood Velocity
+        if twophase_rbs.get(r"FINALVEL.OUT"):
+            name = "FINAL_FLOOD_VELOCITY"
+            raster = map_output_dir + r"\FINAL_FLOOD_VELOCITY.tif"
+            file = flo2d_results_dir + r"\FINALVEL.OUT"
+            self.process_maps(name, raster, file, crs, mapping_group, 1)
+
+        # Final Mudflow Velocity
+        if twophase_rbs.get(r"FINALVEL_MUD.OUT"):
+            name = "FINAL_MUDFLOW_VELOCITY"
+            raster = map_output_dir + r"\FINAL_MUDFLOW_VELOCITY.tif"
+            file = flo2d_results_dir + r"\FINALVEL_MUD.OUT"
+            self.process_maps(name, raster, file, crs, mapping_group, 1)
+
+        # Final Mudflow Sediment Concentration
+        if twophase_rbs.get(r"FINALCVFP_MUD.OUT"):
+            name = "FINAL_MUDFLOW_SEDIMENT_CONCENTRATION"
+            raster = map_output_dir + r"\FINAL_MUDFLOW_SEDIMENT_CONCENTRATION.tif"
+            file = flo2d_results_dir + r"\FINALCVFP_MUD.OUT"
+            self.process_maps(name, raster, file, crs, mapping_group, 10)
+
+        # Depth x Velocity
+        if twophase_rbs.get(r"VEL_X_DEPTH.OUT"):
+            name = "DEPTH_X_VELOCITY"
+            raster = map_output_dir + r"\DEPTH_X_VELOCITY.tif"
+            file = flo2d_results_dir + r"\VEL_X_DEPTH.OUT"
+            self.process_maps(name, raster, file, crs, mapping_group, 7)
+
+        # Time to one ft
+        if twophase_rbs.get(r"TIMEONEFT.OUT"):
+            name = "TIME_ONE_FT"
+            raster = map_output_dir + r"\TIME_ONE_FT.tif"
+            file = flo2d_results_dir + r"\TIMEONEFT.OUT"
+            self.process_maps(name, raster, file, crs, mapping_group, 3)
+
+        # Time to two ft
+        if twophase_rbs.get(r"TIMETOPEAK.OUT"):
+            name = "TIME_TWO_FT"
+            raster = map_output_dir + r"\TIME_TWO_FT.tif"
+            file = flo2d_results_dir + r"\TIMETWOFT.OUT"
+            self.process_maps(name, raster, file, crs, mapping_group, 3)
+
+        # Time to peak
+        if twophase_rbs.get(r"TIMETOPEAK.OUT"):
+            name = "TIME_TO_MAX"
+            raster = map_output_dir + r"\TIME_TO_MAX.tif"
+            file = flo2d_results_dir + r"\TIMETOPEAK.OUT"
+            self.process_maps(name, raster, file, crs, mapping_group, 3)
+
+        # Static pressure
+        if twophase_rbs.get(r"STATICPRESS.OUT"):
+            name = "STATIC_PRESSURE"
+            raster = map_output_dir + r"\STATIC_PRESSURE.tif"
+            file = flo2d_results_dir + r"\STATICPRESS.OUT"
+            self.process_maps(name, raster, file, crs, mapping_group, 8)
+
+        # Static pressure
+        if twophase_rbs.get(r"SPECENERGY.OUT"):
+            name = "SPECIFIC_ENERGY"
+            raster = map_output_dir + r"\SPECIFIC_ENERGY.tif"
+            file = flo2d_results_dir + r"\SPECENERGY.OUT"
+            self.process_maps(name, raster, file, crs, mapping_group, 9)
+
+        # Maximum channel depth
+        if twophase_rbs.get(r"DEPCH.OUT"):
+            name = "MAXIMUM_CHANNEL_DEPTH"
+            raster = map_output_dir + r"\MAXIMUM_CHANNEL_DEPTH.tif"
+            file = flo2d_results_dir + r"\DEPCH.OUT"
+            self.process_maps(name, raster, file, crs, mapping_group, 5)
+
+        # Final channel depth
+        if twophase_rbs.get(r"DEPCHFINAL.OUT"):
+            name = "FINAL_CHANNEL_DEPTH"
+            raster = map_output_dir + r"\FINAL_CHANNEL_DEPTH.tif"
+            file = flo2d_results_dir + r"\DEPCHFINAL.OUT"
+            self.process_maps(name, raster, file, crs, mapping_group, 5)
+
+        # Maximum channel velocity
+        if twophase_rbs.get(r"VELOC.OUT"):
+            name = "MAXIMUM_CHANNEL_VELOCITY"
+            raster = map_output_dir + r"\MAXIMUM_CHANNEL_VELOCITY.tif"
+            file = flo2d_results_dir + r"\VELOC.OUT"
+            self.process_maps(name, raster, file, crs, mapping_group, 1)
+
+        # Final channel velocity
+        if twophase_rbs.get(r"VELCHFINAL.OUT"):
+            name = "FINAL_CHANNEL_VELOCITY"
+            raster = map_output_dir + r"\FINAL_CHANNEL_VELOCITY.tif"
+            file = flo2d_results_dir + r"\VELCHFINAL.OUT"
+            self.process_maps(name, raster, file, crs, mapping_group, 1)
+
+        # Levee Deficit
+        if twophase_rbs.get(r"LEVEEDEFIC.OUT"):
+            name = "LEVEE_DEFICIT"
+            raster = map_output_dir + r"\LEVEE_DEFICIT.tif"
+            file = flo2d_results_dir + r"\LEVEEDEFIC.OUT"
+            self.process_maps(name, raster, file, crs, mapping_group, 1)
+
+    def process_maps(self, name, raster, file, crs, mapping_group, style):
+        """
+        Function to process the maps
+        """
+
+        raster_processed = read_ASCII(
+            file, raster, name, crs
+        )
+
+        QgsProject.instance().addMapLayer(raster_processed, False)
+        set_raster_style(raster_processed, style)
+
+        mapping_group.insertLayer(0, raster_processed)
+

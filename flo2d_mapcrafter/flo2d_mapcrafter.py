@@ -103,6 +103,7 @@ class FLO2DMapCrafter:
         # Check all available maps
         self.dlg.check_cw_cb.stateChanged.connect(self.check_cw)
         self.dlg.check_mf_cb.stateChanged.connect(self.check_mf)
+        self.dlg.check_tp_cb.stateChanged.connect(self.check_tp)
 
         # DEBUG Map layouts
         # self.dlg.map_title_le.setText("Mudflow")
@@ -312,9 +313,9 @@ class FLO2DMapCrafter:
                 r"TIMETWOFT.OUT": self.dlg.t2ft_cw_cb,
                 r"TIMETOPEAK.OUT": self.dlg.tmax_cw_cb,
                 r"DEPCH.OUT": self.dlg.cd_cw_cb,
-                r"VELCHFINAL.OUT": self.dlg.cv_cw_cb,
-                r"VELOC.OUT": self.dlg.fcd_cw_cb,
-                r"DEPCHFINAL.OUT": self.dlg.fcv_cw_cb,
+                r"VELOC.OUT": self.dlg.cv_cw_cb,
+                r"VELCHFINAL.OUT": self.dlg.fcv_cw_cb,
+                r"DEPCHFINAL.OUT": self.dlg.fcd_cw_cb,
                 r"LEVEEDEFIC.OUT": self.dlg.ld_cw_cb,
                 r"SPECENERGY.OUT": self.dlg.se_cw_cb,
                 r"STATICPRESS.OUT": self.dlg.sp_cw_cb,
@@ -348,9 +349,9 @@ class FLO2DMapCrafter:
                 r"TIMETWOFT.OUT": self.dlg.t2ft_mf_cb,
                 r"TIMETOPEAK.OUT": self.dlg.tmax_mf_cb,
                 r"DEPCH.OUT": self.dlg.cd_mf_cb,
-                r"VELCHFINAL.OUT": self.dlg.cv_mf_cb,
-                r"VELOC.OUT": self.dlg.fcd_mf_cb,
-                r"DEPCHFINAL.OUT": self.dlg.fcv_mf_cb,
+                r"VELOC.OUT": self.dlg.cv_mf_cb,
+                r"VELCHFINAL.OUT": self.dlg.fcv_mf_cb,
+                r"DEPCHFINAL.OUT": self.dlg.fcd_mf_cb,
                 r"LEVEEDEFIC.OUT": self.dlg.ld_mf_cb,
                 r"SPECENERGY.OUT": self.dlg.se_mf_cb,
                 r"STATICPRESS.OUT": self.dlg.sp_mf_cb,
@@ -372,7 +373,43 @@ class FLO2DMapCrafter:
             self.dlg.tabs.setCurrentIndex(2)
 
             twophase_maps = TwophaseMaps()
+            twophase_files_dict = twophase_maps.check_twophase_files(output_directory)
 
+            twophase_rbs = {
+                r"TOPO.DAT": self.dlg.ge_tp_cb,
+                r"DEPTH.OUT": self.dlg.mfd_tp_cb,
+                r"DEPFPMAX_MUD.OUT": self.dlg.mmd_tp_cb,
+                r"DEPTHMAX_2PHASE_COMBINED.OUT": self.dlg.cmd_tp_cb,
+                r"VELFP.OUT": self.dlg.mfv_tp_cb,
+                r"VELFP_MUD.OUT": self.dlg.mmv_tp_cb,
+                r"CVFPMAX.OUT": self.dlg.mfsc_tp_cb,
+                r"CVFPMAX_MUD.OUT": self.dlg.mmsc_tp_cb,
+                #r"FINALCVFP.OUT": self.dlg.ffsc_tp_cb,
+                r"FINALCVFP_MUD.OUT": self.dlg.fmsc_tp_cb,
+                #r"MAXWSELEV.OUT": self.dlg.mwse_mf_cb,
+                r"FINALDEP.OUT": self.dlg.ffd_tp_cb,
+                r"FINALDEP_MUD.OUT": self.dlg.fmd_tp_cb,
+                r"FINALDEP_COMBO.OUT": self.dlg.fcd_tp_cb,
+                r"FINALVEL.OUT": self.dlg.ffv_tp_cb,
+                r"FINALVEL_MUD.OUT": self.dlg.fmv_tp_cb,
+                r"VEL_X_DEPTH.OUT": self.dlg.dv_tp_cb,
+                r"TIMEONEFT.OUT": self.dlg.t1ft_tp_cb,
+                r"TIMETWOFT.OUT": self.dlg.t2ft_tp_cb,
+                r"TIMETOPEAK.OUT": self.dlg.tmax_tp_cb,
+                r"DEPCH.OUT": self.dlg.mchd_tp_cb,
+                r"VELOC.OUT": self.dlg.mchv_tp_cb,
+                r"VELCHFINAL.OUT": self.dlg.fchv_tp_cb,
+                r"DEPCHFINAL.OUT": self.dlg.fchd_tp_cb,
+                r"LEVEEDEFIC.OUT": self.dlg.ld_tp_cb,
+                r"SPECENERGY.OUT": self.dlg.se_tp_cb,
+                r"STATICPRESS.OUT": self.dlg.sp_tp_cb,
+            }
+
+            for key, value in twophase_files_dict.items():
+                if value:
+                    twophase_rbs[key].setEnabled(True)
+                else:
+                    twophase_rbs[key].setEnabled(False)
     def run_map_creator(self):
         """Run method that performs all the real work"""
 
@@ -381,8 +418,8 @@ class FLO2DMapCrafter:
         map_output_dir = self.dlg.mapper_out_folder.filePath()
         self.crs = self.dlg.crsselector.crs()
 
-        # if not self.check_input(map_output_dir, "Please, select the output folder."):
-        #     return
+        if not self.check_input(map_output_dir, "Please, select the output folder."):
+            return
         #
         # if not self.check_checkboxes():
         #     return
@@ -422,9 +459,9 @@ class FLO2DMapCrafter:
                 r"TIMETWOFT.OUT": self.dlg.t2ft_cw_cb.isChecked(),
                 r"TIMETOPEAK.OUT": self.dlg.tmax_cw_cb.isChecked(),
                 r"DEPCH.OUT": self.dlg.cd_cw_cb.isChecked(),
-                r"VELCHFINAL.OUT": self.dlg.cv_cw_cb.isChecked(),
-                r"VELOC.OUT": self.dlg.fcd_cw_cb.isChecked(),
-                r"DEPCHFINAL.OUT": self.dlg.fcv_cw_cb.isChecked(),
+                r"VELOC.OUT": self.dlg.cv_cw_cb.isChecked(),
+                r"VELCHFINAL.OUT": self.dlg.fcv_cw_cb.isChecked(),
+                r"DEPCHFINAL.OUT": self.dlg.fcd_cw_cb.isChecked(),
                 r"LEVEEDEFIC.OUT": self.dlg.ld_cw_cb.isChecked(),
                 r"SPECENERGY.OUT": self.dlg.se_cw_cb.isChecked(),
                 r"STATICPRESS.OUT": self.dlg.sp_cw_cb.isChecked(),
@@ -448,9 +485,9 @@ class FLO2DMapCrafter:
                 r"TIMETWOFT.OUT": self.dlg.t2ft_mf_cb.isChecked(),
                 r"TIMETOPEAK.OUT": self.dlg.tmax_mf_cb.isChecked(),
                 r"DEPCH.OUT": self.dlg.cd_mf_cb.isChecked(),
-                r"VELCHFINAL.OUT": self.dlg.cv_mf_cb.isChecked(),
-                r"VELOC.OUT": self.dlg.fcd_mf_cb.isChecked(),
-                r"DEPCHFINAL.OUT": self.dlg.fcv_mf_cb.isChecked(),
+                r"VELOC.OUT": self.dlg.cv_mf_cb.isChecked(),
+                r"VELCHFINAL.OUT": self.dlg.fcv_mf_cb.isChecked(),
+                r"DEPCHFINAL.OUT": self.dlg.fcd_mf_cb.isChecked(),
                 r"LEVEEDEFIC.OUT": self.dlg.ld_mf_cb.isChecked(),
                 r"SPECENERGY.OUT": self.dlg.se_mf_cb.isChecked(),
                 r"STATICPRESS.OUT": self.dlg.sp_mf_cb.isChecked(),
@@ -463,6 +500,41 @@ class FLO2DMapCrafter:
                 mudflow_rbs, flo2d_results_dir, map_output_dir, mapping_group, self.crs
             )
 
+        if mud_switch == "2":
+            twophase_rbs = {
+                r"TOPO.DAT": self.dlg.ge_tp_cb.isChecked(),
+                r"DEPTH.OUT": self.dlg.mfd_tp_cb.isChecked(),
+                r"DEPFPMAX_MUD.OUT": self.dlg.mmd_tp_cb.isChecked(),
+                r"DEPTHMAX_2PHASE_COMBINED.OUT": self.dlg.cmd_tp_cb.isChecked(),
+                r"VELFP.OUT": self.dlg.mfv_tp_cb.isChecked(),
+                r"VELFP_MUD.OUT": self.dlg.mmv_tp_cb.isChecked(),
+                r"CVFPMAX.OUT": self.dlg.mfsc_tp_cb.isChecked(),
+                r"CVFPMAX_MUD.OUT": self.dlg.mmsc_tp_cb.isChecked(),
+                # r"FINALCVFP.OUT": self.dlg.ffsc_tp_cb,
+                r"FINALCVFP_MUD.OUT": self.dlg.fmsc_tp_cb.isChecked(),
+                # r"MAXWSELEV.OUT": self.dlg.mwse_mf_cb,
+                r"FINALDEP.OUT": self.dlg.ffd_tp_cb.isChecked(),
+                r"FINALDEP_MUD.OUT": self.dlg.fmd_tp_cb.isChecked(),
+                r"FINALDEP_COMBO.OUT": self.dlg.fcd_tp_cb.isChecked(),
+                r"FINALVEL.OUT": self.dlg.ffv_tp_cb.isChecked(),
+                r"FINALVEL_MUD.OUT": self.dlg.fmv_tp_cb.isChecked(),
+                r"VEL_X_DEPTH.OUT": self.dlg.dv_tp_cb.isChecked(),
+                r"TIMEONEFT.OUT": self.dlg.t1ft_tp_cb.isChecked(),
+                r"TIMETWOFT.OUT": self.dlg.t2ft_tp_cb.isChecked(),
+                r"TIMETOPEAK.OUT": self.dlg.tmax_tp_cb.isChecked(),
+                r"DEPCH.OUT": self.dlg.mchd_tp_cb.isChecked(),
+                r"VELOC.OUT": self.dlg.mchv_tp_cb.isChecked(),
+                r"VELCHFINAL.OUT": self.dlg.fchv_tp_cb.isChecked(),
+                r"DEPCHFINAL.OUT": self.dlg.fchd_tp_cb.isChecked(),
+                r"LEVEEDEFIC.OUT": self.dlg.ld_tp_cb.isChecked(),
+                r"SPECENERGY.OUT": self.dlg.se_tp_cb.isChecked(),
+                r"STATICPRESS.OUT": self.dlg.sp_tp_cb.isChecked(),
+            }
+
+            twophase_maps = TwophaseMaps()
+            twophase_maps.create_maps(
+                twophase_rbs, flo2d_results_dir, map_output_dir, mapping_group, self.crs
+            )
 
         if self.dlg.fe_cb.isChecked():
             flood_extent_raster = map_output_dir + r"\FLOOD_EXTENT.tif"
@@ -1308,4 +1380,48 @@ class FLO2DMapCrafter:
                     cb.setChecked(False)
         else:
             for cb in mudflow_rbs:
+                cb.setChecked(False)
+
+    def check_tp(self):
+        """
+        Function to check all available twophase maps
+        """
+        twophase_rbs = [
+            self.dlg.ge_tp_cb,
+            self.dlg.mfd_tp_cb,
+            self.dlg.mmd_tp_cb,
+            self.dlg.cmd_tp_cb,
+            self.dlg.mfv_tp_cb,
+            self.dlg.mmv_tp_cb,
+            self.dlg.mfsc_tp_cb,
+            self.dlg.mmsc_tp_cb,
+            # self.dlg.ffsc_tp_cb,
+            self.dlg.fmsc_tp_cb,
+            self.dlg.mwse_mf_cb,
+            self.dlg.ffd_tp_cb,
+            self.dlg.fmd_tp_cb,
+            self.dlg.fcd_tp_cb,
+            self.dlg.ffv_tp_cb,
+            self.dlg.fmv_tp_cb,
+            self.dlg.dv_tp_cb,
+            self.dlg.t1ft_tp_cb,
+            self.dlg.t2ft_tp_cb,
+            self.dlg.tmax_tp_cb,
+            self.dlg.mchd_tp_cb,
+            self.dlg.mchv_tp_cb,
+            self.dlg.fchd_tp_cb,
+            self.dlg.fchv_tp_cb,
+            self.dlg.ld_tp_cb,
+            self.dlg.se_tp_cb,
+            self.dlg.sp_tp_cb,
+        ]
+
+        if self.dlg.check_tp_cb.isChecked():
+            for cb in twophase_rbs:
+                if cb.isEnabled():
+                    cb.setChecked(True)
+                else:
+                    cb.setChecked(False)
+        else:
+            for cb in twophase_rbs:
                 cb.setChecked(False)
