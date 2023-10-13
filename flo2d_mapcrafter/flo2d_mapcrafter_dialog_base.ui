@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>663</width>
+    <width>629</width>
     <height>838</height>
    </rect>
   </property>
@@ -14,41 +14,6 @@
    <string>FLO-2D MapCrafter </string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
-   <item row="0" column="0">
-    <layout class="QGridLayout" name="gridLayout_43">
-     <item row="1" column="0">
-      <widget class="QLabel" name="label_10">
-       <property name="enabled">
-        <bool>true</bool>
-       </property>
-       <property name="text">
-        <string>CRS</string>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="1">
-      <widget class="QgsProjectionSelectionWidget" name="crsselector">
-       <property name="enabled">
-        <bool>true</bool>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="0">
-      <widget class="QLabel" name="label_12">
-       <property name="text">
-        <string>FLO-2D Export Folder</string>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="1">
-      <widget class="QgsFileWidget" name="flo2d_out_folder">
-       <property name="storageMode">
-        <enum>QgsFileWidget::GetDirectory</enum>
-       </property>
-      </widget>
-     </item>
-    </layout>
-   </item>
    <item row="6" column="0">
     <layout class="QGridLayout" name="gridLayout_44">
      <item row="0" column="0">
@@ -96,6 +61,41 @@
      </item>
     </layout>
    </item>
+   <item row="0" column="0">
+    <layout class="QGridLayout" name="gridLayout_43">
+     <item row="1" column="0">
+      <widget class="QLabel" name="label_10">
+       <property name="enabled">
+        <bool>true</bool>
+       </property>
+       <property name="text">
+        <string>CRS</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1">
+      <widget class="QgsProjectionSelectionWidget" name="crsselector">
+       <property name="enabled">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="0">
+      <widget class="QLabel" name="label_12">
+       <property name="text">
+        <string>FLO-2D Export Folder</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QgsFileWidget" name="flo2d_out_folder">
+       <property name="storageMode">
+        <enum>QgsFileWidget::GetDirectory</enum>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
    <item row="4" column="0">
     <widget class="QTabWidget" name="tabs">
      <property name="enabled">
@@ -108,7 +108,7 @@
       <enum>QTabWidget::Triangular</enum>
      </property>
      <property name="currentIndex">
-      <number>0</number>
+      <number>3</number>
      </property>
      <property name="elideMode">
       <enum>Qt::ElideNone</enum>
@@ -259,6 +259,9 @@
          </item>
          <item row="1" column="0">
           <widget class="QgsCollapsibleGroupBox" name="sc_cw_cgb">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
            <property name="title">
             <string>Site Characteristics</string>
            </property>
@@ -273,6 +276,9 @@
              <layout class="QGridLayout" name="gridLayout_37">
               <item row="0" column="0">
                <widget class="QCheckBox" name="ge_cw_cb">
+                <property name="enabled">
+                 <bool>false</bool>
+                </property>
                 <property name="text">
                  <string>Ground Elevation</string>
                 </property>
@@ -1061,14 +1067,202 @@
       <layout class="QGridLayout" name="gridLayout_46">
        <item row="0" column="0">
         <layout class="QGridLayout" name="gridLayout_45">
-         <item row="0" column="0">
-          <widget class="QgsCollapsibleGroupBox" name="hm_cgb">
+         <item row="1" column="0">
+          <widget class="QgsCollapsibleGroupBox" name="austrian_hm_cgb">
            <property name="title">
-            <string>Hazard maps</string>
+            <string>Austrian</string>
            </property>
+           <layout class="QGridLayout" name="gridLayout_64">
+            <item row="0" column="0">
+             <layout class="QGridLayout" name="gridLayout_61">
+              <item row="0" column="0">
+               <widget class="QCheckBox" name="fh_austrian_cb">
+                <property name="text">
+                 <string>Flood Hazard Map</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item row="3" column="0">
+          <widget class="QgsCollapsibleGroupBox" name="swiss_hm_cgb">
+           <property name="title">
+            <string>Swiss</string>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_78">
+            <item row="0" column="0">
+             <layout class="QGridLayout" name="gridLayout_77">
+              <item row="0" column="0">
+               <widget class="QCheckBox" name="fi_swiss_cb">
+                <property name="text">
+                 <string>Flood Intensity Map</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="1">
+               <widget class="QCheckBox" name="di_swiss_cb">
+                <property name="text">
+                 <string>Debris Intensity Map</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="2">
+               <widget class="QLabel" name="label_19">
+                <property name="text">
+                 <string/>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item row="4" column="0">
+          <widget class="QgsCollapsibleGroupBox" name="uk_hm_cgb">
+           <property name="title">
+            <string>UK Hazard Mapping</string>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_76">
+            <item row="0" column="0">
+             <layout class="QGridLayout" name="gridLayout_75">
+              <item row="0" column="0">
+               <widget class="QCheckBox" name="fh_uk_cb">
+                <property name="text">
+                 <string>Flood Hazard Map</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item row="0" column="0">
+          <widget class="QgsCollapsibleGroupBox" name="australian_hm_cgb">
+           <property name="title">
+            <string>Australian Rainfall and Runoff (ARR)</string>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_3">
+            <item row="0" column="0">
+             <layout class="QGridLayout" name="gridLayout_2">
+              <item row="0" column="0">
+               <widget class="QCheckBox" name="fh_australian_cb">
+                <property name="text">
+                 <string>Flood Hazard Map</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item row="5" column="0">
+          <widget class="QgsCollapsibleGroupBox" name="usbr_hm_cgb">
+           <property name="title">
+            <string>US Bureau of Reclamation</string>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_80">
+            <item row="0" column="0">
+             <layout class="QGridLayout" name="gridLayout_79">
+              <item row="0" column="1">
+               <widget class="QCheckBox" name="usbrm_hm_cb">
+                <property name="text">
+                 <string>Mobile H. Hazard Map</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="2">
+               <widget class="QCheckBox" name="usbrv_hm_cb">
+                <property name="text">
+                 <string>Vehicles Hazard Map</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="0">
+               <widget class="QCheckBox" name="usbrh_hm_cb">
+                <property name="text">
+                 <string>Houses Hazard Map</string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="0">
+               <widget class="QCheckBox" name="usbra_hm_cb">
+                <property name="text">
+                 <string>Adults Hazard Map</string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="1">
+               <widget class="QCheckBox" name="usbrc_hm_cb">
+                <property name="text">
+                 <string>Children Hazard Map</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item row="6" column="0">
+          <widget class="QgsCollapsibleGroupBox" name="fema_hz_cgb">
+           <property name="title">
+            <string>US Federal Emergency Management Agency</string>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_74">
+            <item row="0" column="0">
+             <layout class="QGridLayout" name="gridLayout_65">
+              <item row="0" column="0">
+               <widget class="QCheckBox" name="fema_hm_cb">
+                <property name="text">
+                 <string>Flood Hazard</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item row="2" column="0">
+          <widget class="QgsCollapsibleGroupBox" name="flo_hm_cgb">
+           <property name="title">
+            <string>FLO-2D </string>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_5">
+            <item row="0" column="0">
+             <layout class="QGridLayout" name="gridLayout_4">
+              <item row="0" column="0">
+               <widget class="QCheckBox" name="flo_hm_cb">
+                <property name="text">
+                 <string>Flood Hazard Map</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+           </layout>
           </widget>
          </item>
         </layout>
+       </item>
+       <item row="2" column="0">
+        <spacer name="verticalSpacer_4">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
        </item>
       </layout>
      </widget>
@@ -1187,207 +1381,6 @@
        </item>
       </layout>
      </widget>
-     <widget class="QWidget" name="tab0">
-      <property name="enabled">
-       <bool>false</bool>
-      </property>
-      <attribute name="title">
-       <string>Old</string>
-      </attribute>
-      <layout class="QGridLayout" name="gridLayout_7">
-       <item row="0" column="0">
-        <layout class="QGridLayout" name="gridLayout_2">
-         <item row="1" column="0" colspan="2">
-          <widget class="Line" name="line_2">
-           <property name="orientation">
-            <enum>Qt::Horizontal</enum>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="0" colspan="2">
-          <widget class="QGroupBox" name="mud_grp">
-           <property name="enabled">
-            <bool>false</bool>
-           </property>
-           <property name="title">
-            <string>Mudflow Maps</string>
-           </property>
-           <layout class="QGridLayout" name="gridLayout_6">
-            <item row="0" column="0">
-             <widget class="QCheckBox" name="me_cb">
-              <property name="text">
-               <string>Mudflow Extent</string>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="1">
-             <widget class="QCheckBox" name="md_cb">
-              <property name="text">
-               <string>Mudflow Depth</string>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="0">
-             <widget class="QCheckBox" name="ms_cb">
-              <property name="text">
-               <string>Mudflow Speed</string>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="2">
-             <widget class="QCheckBox" name="mt_cb">
-              <property name="text">
-               <string>Mudflow Arrival Time</string>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </widget>
-         </item>
-         <item row="2" column="0" colspan="2">
-          <widget class="QGroupBox" name="flood_grp">
-           <property name="enabled">
-            <bool>false</bool>
-           </property>
-           <property name="title">
-            <string>Flood Maps</string>
-           </property>
-           <property name="checkable">
-            <bool>false</bool>
-           </property>
-           <property name="checked">
-            <bool>false</bool>
-           </property>
-           <layout class="QGridLayout" name="gridLayout_3">
-            <item row="0" column="3">
-             <widget class="QCheckBox" name="ft_cb">
-              <property name="text">
-               <string>Flood Arrival Time</string>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="1">
-             <widget class="QCheckBox" name="fe_cb">
-              <property name="text">
-               <string>Flood Extent</string>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="2">
-             <widget class="QCheckBox" name="fd_cb">
-              <property name="text">
-               <string>Flood Depth</string>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="1">
-             <widget class="QCheckBox" name="fs_cb">
-              <property name="text">
-               <string>Flow Speed</string>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </widget>
-         </item>
-         <item row="5" column="0" colspan="2">
-          <widget class="QGroupBox" name="risk_grp">
-           <property name="enabled">
-            <bool>false</bool>
-           </property>
-           <property name="title">
-            <string>Risk Maps</string>
-           </property>
-           <layout class="QGridLayout" name="gridLayout_4">
-            <item row="0" column="0">
-             <widget class="QCheckBox" name="hr_cb">
-              <property name="text">
-               <string>Hydrodynamic Risk (ARR)</string>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </widget>
-         </item>
-         <item row="6" column="0" colspan="2">
-          <widget class="Line" name="line">
-           <property name="orientation">
-            <enum>Qt::Horizontal</enum>
-           </property>
-          </widget>
-         </item>
-         <item row="4" column="0" colspan="2">
-          <widget class="QGroupBox" name="twophase_grp">
-           <property name="enabled">
-            <bool>false</bool>
-           </property>
-           <property name="title">
-            <string>Two-phase Maps</string>
-           </property>
-           <layout class="QGridLayout" name="gridLayout_5">
-            <item row="2" column="0">
-             <widget class="QCheckBox" name="ce_cb">
-              <property name="text">
-               <string>Combined Extent</string>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="0">
-             <widget class="QCheckBox" name="cfe_cb">
-              <property name="text">
-               <string>Fluid Extent</string>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="1">
-             <widget class="QCheckBox" name="cfd_cb">
-              <property name="text">
-               <string>Fluid Depth</string>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="0">
-             <widget class="QCheckBox" name="cme_cb">
-              <property name="text">
-               <string>Mudflow Extent</string>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="1">
-             <widget class="QCheckBox" name="cmd_cb">
-              <property name="text">
-               <string>Mudflow Depth</string>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="2">
-             <widget class="QCheckBox" name="cfs_cb">
-              <property name="text">
-               <string>Fluid Speed</string>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="2">
-             <widget class="QCheckBox" name="cms_cb">
-              <property name="text">
-               <string>Mudflow Speed</string>
-              </property>
-             </widget>
-            </item>
-            <item row="2" column="1">
-             <widget class="QCheckBox" name="ct_cb">
-              <property name="text">
-               <string>Combined Flood Arrival Time</string>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </widget>
-         </item>
-        </layout>
-       </item>
-      </layout>
-     </widget>
     </widget>
    </item>
   </layout>
@@ -1416,23 +1409,6 @@
   </customwidget>
  </customwidgets>
  <tabstops>
-  <tabstop>fe_cb</tabstop>
-  <tabstop>fd_cb</tabstop>
-  <tabstop>ft_cb</tabstop>
-  <tabstop>fs_cb</tabstop>
-  <tabstop>me_cb</tabstop>
-  <tabstop>md_cb</tabstop>
-  <tabstop>mt_cb</tabstop>
-  <tabstop>ms_cb</tabstop>
-  <tabstop>cfe_cb</tabstop>
-  <tabstop>cfd_cb</tabstop>
-  <tabstop>cfs_cb</tabstop>
-  <tabstop>cme_cb</tabstop>
-  <tabstop>cmd_cb</tabstop>
-  <tabstop>cms_cb</tabstop>
-  <tabstop>ce_cb</tabstop>
-  <tabstop>ct_cb</tabstop>
-  <tabstop>hr_cb</tabstop>
   <tabstop>map_title_le</tabstop>
   <tabstop>map_description</tabstop>
   <tabstop>a4_land</tabstop>
