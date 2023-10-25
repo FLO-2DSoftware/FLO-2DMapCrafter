@@ -48,6 +48,7 @@ from qgis._core import (
 from .mapping.flood import FloodMaps
 from .mapping.hazard import HazardMaps
 from .mapping.mudflow import MudflowMaps
+from .mapping.sediment import SedimentMaps
 from .mapping.twophase import TwophaseMaps
 from .resources import *
 from .flo2d_mapcrafter_dialog import FLO2DMapCrafterDialog
@@ -106,6 +107,15 @@ class FLO2DMapCrafter:
         self.dlg.check_cw_cb.stateChanged.connect(self.check_cw)
         self.dlg.check_mf_cb.stateChanged.connect(self.check_mf)
         self.dlg.check_tp_cb.stateChanged.connect(self.check_tp)
+        self.dlg.check_sd_cb.stateChanged.connect(self.check_sd)
+
+        self.dlg.runButton_2.clicked.connect(self.run_open_layout)
+
+        self.dlg.tab0.setEnabled(False)
+        self.dlg.tab1.setEnabled(False)
+        self.dlg.tab2.setEnabled(False)
+        self.dlg.tab3.setEnabled(False)
+        self.dlg.tab4.setEnabled(False)
 
         # DEBUG Map layouts
         # self.dlg.map_title_le.setText("Mudflow")
@@ -271,10 +281,12 @@ class FLO2DMapCrafter:
             lines = file.readlines()
             elements = lines[2].split()
             mud_switch = elements[3]
+            sed_switch = elements[4]
             file.close()
 
         # Flood simulation
-        if mud_switch == "0":
+        if mud_switch == "0" and sed_switch == "0":
+            self.dlg.tab0.setEnabled(False)
             self.dlg.tab1.setEnabled(True)
             self.dlg.tab2.setEnabled(False)
             self.dlg.tab3.setEnabled(False)
@@ -309,12 +321,63 @@ class FLO2DMapCrafter:
                 else:
                     flood_rbs[key].setEnabled(False)
 
+        # Sediment simulation
+        if mud_switch == "0" and sed_switch == "1":
+            self.dlg.tab1.setEnabled(False)
+            self.dlg.tab2.setEnabled(False)
+            self.dlg.tab0.setEnabled(True)
+            self.dlg.tab3.setEnabled(False)
+            self.dlg.tabs.setCurrentIndex(1)
+
+            sediment_maps = SedimentMaps()
+            sediment_files_dict = sediment_maps.check_sediment_files(output_directory)
+
+            sediment_rbs = {
+                r"TOPO.DAT": self.dlg.ge_sd_cb,
+                r"DEPTH.OUT": self.dlg.md_sd_cb,
+                r"VELFP.OUT": self.dlg.mv_sd_cb,
+                r"MAXWSELEV.OUT": self.dlg.mwse_sd_cb,
+                r"FINALDEP.OUT": self.dlg.fd_sd_cb,
+                r"FINALVEL.OUT": self.dlg.fv_sd_cb,
+                r"VEL_X_DEPTH.OUT": self.dlg.dv_sd_cb,
+                r"TIMEONEFT.OUT": self.dlg.t1ft_sd_cb,
+                r"TIMETWOFT.OUT": self.dlg.t2ft_sd_cb,
+                r"TIMETOPEAK.OUT": self.dlg.tmax_sd_cb,
+                r"DEPCH.OUT": self.dlg.cd_sd_cb,
+                r"VELOC.OUT": self.dlg.cv_sd_cb,
+                r"VELCHFINAL.OUT": self.dlg.fcv_sd_cb,
+                r"DEPCHFINAL.OUT": self.dlg.fcd_sd_cb,
+                r"LEVEEDEFIC.OUT": self.dlg.ld_sd_cb,
+                r"SPECENERGY.OUT": self.dlg.se_sd_cb,
+                r"STATICPRESS.OUT": self.dlg.sp_sd_cb,
+                r"SEDFP.OUT": [
+                    self.dlg.mdep_sd_cb,
+                    self.dlg.msco_sd_cb,
+                    self.dlg.fbd_sd_cb
+                                ],
+            }
+
+            for key, value in sediment_files_dict.items():
+                if value:
+                    if isinstance(sediment_rbs[key], list):
+                        for cb in sediment_rbs[key]:
+                            cb.setEnabled(True)
+                    else:
+                        sediment_rbs[key].setEnabled(True)
+                else:
+                    if isinstance(sediment_rbs[key], list):
+                        for cb in sediment_rbs[key]:
+                            cb.setEnabled(False)
+                    else:
+                        sediment_rbs[key].setEnabled(False)
+
         # Mudflow simulation
-        if mud_switch == "1":
+        if mud_switch == "1" and sed_switch == "0":
+            self.dlg.tab0.setEnabled(False)
             self.dlg.tab1.setEnabled(False)
             self.dlg.tab2.setEnabled(True)
             self.dlg.tab3.setEnabled(False)
-            self.dlg.tabs.setCurrentIndex(1)
+            self.dlg.tabs.setCurrentIndex(2)
 
             mudflow_maps = MudflowMaps()
             mudflow_files_dict = mudflow_maps.check_mudflow_files(output_directory)
@@ -348,11 +411,12 @@ class FLO2DMapCrafter:
                     mudflow_rbs[key].setEnabled(False)
 
         # Two-phase simulation
-        if mud_switch == "2":
+        if mud_switch == "2" and sed_switch == "0":
+            self.dlg.tab0.setEnabled(False)
             self.dlg.tab1.setEnabled(False)
             self.dlg.tab2.setEnabled(False)
             self.dlg.tab3.setEnabled(True)
-            self.dlg.tabs.setCurrentIndex(2)
+            self.dlg.tabs.setCurrentIndex(3)
 
             twophase_maps = TwophaseMaps()
             twophase_files_dict = twophase_maps.check_twophase_files(output_directory)
@@ -447,6 +511,7 @@ class FLO2DMapCrafter:
             lines = file.readlines()
             elements = lines[2].split()
             mud_switch = elements[3]
+            sed_switch = elements[4]
             file.close()
 
         """
@@ -465,7 +530,7 @@ class FLO2DMapCrafter:
         FLOOD MAPS        
         """
 
-        if mud_switch == "0":
+        if mud_switch == "0" and sed_switch == "0":
             flood_rbs = {
                 r"TOPO.DAT": self.dlg.ge_cw_cb.isChecked(),
                 r"DEPTH.OUT": self.dlg.md_cw_cb.isChecked(),
@@ -491,11 +556,46 @@ class FLO2DMapCrafter:
                 flood_rbs, flo2d_results_dir, map_output_dir, mapping_group, self.crs
             )
 
+        """
+        SEDIMENT MAPS
+        """
+
+        if mud_switch == "0" and sed_switch == "1":
+            sediment_rbs = {
+                r"TOPO.DAT": self.dlg.ge_sd_cb.isChecked(),
+                r"DEPTH.OUT": self.dlg.md_sd_cb.isChecked(),
+                r"VELFP.OUT": self.dlg.mv_sd_cb.isChecked(),
+                r"MAXWSELEV.OUT": self.dlg.mwse_sd_cb.isChecked(),
+                r"FINALDEP.OUT": self.dlg.fd_sd_cb.isChecked(),
+                r"FINALVEL.OUT": self.dlg.fv_sd_cb.isChecked(),
+                r"VEL_X_DEPTH.OUT": self.dlg.dv_sd_cb.isChecked(),
+                r"TIMEONEFT.OUT": self.dlg.t1ft_sd_cb.isChecked(),
+                r"TIMETWOFT.OUT": self.dlg.t2ft_sd_cb.isChecked(),
+                r"TIMETOPEAK.OUT": self.dlg.tmax_sd_cb.isChecked(),
+                r"DEPCH.OUT": self.dlg.cd_sd_cb.isChecked(),
+                r"VELOC.OUT": self.dlg.cv_sd_cb.isChecked(),
+                r"VELCHFINAL.OUT": self.dlg.fcv_sd_cb.isChecked(),
+                r"DEPCHFINAL.OUT": self.dlg.fcd_sd_cb.isChecked(),
+                r"LEVEEDEFIC.OUT": self.dlg.ld_sd_cb.isChecked(),
+                r"SPECENERGY.OUT": self.dlg.se_sd_cb.isChecked(),
+                r"STATICPRESS.OUT": self.dlg.sp_sd_cb.isChecked(),
+                r"SEDFP.OUT": [
+                    self.dlg.mdep_sd_cb.isChecked(),
+                    self.dlg.msco_sd_cb.isChecked(),
+                    self.dlg.fbd_sd_cb.isChecked()
+                ],
+            }
+
+            sediment_maps = SedimentMaps()
+            sediment_maps.create_maps(
+                sediment_rbs, flo2d_results_dir, map_output_dir, mapping_group, self.crs
+            )
+
         """"
         MUDFLOW MAPS
         """
 
-        if mud_switch == "1":
+        if mud_switch == "1" and sed_switch == "0":
             mudflow_rbs = {
                 r"TOPO.DAT": self.dlg.ge_mf_cb.isChecked(),
                 r"DEPTH.OUT": self.dlg.md_mf_cb.isChecked(),
@@ -527,7 +627,7 @@ class FLO2DMapCrafter:
         TWO-PHASE MAPS
         """
 
-        if mud_switch == "2":
+        if mud_switch == "2" and sed_switch == "0":
             twophase_rbs = {
                 r"TOPO.DAT": self.dlg.ge_tp_cb.isChecked(),
                 r"DEPTH.OUT": self.dlg.mfd_tp_cb.isChecked(),
@@ -572,7 +672,7 @@ class FLO2DMapCrafter:
             "Austrian": self.dlg.fh_austrian_cb.isChecked(),
             "Swiss": self.dlg.fi_swiss_cb.isChecked(),
             "UK": self.dlg.fh_uk_cb.isChecked(),
-            "USBR": self.dlg.usbr_hm_cb.isChecked(),
+            #"USBR": self.dlg.usbr_hm_cb.isChecked(),
             "FEMA": self.dlg.fema_hm_cb.isChecked()
         }
 
@@ -1037,4 +1137,41 @@ class FLO2DMapCrafter:
                     cb.setChecked(False)
         else:
             for cb in twophase_rbs:
+                cb.setChecked(False)
+
+    def check_sd(self):
+        """
+        Function to check all available sediment maps
+        """
+        sediment_rbs = [
+            self.dlg.ge_sd_cb,
+            self.dlg.md_sd_cb,
+            self.dlg.mv_sd_cb,
+            self.dlg.mwse_sd_cb,
+            self.dlg.fd_sd_cb,
+            self.dlg.fv_sd_cb,
+            self.dlg.dv_sd_cb,
+            self.dlg.t1ft_sd_cb,
+            self.dlg.t2ft_sd_cb,
+            self.dlg.tmax_sd_cb,
+            self.dlg.cd_sd_cb,
+            self.dlg.cv_sd_cb,
+            self.dlg.fcv_sd_cb,
+            self.dlg.fcd_sd_cb,
+            self.dlg.ld_sd_cb,
+            self.dlg.se_sd_cb,
+            self.dlg.sp_sd_cb,
+            self.dlg.mdep_sd_cb,
+            self.dlg.msco_sd_cb,
+            self.dlg.fbd_sd_cb
+            ]
+
+        if self.dlg.check_sd_cb.isChecked():
+            for cb in sediment_rbs:
+                if cb.isEnabled():
+                    cb.setChecked(True)
+                else:
+                    cb.setChecked(False)
+        else:
+            for cb in sediment_rbs:
                 cb.setChecked(False)

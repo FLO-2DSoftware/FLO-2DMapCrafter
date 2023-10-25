@@ -70,6 +70,36 @@ def read_ASCII(file_path, output_path, name, crs):
                 values.append((x, y, value))
                 if len(cellSize_data) < 2:
                     cellSize_data.append((x, y))
+            elif name == "MAXIMUM_DEPOSITION":
+                cell, x, y, value = (
+                    float(fields[0]),
+                    float(fields[1]),
+                    float(fields[2]),
+                    float(fields[3]),
+                )
+                values.append((x, y, value))
+                if len(cellSize_data) < 2:
+                    cellSize_data.append((x, y))
+            elif name == "MAXIMUM_SCOUR":
+                cell, x, y, value = (
+                    float(fields[0]),
+                    float(fields[1]),
+                    float(fields[2]),
+                    float(fields[4]),
+                )
+                values.append((x, y, value))
+                if len(cellSize_data) < 2:
+                    cellSize_data.append((x, y))
+            elif name == "FINAL_BED_DIFFERENCE":
+                cell, x, y, value = (
+                    float(fields[0]),
+                    float(fields[1]),
+                    float(fields[2]),
+                    float(fields[5]),
+                )
+                values.append((x, y, value))
+                if len(cellSize_data) < 2:
+                    cellSize_data.append((x, y))
             else:
                 if fields[0].isnumeric():
                     cell, x, y, value = (
