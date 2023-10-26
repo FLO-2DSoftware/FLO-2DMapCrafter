@@ -24,7 +24,7 @@
 import os
 
 import numpy as np
-from PyQt5.QtGui import QColor
+from PyQt5.QtGui import QColor, QIcon
 from qgis._core import (
     QgsProject,
     QgsRasterLayer,
@@ -33,7 +33,8 @@ from qgis._core import (
     QgsColorRampShader,
     QgsRasterShader,
     QgsSingleBandPseudoColorRenderer,
-    QgsMessageLog,
+    QgsMessageLog, QgsSvgMarkerSymbolLayer, QgsMarkerSymbol, QgsSymbol, QgsCentroidFillSymbolLayer, QgsFillSymbol,
+    QgsRuleBasedRenderer,
 )
 from osgeo import gdal
 
@@ -189,6 +190,15 @@ def get_extent(raster, flood_extent_vector, name):
     extent = QgsVectorLayer(flood_extent_vector, name)
 
     return extent
+
+
+def set_icon(btn, icon_file):
+    """
+    Function to set the icon
+    """
+    parent_dir = os.path.dirname(os.path.abspath(__file__))
+    idir = os.path.join(os.path.dirname(parent_dir), "img")
+    btn.setIcon(QIcon(os.path.join(idir, icon_file)))
 
 
 def set_raster_style(layer, style):
@@ -368,3 +378,38 @@ def remove_layer(layer_name):
     for layer in QgsProject.instance().mapLayers().values():
         if layer.name() == layer_name:
             QgsProject.instance().removeMapLayers([layer.id()])
+
+def set_velocity_vector_style(layer_name):
+    """
+    Function to set the velocity vector style
+    """
+    vector_style_directory = os.path.dirname(os.path.realpath(__file__))[:-8] + r"\vector_styles"
+    QgsMessageLog.logMessage(str(vector_style_directory))
+
+    svgStyle = {
+        "name": (vector_style_directory + r"\Arrow_06.svg"),
+        "outline": "#000000",
+        "size": "15",
+    }
+    svgLayer = QgsSvgMarkerSymbolLayer.create(svgStyle)
+    svgSymbol = QgsMarkerSymbol()
+    svgSymbol.changeSymbolLayer(0, svgLayer)
+
+    # Default symbol, for unselected polygons
+    symbol = QgsSymbol.defaultSymbol(layer_name.geometryType())
+
+    # Centroid fill symbol for selected polygons
+    centroid = QgsCentroidFillSymbolLayer()
+    centroid.setSubSymbol(svgSymbol)
+    selectedSymbol = QgsFillSymbol()
+    selectedSymbol.changeSymbolLayer(0, centroid)
+
+    # Create renderer
+    renderer = QgsRuleBasedRenderer(symbol)
+    rule = QgsRuleBasedRenderer.Rule(
+        selectedSymbol, label="Selected", filterExp="is_selected()"
+    )
+    renderer.rootRule().appendChild(rule)
+    layer_name.setRenderer(renderer)
+
+

@@ -48,13 +48,13 @@ from qgis._core import (
 from .mapping.flood import FloodMaps
 from .mapping.hazard import HazardMaps
 from .mapping.mudflow import MudflowMaps
+from .mapping.scripts import set_icon
 from .mapping.sediment import SedimentMaps
 from .mapping.twophase import TwophaseMaps
 from .resources import *
 from .flo2d_mapcrafter_dialog import FLO2DMapCrafterDialog
 import os.path
 import processing
-
 
 class FLO2DMapCrafter:
     """QGIS Plugin Implementation."""
@@ -116,6 +116,29 @@ class FLO2DMapCrafter:
         self.dlg.tab2.setEnabled(False)
         self.dlg.tab3.setEnabled(False)
         self.dlg.tab4.setEnabled(False)
+        self.dlg.tab5.setEnabled(False)
+
+        self.dlg.cg_cw_btn.clicked.connect(self.collapse_all_groups)
+        self.dlg.eg_cw_btn.clicked.connect(self.expand_all_groups)
+        self.dlg.cg_sd_btn.clicked.connect(self.collapse_all_groups)
+        self.dlg.eg_sd_btn.clicked.connect(self.expand_all_groups)
+        self.dlg.cg_md_btn.clicked.connect(self.collapse_all_groups)
+        self.dlg.eg_md_btn.clicked.connect(self.expand_all_groups)
+        self.dlg.cg_tp_btn.clicked.connect(self.collapse_all_groups)
+        self.dlg.eg_tp_btn.clicked.connect(self.expand_all_groups)
+        self.dlg.cg_hm_btn.clicked.connect(self.collapse_all_groups)
+        self.dlg.eg_hm_btn.clicked.connect(self.expand_all_groups)
+
+        set_icon(self.dlg.cg_cw_btn, "collapse_groups.svg")
+        set_icon(self.dlg.eg_cw_btn, "expand_groups.svg")
+        set_icon(self.dlg.cg_sd_btn, "collapse_groups.svg")
+        set_icon(self.dlg.eg_sd_btn, "expand_groups.svg")
+        set_icon(self.dlg.cg_md_btn, "collapse_groups.svg")
+        set_icon(self.dlg.eg_md_btn, "expand_groups.svg")
+        set_icon(self.dlg.cg_tp_btn, "collapse_groups.svg")
+        set_icon(self.dlg.eg_tp_btn, "expand_groups.svg")
+        set_icon(self.dlg.cg_hm_btn, "collapse_groups.svg")
+        set_icon(self.dlg.eg_hm_btn, "expand_groups.svg")
 
         # DEBUG Map layouts
         # self.dlg.map_title_le.setText("Mudflow")
@@ -299,9 +322,11 @@ class FLO2DMapCrafter:
                 r"TOPO.DAT": self.dlg.ge_cw_cb,
                 r"DEPTH.OUT": self.dlg.md_cw_cb,
                 r"VELFP.OUT": self.dlg.mv_cw_cb,
+                r"VELDIREC.OUT": self.dlg.mvv_cw_cb,
                 r"MAXWSELEV.OUT": self.dlg.mwse_cw_cb,
                 r"FINALDEP.OUT": self.dlg.fd_cw_cb,
                 r"FINALVEL.OUT": self.dlg.fv_cw_cb,
+                r"FINALDIR.OUT": self.dlg.fvv_cw_cb,
                 r"VEL_X_DEPTH.OUT": self.dlg.dv_cw_cb,
                 r"TIMEONEFT.OUT": self.dlg.t1ft_cw_cb,
                 r"TIMETWOFT.OUT": self.dlg.t2ft_cw_cb,
@@ -535,9 +560,11 @@ class FLO2DMapCrafter:
                 r"TOPO.DAT": self.dlg.ge_cw_cb.isChecked(),
                 r"DEPTH.OUT": self.dlg.md_cw_cb.isChecked(),
                 r"VELFP.OUT": self.dlg.mv_cw_cb.isChecked(),
+                r"VELDIREC.OUT": self.dlg.mvv_cw_cb.isChecked(),
                 r"MAXWSELEV.OUT": self.dlg.mwse_cw_cb.isChecked(),
                 r"FINALDEP.OUT": self.dlg.fd_cw_cb.isChecked(),
                 r"FINALVEL.OUT": self.dlg.fv_cw_cb.isChecked(),
+                r"FINALDIR.OUT": self.dlg.fvv_cw_cb.isChecked(),
                 r"VEL_X_DEPTH.OUT": self.dlg.dv_cw_cb.isChecked(),
                 r"TIMEONEFT.OUT": self.dlg.t1ft_cw_cb.isChecked(),
                 r"TIMETWOFT.OUT": self.dlg.t2ft_cw_cb.isChecked(),
@@ -1175,3 +1202,142 @@ class FLO2DMapCrafter:
         else:
             for cb in sediment_rbs:
                 cb.setChecked(False)
+
+    def collapse_all_groups(self):
+        """
+        Function to collapse all groups
+        """
+        cw_grps = [
+            self.dlg.sc_cw_cgb,
+            self.dlg.bv_cw_cgb,
+            self.dlg.dv_cw_cgb,
+            self.dlg.tv_cw_cgb,
+            self.dlg.ch_cw_cgb,
+            self.dlg.sv_cw_cgb,
+            self.dlg.hp_cw_cgb,
+        ]
+        sd_grps = [
+            self.dlg.sc_sd_cgb,
+            self.dlg.bv_sd_cgb,
+            self.dlg.dv_sd_cgb,
+            self.dlg.tv_sd_cgb,
+            self.dlg.ch_sd_cgb,
+            self.dlg.sd_sd_cgb,
+            self.dlg.sv_sd_cgb,
+            self.dlg.hp_sd_cgb,
+        ]
+        md_grps = [
+            self.dlg.sc_mf_cgb,
+            self.dlg.bv_mf_cgb,
+            self.dlg.dv_mf_cgb,
+            self.dlg.tv_mf_cgb,
+            self.dlg.ch_mf_cgb,
+            self.dlg.mf_mf_cgb,
+            self.dlg.sv_mf_cgb,
+            self.dlg.hp_mf_cgb,
+        ]
+        tp_grps = [
+            self.dlg.sc_tp_cgb,
+            self.dlg.bv_tp_cgb,
+            self.dlg.dv_tp_cgb,
+            self.dlg.tv_tp_cgb,
+            self.dlg.ch_tp_cgb,
+            self.dlg.sv_tp_cgb,
+            self.dlg.mv_tp_cgb,
+            self.dlg.sdv_tp_cgb,
+            self.dlg.hp_tp_cgb,
+        ]
+        hm_grps = [
+            self.dlg.sc_cw_cgb,
+            self.dlg.bv_cw_cgb,
+            self.dlg.dv_cw_cgb,
+            self.dlg.tv_cw_cgb,
+            self.dlg.ch_cw_cgb,
+            self.dlg.sv_cw_cgb,
+            self.dlg.hp_cw_cgb,
+        ]
+
+        if self.dlg.tab0.isEnabled():
+            for grp in sd_grps:
+                grp.setCollapsed(True)
+        if self.dlg.tab1.isEnabled():
+            for grp in cw_grps:
+                grp.setCollapsed(True)
+        if self.dlg.tab2.isEnabled():
+            for grp in md_grps:
+                grp.setCollapsed(True)
+        if self.dlg.tab3.isEnabled():
+            for grp in tp_grps:
+                grp.setCollapsed(True)
+        if self.dlg.tab5.isEnabled():
+            for grp in hm_grps:
+                grp.setCollapsed(True)
+    def expand_all_groups(self):
+        """
+        Function to expand all groups
+        """
+        cw_grps = [
+            self.dlg.sc_cw_cgb,
+            self.dlg.bv_cw_cgb,
+            self.dlg.dv_cw_cgb,
+            self.dlg.tv_cw_cgb,
+            self.dlg.ch_cw_cgb,
+            self.dlg.sv_cw_cgb,
+            self.dlg.hp_cw_cgb,
+        ]
+        sd_grps = [
+            self.dlg.sc_sd_cgb,
+            self.dlg.bv_sd_cgb,
+            self.dlg.dv_sd_cgb,
+            self.dlg.tv_sd_cgb,
+            self.dlg.ch_sd_cgb,
+            self.dlg.sd_sd_cgb,
+            self.dlg.sv_sd_cgb,
+            self.dlg.hp_sd_cgb,
+        ]
+        md_grps = [
+            self.dlg.sc_mf_cgb,
+            self.dlg.bv_mf_cgb,
+            self.dlg.dv_mf_cgb,
+            self.dlg.tv_mf_cgb,
+            self.dlg.ch_mf_cgb,
+            self.dlg.mf_mf_cgb,
+            self.dlg.sv_mf_cgb,
+            self.dlg.hp_mf_cgb,
+        ]
+        tp_grps = [
+            self.dlg.sc_tp_cgb,
+            self.dlg.bv_tp_cgb,
+            self.dlg.dv_tp_cgb,
+            self.dlg.tv_tp_cgb,
+            self.dlg.ch_tp_cgb,
+            self.dlg.sv_tp_cgb,
+            self.dlg.mv_tp_cgb,
+            self.dlg.sdv_tp_cgb,
+            self.dlg.hp_tp_cgb,
+        ]
+        hm_grps = [
+            self.dlg.sc_cw_cgb,
+            self.dlg.bv_cw_cgb,
+            self.dlg.dv_cw_cgb,
+            self.dlg.tv_cw_cgb,
+            self.dlg.ch_cw_cgb,
+            self.dlg.sv_cw_cgb,
+            self.dlg.hp_cw_cgb,
+        ]
+
+        if self.dlg.tab0.isEnabled():
+            for grp in sd_grps:
+                grp.setCollapsed(False)
+        if self.dlg.tab1.isEnabled():
+            for grp in cw_grps:
+                grp.setCollapsed(False)
+        if self.dlg.tab2.isEnabled():
+            for grp in md_grps:
+                grp.setCollapsed(False)
+        if self.dlg.tab3.isEnabled():
+            for grp in tp_grps:
+                grp.setCollapsed(False)
+        if self.dlg.tab5.isEnabled():
+            for grp in hm_grps:
+                grp.setCollapsed(False)
