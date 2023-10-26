@@ -34,7 +34,10 @@ from qgis._core import (
     QgsRasterShader,
     QgsSingleBandPseudoColorRenderer,
     QgsMessageLog, QgsSvgMarkerSymbolLayer, QgsMarkerSymbol, QgsSymbol, QgsCentroidFillSymbolLayer, QgsFillSymbol,
-    QgsRuleBasedRenderer,
+    QgsRuleBasedRenderer, QgsGraduatedSymbolRenderer, QgsClassificationEqualInterval, QgsStyle,
+    QgsClassificationQuantile, QgsCategorizedSymbolRenderer, QgsRendererCategory, QgsPointXY, QgsExpression,
+    QgsExpressionContext, QgsExpressionContextUtils, QgsProperty, QgsPropertyCollection, QgsSymbolLayer,
+    QgsSimpleMarkerSymbolLayer,
 )
 from osgeo import gdal
 
@@ -336,7 +339,7 @@ def set_raster_style(layer, style):
             QgsColorRampShader.ColorRampItem(valueList[2], QColor(colDic["red"])),
         ]
 
-        sed_lst =[
+        sed_lst = [
             QgsColorRampShader.ColorRampItem(valueList[0], QColor(colDic["sed1"])),
             QgsColorRampShader.ColorRampItem(valueList[1], QColor(colDic["sed2"])),
             QgsColorRampShader.ColorRampItem(valueList[2], QColor(colDic["sed3"])),
@@ -379,37 +382,47 @@ def remove_layer(layer_name):
         if layer.name() == layer_name:
             QgsProject.instance().removeMapLayers([layer.id()])
 
+
 def set_velocity_vector_style(layer_name):
     """
     Function to set the velocity vector style
     """
     vector_style_directory = os.path.dirname(os.path.realpath(__file__))[:-8] + r"\vector_styles"
-    QgsMessageLog.logMessage(str(vector_style_directory))
 
-    svgStyle = {
-        "name": (vector_style_directory + r"\Arrow_06.svg"),
-        "outline": "#000000",
-        "size": "15",
-    }
-    svgLayer = QgsSvgMarkerSymbolLayer.create(svgStyle)
-    svgSymbol = QgsMarkerSymbol()
-    svgSymbol.changeSymbolLayer(0, svgLayer)
+    svg_symbol_layer = QgsSvgMarkerSymbolLayer(vector_style_directory + r"\Arrow_06.svg")
 
-    # Default symbol, for unselected polygons
-    symbol = QgsSymbol.defaultSymbol(layer_name.geometryType())
+    svg_symbol_layer.setDataDefinedProperty(QgsSymbolLayer.PropertyAngle,
+                                            QgsProperty().fromField("Direction"))
+    svg_symbol_layer.setDataDefinedProperty(QgsSymbolLayer.PropertyHeight,
+                                            QgsProperty().fromField("Velocity"))
+    svg_symbol_layer.setDataDefinedProperty(QgsSymbolLayer.PropertyWidth,
+                                            QgsProperty().fromValue(4, True))
 
-    # Centroid fill symbol for selected polygons
-    centroid = QgsCentroidFillSymbolLayer()
-    centroid.setSubSymbol(svgSymbol)
-    selectedSymbol = QgsFillSymbol()
-    selectedSymbol.changeSymbolLayer(0, centroid)
+    # Create a symbol using the SVGMarker layer
+    symbol = QgsSymbol.defaultSymbol(layer_name.geometryType())  # Assuming your layer is a point layer
+    symbol.changeSymbolLayer(0, svg_symbol_layer)
 
-    # Create renderer
-    renderer = QgsRuleBasedRenderer(symbol)
-    rule = QgsRuleBasedRenderer.Rule(
-        selectedSymbol, label="Selected", filterExp="is_selected()"
-    )
-    renderer.rootRule().appendChild(rule)
+    # Create a graduated symbol renderer
+    renderer = QgsGraduatedSymbolRenderer()
+    renderer.setClassAttribute("Velocity")
+
+    # Set up the color ramp and classification
+    default_style = QgsStyle().defaultStyle()
+    color_ramp = default_style.colorRamp("Turbo")
+    n_classes = 10
+    classification = QgsClassificationQuantile()
+
+    # Update classes and color ramp
+    renderer.updateClasses(layer_name, n_classes)
+    renderer.updateColorRamp(color_ramp)
+    renderer.setClassificationMethod(classification)
+
+    # Set the symbol for the renderer
+    renderer.setSourceSymbol(symbol)
+    renderer.updateClasses(layer_name, n_classes)
+
+    # Set the renderer to the layer
     layer_name.setRenderer(renderer)
 
-
+    # Refresh the layer to apply the changes
+    layer_name.triggerRepaint()
