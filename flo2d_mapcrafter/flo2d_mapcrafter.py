@@ -276,6 +276,8 @@ class FLO2DMapCrafter:
         for checkBox in checkboxes:
             checkBox.setChecked(False)
 
+        self.collapse_all_groups()
+
         self.dlg.close()
 
     def check_files(self):
@@ -361,9 +363,11 @@ class FLO2DMapCrafter:
                 r"TOPO.DAT": self.dlg.ge_sd_cb,
                 r"DEPTH.OUT": self.dlg.md_sd_cb,
                 r"VELFP.OUT": self.dlg.mv_sd_cb,
+                r"VELDIREC.OUT": self.dlg.mvv_sd_cb,
                 r"MAXWSELEV.OUT": self.dlg.mwse_sd_cb,
                 r"FINALDEP.OUT": self.dlg.fd_sd_cb,
                 r"FINALVEL.OUT": self.dlg.fv_sd_cb,
+                r"FINALDIR.OUT": self.dlg.fvv_sd_cb,
                 r"VEL_X_DEPTH.OUT": self.dlg.dv_sd_cb,
                 r"TIMEONEFT.OUT": self.dlg.t1ft_sd_cb,
                 r"TIMETWOFT.OUT": self.dlg.t2ft_sd_cb,
@@ -411,9 +415,11 @@ class FLO2DMapCrafter:
                 r"TOPO.DAT": self.dlg.ge_mf_cb,
                 r"DEPTH.OUT": self.dlg.md_mf_cb,
                 r"VELFP.OUT": self.dlg.mv_mf_cb,
+                r"VELDIREC.OUT": self.dlg.mvv_mf_cb,
                 r"MAXWSELEV.OUT": self.dlg.mwse_mf_cb,
                 r"FINALDEP.OUT": self.dlg.fd_mf_cb,
                 r"FINALVEL.OUT": self.dlg.fv_mf_cb,
+                r"FINALDIR.OUT": self.dlg.fvv_mf_cb,
                 r"VEL_X_DEPTH.OUT": self.dlg.dv_mf_cb,
                 r"TIMEONEFT.OUT": self.dlg.t1ft_mf_cb,
                 r"TIMETWOFT.OUT": self.dlg.t2ft_mf_cb,
@@ -453,6 +459,8 @@ class FLO2DMapCrafter:
                 r"DEPTHMAX_2PHASE_COMBINED.OUT": self.dlg.cmd_tp_cb,
                 r"VELFP.OUT": self.dlg.mfv_tp_cb,
                 r"VELFP_MUD.OUT": self.dlg.mmv_tp_cb,
+                r"VELDIREC.OUT": self.dlg.mfvv_tp_cb,
+                r"VELDIREC_MUD.OUT": self.dlg.mmvv_tp_cb,
                 r"CVFPMAX.OUT": self.dlg.mfsc_tp_cb,
                 r"CVFPMAX_MUD.OUT": self.dlg.mmsc_tp_cb,
                 #r"FINALCVFP.OUT": self.dlg.ffsc_tp_cb,
@@ -460,6 +468,8 @@ class FLO2DMapCrafter:
                 #r"MAXWSELEV.OUT": self.dlg.mwse_mf_cb,
                 r"FINALDEP.OUT": self.dlg.ffd_tp_cb,
                 r"FINALDEP_MUD.OUT": self.dlg.fmd_tp_cb,
+                r"FINALDIR.OUT": self.dlg.ffvv_tp_cb,
+                r"FINALDIR_MUD.OUT": self.dlg.fmvv_tp_cb,
                 r"FINALDEP_COMBO.OUT": self.dlg.fcd_tp_cb,
                 r"FINALVEL.OUT": self.dlg.ffv_tp_cb,
                 r"FINALVEL_MUD.OUT": self.dlg.fmv_tp_cb,
@@ -592,9 +602,11 @@ class FLO2DMapCrafter:
                 r"TOPO.DAT": self.dlg.ge_sd_cb.isChecked(),
                 r"DEPTH.OUT": self.dlg.md_sd_cb.isChecked(),
                 r"VELFP.OUT": self.dlg.mv_sd_cb.isChecked(),
+                r"VELDIREC.OUT": self.dlg.mvv_sd_cb.isChecked(),
                 r"MAXWSELEV.OUT": self.dlg.mwse_sd_cb.isChecked(),
                 r"FINALDEP.OUT": self.dlg.fd_sd_cb.isChecked(),
                 r"FINALVEL.OUT": self.dlg.fv_sd_cb.isChecked(),
+                r"FINALDIR.OUT": self.dlg.fvv_sd_cb.isChecked(),
                 r"VEL_X_DEPTH.OUT": self.dlg.dv_sd_cb.isChecked(),
                 r"TIMEONEFT.OUT": self.dlg.t1ft_sd_cb.isChecked(),
                 r"TIMETWOFT.OUT": self.dlg.t2ft_sd_cb.isChecked(),
@@ -627,9 +639,11 @@ class FLO2DMapCrafter:
                 r"TOPO.DAT": self.dlg.ge_mf_cb.isChecked(),
                 r"DEPTH.OUT": self.dlg.md_mf_cb.isChecked(),
                 r"VELFP.OUT": self.dlg.mv_mf_cb.isChecked(),
+                r"VELDIREC.OUT": self.dlg.mvv_mf_cb.isChecked(),
                 r"MAXWSELEV.OUT": self.dlg.mwse_mf_cb.isChecked(),
                 r"FINALDEP.OUT": self.dlg.fd_mf_cb.isChecked(),
                 r"FINALVEL.OUT": self.dlg.fv_mf_cb.isChecked(),
+                r"FINALDIR.OUT": self.dlg.fvv_mf_cb.isChecked(),
                 r"VEL_X_DEPTH.OUT": self.dlg.dv_mf_cb.isChecked(),
                 r"TIMEONEFT.OUT": self.dlg.t1ft_mf_cb.isChecked(),
                 r"TIMETWOFT.OUT": self.dlg.t2ft_mf_cb.isChecked(),
@@ -662,6 +676,8 @@ class FLO2DMapCrafter:
                 r"DEPTHMAX_2PHASE_COMBINED.OUT": self.dlg.cmd_tp_cb.isChecked(),
                 r"VELFP.OUT": self.dlg.mfv_tp_cb.isChecked(),
                 r"VELFP_MUD.OUT": self.dlg.mmv_tp_cb.isChecked(),
+                r"VELDIREC.OUT": self.dlg.mfvv_tp_cb.isChecked(),
+                r"VELDIREC_MUD.OUT": self.dlg.mmvv_tp_cb.isChecked(),
                 r"CVFPMAX.OUT": self.dlg.mfsc_tp_cb.isChecked(),
                 r"CVFPMAX_MUD.OUT": self.dlg.mmsc_tp_cb.isChecked(),
                 # r"FINALCVFP.OUT": self.dlg.ffsc_tp_cb,
@@ -669,6 +685,8 @@ class FLO2DMapCrafter:
                 # r"MAXWSELEV.OUT": self.dlg.mwse_mf_cb,
                 r"FINALDEP.OUT": self.dlg.ffd_tp_cb.isChecked(),
                 r"FINALDEP_MUD.OUT": self.dlg.fmd_tp_cb.isChecked(),
+                r"FINALDIR.OUT": self.dlg.ffvv_tp_cb.isChecked(),
+                r"FINALDIR_MUD.OUT": self.dlg.fmvv_tp_cb.isChecked(),
                 r"FINALDEP_COMBO.OUT": self.dlg.fcd_tp_cb.isChecked(),
                 r"FINALVEL.OUT": self.dlg.ffv_tp_cb.isChecked(),
                 r"FINALVEL_MUD.OUT": self.dlg.fmv_tp_cb.isChecked(),
@@ -707,49 +725,6 @@ class FLO2DMapCrafter:
         hazard_maps.create_maps(
             hazard_rbs, flo2d_results_dir, map_output_dir, mapping_group, self.crs
         )
-
-        # if self.dlg.hr_cb.isChecked():
-        #     hydro_risk = map_output_dir + r"\HYDRODYNAMIC_RISK.tif"
-        #     depth_file = flo2d_results_dir + r"\DEPTH.OUT"
-        #     vel_file = flo2d_results_dir + r"\VELFP.OUT"
-        #     vel_x_depth_file = flo2d_results_dir + r"\VEL_X_DEPTH.OUT"
-        #
-        #     hydro_risk_raster = self.create_hydro_risk(
-        #         map_output_dir, hydro_risk, depth_file, vel_file, vel_x_depth_file
-        #     )
-        #
-        #     QgsProject.instance().addMapLayer(hydro_risk_raster, False)
-        #     self.set_raster_style(hydro_risk_raster, 2)
-        #
-        #     mapping_group.findGroup("Risk Maps").insertLayer(0, hydro_risk_raster)
-        #     mapping_group.removeLayer(hydro_risk_raster)
-        #     root.removeLayer(hydro_risk_raster)
-
-        # if self.dlg.fe_cb.isChecked():
-        #     flood_extent_raster = map_output_dir + r"\FLOOD_EXTENT.tif"
-        #     flood_extent_vector = map_output_dir + r"\FLOOD_EXTENT.shp"
-        #     depth_file = flo2d_results_dir + r"\DEPTH.OUT"
-        #
-        #     self.remove_layer("FLOOD_EXTENT")
-        #
-        #     files = os.listdir(map_output_dir)
-        #     for file in files:
-        #         if file.startswith("FLOOD_EXTENT"):
-        #             file_path = os.path.join(map_output_dir, file)
-        #             os.remove(file_path)
-        #
-        #     raster = self.read_ASCII(
-        #         depth_file, flood_extent_raster, "FLOOD_EXTENT_RASTER"
-        #     )
-        #
-        #     flood_extent = self.get_extent(raster, flood_extent_vector, "FLOOD_EXTENT")
-        #
-        #     QgsProject.instance().addMapLayer(flood_extent, False)
-        #     self.set_vector_style(flood_extent, 0)
-        #
-        #     mapping_group.findGroup("Flood Maps").insertLayer(0, flood_extent)
-        #     mapping_group.removeLayer(flood_extent)
-        #     root.removeLayer(flood_extent)
 
         msg_box = QMessageBox()
         msg_box.setIcon(QMessageBox.Information)
@@ -1074,6 +1049,8 @@ class FLO2DMapCrafter:
             self.dlg.ld_cw_cb,
             self.dlg.se_cw_cb,
             self.dlg.sp_cw_cb,
+            self.dlg.mvv_cw_cb,
+            self.dlg.fvv_cw_cb
         ]
 
         if self.dlg.check_cw_cb.isChecked():
@@ -1086,6 +1063,45 @@ class FLO2DMapCrafter:
             for cb in flood_rbs:
                 cb.setChecked(False)
 
+    def check_sd(self):
+        """
+        Function to check all available sediment maps
+        """
+        sediment_rbs = [
+            self.dlg.ge_sd_cb,
+            self.dlg.md_sd_cb,
+            self.dlg.mv_sd_cb,
+            self.dlg.mwse_sd_cb,
+            self.dlg.fd_sd_cb,
+            self.dlg.fv_sd_cb,
+            self.dlg.dv_sd_cb,
+            self.dlg.t1ft_sd_cb,
+            self.dlg.t2ft_sd_cb,
+            self.dlg.tmax_sd_cb,
+            self.dlg.cd_sd_cb,
+            self.dlg.cv_sd_cb,
+            self.dlg.fcv_sd_cb,
+            self.dlg.fcd_sd_cb,
+            self.dlg.ld_sd_cb,
+            self.dlg.se_sd_cb,
+            self.dlg.sp_sd_cb,
+            self.dlg.mdep_sd_cb,
+            self.dlg.msco_sd_cb,
+            self.dlg.fbd_sd_cb,
+            self.dlg.mvv_sd_cb,
+            self.dlg.fvv_sd_cb,
+            ]
+
+        if self.dlg.check_sd_cb.isChecked():
+            for cb in sediment_rbs:
+                if cb.isEnabled():
+                    cb.setChecked(True)
+                else:
+                    cb.setChecked(False)
+        else:
+            for cb in sediment_rbs:
+                cb.setChecked(False)
+
     def check_mf(self):
         """
         Function to check all available mudflow maps
@@ -1094,9 +1110,11 @@ class FLO2DMapCrafter:
             self.dlg.ge_mf_cb,
             self.dlg.md_mf_cb,
             self.dlg.mv_mf_cb,
+            self.dlg.mvv_mf_cb,
             self.dlg.mwse_mf_cb,
             self.dlg.fd_mf_cb,
             self.dlg.fv_mf_cb,
+            self.dlg.fvv_mf_cb,
             self.dlg.dv_mf_cb,
             self.dlg.t1ft_mf_cb,
             self.dlg.t2ft_mf_cb,
@@ -1154,6 +1172,13 @@ class FLO2DMapCrafter:
             self.dlg.ld_tp_cb,
             self.dlg.se_tp_cb,
             self.dlg.sp_tp_cb,
+            self.dlg.md_tp_cb,
+            self.dlg.ms_tp_cb,
+            self.dlg.fdb_tp_cb,
+            self.dlg.mfvv_tp_cb,
+            self.dlg.ffvv_tp_cb,
+            self.dlg.fmvv_tp_cb,
+            self.dlg.mmvv_tp_cb,
         ]
 
         if self.dlg.check_tp_cb.isChecked():
@@ -1164,43 +1189,6 @@ class FLO2DMapCrafter:
                     cb.setChecked(False)
         else:
             for cb in twophase_rbs:
-                cb.setChecked(False)
-
-    def check_sd(self):
-        """
-        Function to check all available sediment maps
-        """
-        sediment_rbs = [
-            self.dlg.ge_sd_cb,
-            self.dlg.md_sd_cb,
-            self.dlg.mv_sd_cb,
-            self.dlg.mwse_sd_cb,
-            self.dlg.fd_sd_cb,
-            self.dlg.fv_sd_cb,
-            self.dlg.dv_sd_cb,
-            self.dlg.t1ft_sd_cb,
-            self.dlg.t2ft_sd_cb,
-            self.dlg.tmax_sd_cb,
-            self.dlg.cd_sd_cb,
-            self.dlg.cv_sd_cb,
-            self.dlg.fcv_sd_cb,
-            self.dlg.fcd_sd_cb,
-            self.dlg.ld_sd_cb,
-            self.dlg.se_sd_cb,
-            self.dlg.sp_sd_cb,
-            self.dlg.mdep_sd_cb,
-            self.dlg.msco_sd_cb,
-            self.dlg.fbd_sd_cb
-            ]
-
-        if self.dlg.check_sd_cb.isChecked():
-            for cb in sediment_rbs:
-                if cb.isEnabled():
-                    cb.setChecked(True)
-                else:
-                    cb.setChecked(False)
-        else:
-            for cb in sediment_rbs:
                 cb.setChecked(False)
 
     def collapse_all_groups(self):

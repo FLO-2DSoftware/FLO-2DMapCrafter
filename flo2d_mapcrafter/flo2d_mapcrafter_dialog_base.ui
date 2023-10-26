@@ -16,6 +16,9 @@
   <property name="toolTip">
    <string/>
   </property>
+  <property name="toolTipDuration">
+   <number>0</number>
+  </property>
   <layout class="QGridLayout" name="gridLayout">
    <item row="6" column="0">
     <layout class="QGridLayout" name="gridLayout_44">
@@ -126,7 +129,7 @@
       <enum>QTabWidget::Rounded</enum>
      </property>
      <property name="currentIndex">
-      <number>1</number>
+      <number>5</number>
      </property>
      <property name="elideMode">
       <enum>Qt::ElideNone</enum>
@@ -159,7 +162,7 @@
             <x>0</x>
             <y>0</y>
             <width>676</width>
-            <height>356</height>
+            <height>341</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_99">
@@ -246,6 +249,9 @@
                   </item>
                   <item row="0" column="2">
                    <widget class="QCheckBox" name="mvv_cw_cb">
+                    <property name="toolTip">
+                     <string>VELFP.OUT &amp; VELDIREC.OUT: Combination of these two files to generate the maximum velocity vectors </string>
+                    </property>
                     <property name="toolTipDuration">
                      <number>0</number>
                     </property>
@@ -256,6 +262,9 @@
                   </item>
                   <item row="2" column="2">
                    <widget class="QCheckBox" name="fvv_cw_cb">
+                    <property name="toolTip">
+                     <string>FINALVEL.OUT &amp; FINALDIR.OUT: Combination of these two files to generate the final velocity vectors</string>
+                    </property>
                     <property name="toolTipDuration">
                      <number>0</number>
                     </property>
@@ -646,7 +655,7 @@
             <x>0</x>
             <y>0</y>
             <width>676</width>
-            <height>356</height>
+            <height>341</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_100">
@@ -1006,7 +1015,23 @@
                <layout class="QGridLayout" name="gridLayout_82">
                 <item row="0" column="0">
                  <layout class="QGridLayout" name="gridLayout_81">
-                  <item row="1" column="0">
+                  <item row="0" column="1">
+                   <widget class="QCheckBox" name="mv_sd_cb">
+                    <property name="enabled">
+                     <bool>true</bool>
+                    </property>
+                    <property name="toolTip">
+                     <string>VELFP.OUT: Maximum floodplain flow velocity</string>
+                    </property>
+                    <property name="toolTipDuration">
+                     <number>0</number>
+                    </property>
+                    <property name="text">
+                     <string>Maximum Velocity</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="2" column="0">
                    <widget class="QCheckBox" name="fd_sd_cb">
                     <property name="enabled">
                      <bool>true</bool>
@@ -1019,6 +1044,22 @@
                     </property>
                     <property name="text">
                      <string>Final Depth</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="2" column="1">
+                   <widget class="QCheckBox" name="fv_sd_cb">
+                    <property name="enabled">
+                     <bool>true</bool>
+                    </property>
+                    <property name="toolTip">
+                     <string>FINALVEL.OUT: Flow velocity at the end of the simulation</string>
+                    </property>
+                    <property name="toolTipDuration">
+                     <number>0</number>
+                    </property>
+                    <property name="text">
+                     <string>Final Velocity</string>
                     </property>
                    </widget>
                   </item>
@@ -1038,23 +1079,7 @@
                     </property>
                    </widget>
                   </item>
-                  <item row="0" column="1">
-                   <widget class="QCheckBox" name="mv_sd_cb">
-                    <property name="enabled">
-                     <bool>true</bool>
-                    </property>
-                    <property name="toolTip">
-                     <string>VELFP.OUT: Maximum floodplain flow velocity</string>
-                    </property>
-                    <property name="toolTipDuration">
-                     <number>0</number>
-                    </property>
-                    <property name="text">
-                     <string>Maximum Velocity</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="0" column="2">
+                  <item row="1" column="0">
                    <widget class="QCheckBox" name="mwse_sd_cb">
                     <property name="enabled">
                      <bool>true</bool>
@@ -1070,19 +1095,23 @@
                     </property>
                    </widget>
                   </item>
-                  <item row="1" column="1">
-                   <widget class="QCheckBox" name="fv_sd_cb">
-                    <property name="enabled">
-                     <bool>true</bool>
+                  <item row="0" column="2">
+                   <widget class="QCheckBox" name="mvv_sd_cb">
+                    <property name="text">
+                     <string>Maximum Velocity Vectors</string>
                     </property>
+                   </widget>
+                  </item>
+                  <item row="2" column="2">
+                   <widget class="QCheckBox" name="fvv_sd_cb">
                     <property name="toolTip">
-                     <string>FINALVEL.OUT: Flow velocity at the end of the simulation</string>
+                     <string>FINALVEL.OUT &amp; FINALDIR.OUT: Combination of these two files to generate the final velocity vectors</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
                     </property>
                     <property name="text">
-                     <string>Final Velocity</string>
+                     <string>Final Velocity Vectors</string>
                     </property>
                    </widget>
                   </item>
@@ -1246,7 +1275,7 @@
             <x>0</x>
             <y>0</y>
             <width>676</width>
-            <height>356</height>
+            <height>341</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_101">
@@ -1331,16 +1360,16 @@
                     </property>
                    </widget>
                   </item>
-                  <item row="0" column="2">
-                   <widget class="QCheckBox" name="mwse_mf_cb">
+                  <item row="2" column="2">
+                   <widget class="QCheckBox" name="fvv_mf_cb">
                     <property name="toolTip">
-                     <string>MAXWSELEV.OUT: Grid element number, x-coordinate, y-coordinate, and the maximum water surface elevation of either the floodplain or channel</string>
+                     <string>FINALVEL.OUT &amp; FINALDIR.OUT: Combination of these two files to generate the final velocity vectors</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
                     </property>
                     <property name="text">
-                     <string>Maximum WSE</string>
+                     <string>Final Velocity Vectors</string>
                     </property>
                    </widget>
                   </item>
@@ -1357,7 +1386,20 @@
                     </property>
                    </widget>
                   </item>
-                  <item row="1" column="0">
+                  <item row="2" column="1">
+                   <widget class="QCheckBox" name="fv_mf_cb">
+                    <property name="toolTip">
+                     <string>FINALVEL.OUT: Flow velocity at the end of the simulation</string>
+                    </property>
+                    <property name="toolTipDuration">
+                     <number>0</number>
+                    </property>
+                    <property name="text">
+                     <string>Final Velocity</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="2" column="0">
                    <widget class="QCheckBox" name="fd_mf_cb">
                     <property name="toolTip">
                      <string>FINALDEP.OUT: Final floodplain flow depths</string>
@@ -1370,16 +1412,29 @@
                     </property>
                    </widget>
                   </item>
-                  <item row="1" column="1">
-                   <widget class="QCheckBox" name="fv_mf_cb">
+                  <item row="1" column="0">
+                   <widget class="QCheckBox" name="mwse_mf_cb">
                     <property name="toolTip">
-                     <string>FINALVEL.OUT: Flow velocity at the end of the simulation</string>
+                     <string>MAXWSELEV.OUT: Grid element number, x-coordinate, y-coordinate, and the maximum water surface elevation of either the floodplain or channel</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
                     </property>
                     <property name="text">
-                     <string>Final Velocity</string>
+                     <string>Maximum WSE</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="2">
+                   <widget class="QCheckBox" name="mvv_mf_cb">
+                    <property name="toolTip">
+                     <string>VELFP.OUT &amp; VELDIREC.OUT: Combination of these two files to generate the maximum velocity vectors </string>
+                    </property>
+                    <property name="toolTipDuration">
+                     <number>0</number>
+                    </property>
+                    <property name="text">
+                     <string>Maximum Velocity Vectors</string>
                     </property>
                    </widget>
                   </item>
@@ -1726,7 +1781,7 @@
             <x>0</x>
             <y>0</y>
             <width>676</width>
-            <height>356</height>
+            <height>341</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_102">
@@ -1891,16 +1946,16 @@
                <layout class="QGridLayout" name="gridLayout_60">
                 <item row="0" column="0">
                  <layout class="QGridLayout" name="gridLayout_58">
-                  <item row="3" column="1">
-                   <widget class="QCheckBox" name="fcd_tp_cb">
+                  <item row="1" column="0">
+                   <widget class="QCheckBox" name="mfv_tp_cb">
                     <property name="toolTip">
-                     <string>FINALDEP_COMBO.OUT: Combined floodplain fluid and mudflow maximum flow depths. Floodplain fluid or mudflow max depth (whichever is greater).</string>
+                     <string>VELFP.OUT: Maximum floodplain flow velocity</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
                     </property>
                     <property name="text">
-                     <string>Final Combined Depth</string>
+                     <string>Maximum Flood Velocity</string>
                     </property>
                    </widget>
                   </item>
@@ -1917,29 +1972,16 @@
                     </property>
                    </widget>
                   </item>
-                  <item row="1" column="0">
-                   <widget class="QCheckBox" name="mfv_tp_cb">
+                  <item row="3" column="0">
+                   <widget class="QCheckBox" name="ffd_tp_cb">
                     <property name="toolTip">
-                     <string>VELFP.OUT: Maximum floodplain flow velocity</string>
+                     <string>FINALDEP.OUT: Final floodplain flow depths</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
                     </property>
                     <property name="text">
-                     <string>Maximum Flood Velocity</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="0" column="1">
-                   <widget class="QCheckBox" name="cmd_tp_cb">
-                    <property name="toolTip">
-                     <string>DEPTHMAX_2PHASE_COMBINED.OUT: Maximum flow depth of the combined two phase fluid and mudflows depth (added together)</string>
-                    </property>
-                    <property name="toolTipDuration">
-                     <number>0</number>
-                    </property>
-                    <property name="text">
-                     <string>Maximum Combined Depth</string>
+                     <string>Final Flood Depth</string>
                     </property>
                    </widget>
                   </item>
@@ -1956,19 +1998,6 @@
                     </property>
                    </widget>
                   </item>
-                  <item row="3" column="0">
-                   <widget class="QCheckBox" name="ffd_tp_cb">
-                    <property name="toolTip">
-                     <string>FINALDEP.OUT: Final floodplain flow depths</string>
-                    </property>
-                    <property name="toolTipDuration">
-                     <number>0</number>
-                    </property>
-                    <property name="text">
-                     <string>Final Flood Depth</string>
-                    </property>
-                   </widget>
-                  </item>
                   <item row="0" column="2">
                    <widget class="QCheckBox" name="mfsc_tp_cb">
                     <property name="toolTip">
@@ -1979,6 +2008,58 @@
                     </property>
                     <property name="text">
                      <string>Maximum Flood Sed. Con.</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="1">
+                   <widget class="QCheckBox" name="mfvv_tp_cb">
+                    <property name="toolTip">
+                     <string>VELFP.OUT &amp; VELDIREC.OUT: Combination of these two files to generate the maximum velocity vectors </string>
+                    </property>
+                    <property name="toolTipDuration">
+                     <number>0</number>
+                    </property>
+                    <property name="text">
+                     <string>Maximum Flood Velocity Vectors</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="1">
+                   <widget class="QCheckBox" name="cmd_tp_cb">
+                    <property name="toolTip">
+                     <string>DEPTHMAX_2PHASE_COMBINED.OUT: Maximum flow depth of the combined two phase fluid and mudflows depth (added together)</string>
+                    </property>
+                    <property name="toolTipDuration">
+                     <number>0</number>
+                    </property>
+                    <property name="text">
+                     <string>Maximum Combined Depth</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="3" column="1">
+                   <widget class="QCheckBox" name="ffvv_tp_cb">
+                    <property name="toolTip">
+                     <string>FINALVEL.OUT &amp; FINALDIR.OUT: Combination of these two files to generate the final velocity vectors</string>
+                    </property>
+                    <property name="toolTipDuration">
+                     <number>0</number>
+                    </property>
+                    <property name="text">
+                     <string>Final Flood Velocity Vectors</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="4" column="1">
+                   <widget class="QCheckBox" name="fcd_tp_cb">
+                    <property name="toolTip">
+                     <string>FINALDEP_COMBO.OUT: Combined floodplain fluid and mudflow maximum flow depths. Floodplain fluid or mudflow max depth (whichever is greater).</string>
+                    </property>
+                    <property name="toolTipDuration">
+                     <number>0</number>
+                    </property>
+                    <property name="text">
+                     <string>Final Combined Depth</string>
                     </property>
                    </widget>
                   </item>
@@ -2194,7 +2275,7 @@
                <layout class="QGridLayout" name="gridLayout_96">
                 <item row="0" column="0">
                  <layout class="QGridLayout" name="gridLayout_95">
-                  <item row="1" column="1">
+                  <item row="2" column="1">
                    <widget class="QCheckBox" name="fmv_tp_cb">
                     <property name="toolTip">
                      <string>FINALVEL_MUD.OUT: Floodplain final mudflow velocity in the reported outflow direction</string>
@@ -2204,6 +2285,32 @@
                     </property>
                     <property name="text">
                      <string>Final Mudflow Velocity</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="2" column="2">
+                   <widget class="QCheckBox" name="fmsc_tp_cb">
+                    <property name="toolTip">
+                     <string>FINALCVFP_MUD.OUT: Final floodplain mudflow sediment concentration by volume</string>
+                    </property>
+                    <property name="toolTipDuration">
+                     <number>0</number>
+                    </property>
+                    <property name="text">
+                     <string>Final Mudflow Sed. Con.</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="0">
+                   <widget class="QCheckBox" name="mmvv_tp_cb">
+                    <property name="toolTip">
+                     <string>VELFP_MUD.OUT &amp; VELDIREC_MUD.OUT: Combination of these two files to generate the maximum velocity vectors </string>
+                    </property>
+                    <property name="toolTipDuration">
+                     <number>0</number>
+                    </property>
+                    <property name="text">
+                     <string>Maximum Mudflow Velocity Vectors</string>
                     </property>
                    </widget>
                   </item>
@@ -2220,16 +2327,16 @@
                     </property>
                    </widget>
                   </item>
-                  <item row="1" column="0">
-                   <widget class="QCheckBox" name="fmd_tp_cb">
+                  <item row="3" column="0">
+                   <widget class="QCheckBox" name="fmvv_tp_cb">
                     <property name="toolTip">
-                     <string>FINALDEP_MUD.OUT: Final mudflow depths</string>
+                     <string>FINALVEL_MUD.OUT &amp; FINALDIR_MUD.OUT: Combination of these two files to generate the final velocity vectors</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
                     </property>
                     <property name="text">
-                     <string>Final Mudflow Depth</string>
+                     <string>Final Mudflow Velocity Vectors</string>
                     </property>
                    </widget>
                   </item>
@@ -2246,6 +2353,19 @@
                     </property>
                    </widget>
                   </item>
+                  <item row="2" column="0">
+                   <widget class="QCheckBox" name="fmd_tp_cb">
+                    <property name="toolTip">
+                     <string>FINALDEP_MUD.OUT: Final mudflow depths</string>
+                    </property>
+                    <property name="toolTipDuration">
+                     <number>0</number>
+                    </property>
+                    <property name="text">
+                     <string>Final Mudflow Depth</string>
+                    </property>
+                   </widget>
+                  </item>
                   <item row="0" column="2">
                    <widget class="QCheckBox" name="mmsc_tp_cb">
                     <property name="toolTip">
@@ -2256,19 +2376,6 @@
                     </property>
                     <property name="text">
                      <string>Maximum Mudflow Sed. Con.</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="1" column="2">
-                   <widget class="QCheckBox" name="fmsc_tp_cb">
-                    <property name="toolTip">
-                     <string>FINALCVFP_MUD.OUT: Final floodplain mudflow sediment concentration by volume</string>
-                    </property>
-                    <property name="toolTipDuration">
-                     <number>0</number>
-                    </property>
-                    <property name="text">
-                     <string>Final Mudflow Sed. Con.</string>
                     </property>
                    </widget>
                   </item>
@@ -2317,7 +2424,7 @@
             <x>0</x>
             <y>0</y>
             <width>676</width>
-            <height>356</height>
+            <height>341</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_103">
@@ -2629,8 +2736,8 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>676</width>
-            <height>356</height>
+            <width>655</width>
+            <height>345</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_104">

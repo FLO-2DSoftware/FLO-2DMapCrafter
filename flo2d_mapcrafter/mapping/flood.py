@@ -208,7 +208,15 @@ class FloodMaps():
             shapefile = map_output_dir + r"\MAXIMUM_VELOCITY_VECTORS.shp"
             value_file = flo2d_results_dir + r"\VELFP.OUT"
             direction_file = flo2d_results_dir + r"\VELDIREC.OUT"
-            self.process_vectors(name, shapefile, value_file, direction_file, crs, mapping_group, 1)
+            self.process_vectors(name, shapefile, value_file, direction_file, crs, mapping_group)
+
+        # Final Velocity Vector
+        if flood_rbs.get(r"FINALDIR.OUT"):
+            name = "FINAL_VELOCITY_VECTORS"
+            shapefile = map_output_dir + r"\FINAL_VELOCITY_VECTORS.shp"
+            value_file = flo2d_results_dir + r"\FINALVEL.OUT"
+            direction_file = flo2d_results_dir + r"\FINALDIR.OUT"
+            self.process_vectors(name, shapefile, value_file, direction_file, crs, mapping_group)
 
     def process_maps(self, name, raster, file, crs, mapping_group, style):
         """
@@ -224,7 +232,7 @@ class FloodMaps():
 
         mapping_group.insertLayer(0, raster_processed)
 
-    def process_vectors(self, name, shapefile, value_file, direction_file, crs, mapping_group, style):
+    def process_vectors(self, name, shapefile, value_file, direction_file, crs, mapping_group):
         """
         Function to create vector maps
         """
