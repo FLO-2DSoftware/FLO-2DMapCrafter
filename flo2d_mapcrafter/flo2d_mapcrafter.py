@@ -42,7 +42,7 @@ from qgis._core import (
     QgsUnitTypes,
     QgsPrintLayout,
     QgsReadWriteContext,
-    QgsMessageLog,
+    QgsMessageLog, QgsApplication, QgsProcessingUtils,
 )
 
 from .mapping.flood import FloodMaps
@@ -536,8 +536,12 @@ class FLO2DMapCrafter:
         map_output_dir = self.dlg.mapper_out_folder.filePath()
         self.crs = self.dlg.crsselector.crs()
 
-        if not self.check_input(map_output_dir, "Please, select the output folder."):
-            return
+        if map_output_dir == "":
+            map_output_dir = QgsProcessingUtils.tempFolder()
+
+        # if not self.check_input(map_output_dir, "Please, select the output folder."):
+        #     QgsMessageLog.logMessage(QgsProcessingUtils.tempFolder())
+        #     return
 
         if not self.check_checkboxes():
             return
@@ -908,19 +912,6 @@ class FLO2DMapCrafter:
         extent = QgsVectorLayer(flood_extent_vector, name)
 
         return extent
-
-    def check_input(self, text, message):
-        """Function to check the input data"""
-        if text == "":
-            msg_box = QMessageBox()
-            msg_box.setIcon(QMessageBox.Warning)
-            msg_box.setWindowTitle("Warning")
-            msg_box.setText(message)
-            msg_box.exec_()
-            return False
-        else:
-            return True
-
 
     def check_checkboxes(self):
         """Function to check if at least one map checkbox was checked"""
