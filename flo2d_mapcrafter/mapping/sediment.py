@@ -28,7 +28,14 @@ from qgis._core import QgsProject, QgsVectorLayer, QgsField, QgsFeature, QgsPoin
 from flo2d_mapcrafter.mapping.scripts import read_ASCII, set_raster_style, set_velocity_vector_style
 
 
-class SedimentMaps():
+class SedimentMaps:
+
+    def __init__(self, units_switch):
+        """
+        Class constructor
+        :param units_switch: 0 english 1 metric
+        """
+        self.units_switch = units_switch
 
     def check_sediment_files(self, output_dir):
         """

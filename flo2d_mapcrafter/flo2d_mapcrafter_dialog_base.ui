@@ -147,7 +147,7 @@
       <enum>QTabWidget::Rounded</enum>
      </property>
      <property name="currentIndex">
-      <number>4</number>
+      <number>0</number>
      </property>
      <property name="elideMode">
       <enum>Qt::ElideNone</enum>
@@ -2818,7 +2818,10 @@ LOW DANGER ZONE: Almost any size child (excluding infants) is not seriously thre
           <layout class="QGridLayout" name="gridLayout_104">
            <item row="0" column="0">
             <layout class="QGridLayout" name="gridLayout_8">
-             <item row="1" column="1" colspan="4">
+             <item row="3" column="1">
+              <layout class="QGridLayout" name="gridLayout_16"/>
+             </item>
+             <item row="1" column="1" colspan="3">
               <widget class="QGroupBox" name="groupBox_2">
                <property name="title">
                 <string>Map Layouts</string>
@@ -2859,10 +2862,7 @@ LOW DANGER ZONE: Almost any size child (excluding infants) is not seriously thre
                </layout>
               </widget>
              </item>
-             <item row="3" column="1">
-              <layout class="QGridLayout" name="gridLayout_16"/>
-             </item>
-             <item row="0" column="1" colspan="4">
+             <item row="0" column="1" colspan="3">
               <widget class="QGroupBox" name="groupBox">
                <property name="title">
                 <string>Map information</string>
@@ -2909,13 +2909,6 @@ LOW DANGER ZONE: Almost any size child (excluding infants) is not seriously thre
               <widget class="QPushButton" name="runButton_2">
                <property name="text">
                 <string>Open selected layout</string>
-               </property>
-              </widget>
-             </item>
-             <item row="2" column="4">
-              <widget class="QPushButton" name="cancelButton_2">
-               <property name="text">
-                <string>Cancel</string>
                </property>
               </widget>
              </item>
@@ -2975,8 +2968,6 @@ LOW DANGER ZONE: Almost any size child (excluding infants) is not seriously thre
   <tabstop>a4_port</tabstop>
   <tabstop>a3_land</tabstop>
   <tabstop>a3_port</tabstop>
-  <tabstop>runButton_2</tabstop>
-  <tabstop>cancelButton_2</tabstop>
  </tabstops>
  <resources/>
  <connections/>

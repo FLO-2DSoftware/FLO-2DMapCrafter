@@ -306,6 +306,7 @@ class FLO2DMapCrafter:
         with open(output_directory + r"\CONT.DAT", "r") as file:
             lines = file.readlines()
             elements = lines[2].split()
+            units_switch = lines[1].split()[3]
             mud_switch = elements[3]
             sed_switch = elements[4]
             file.close()
@@ -318,7 +319,7 @@ class FLO2DMapCrafter:
             self.dlg.tab3.setEnabled(False)
             self.dlg.tabs.setCurrentIndex(0)
 
-            flood_maps = FloodMaps()
+            flood_maps = FloodMaps(units_switch)
             flood_files_dict = flood_maps.check_flood_files(output_directory)
 
             flood_rbs = {
@@ -357,7 +358,7 @@ class FLO2DMapCrafter:
             self.dlg.tab3.setEnabled(False)
             self.dlg.tabs.setCurrentIndex(1)
 
-            sediment_maps = SedimentMaps()
+            sediment_maps = SedimentMaps(units_switch)
             sediment_files_dict = sediment_maps.check_sediment_files(output_directory)
 
             sediment_rbs = {
@@ -409,7 +410,7 @@ class FLO2DMapCrafter:
             self.dlg.tab3.setEnabled(False)
             self.dlg.tabs.setCurrentIndex(2)
 
-            mudflow_maps = MudflowMaps()
+            mudflow_maps = MudflowMaps(units_switch)
             mudflow_files_dict = mudflow_maps.check_mudflow_files(output_directory)
 
             mudflow_rbs = {
@@ -450,7 +451,7 @@ class FLO2DMapCrafter:
             self.dlg.tab3.setEnabled(True)
             self.dlg.tabs.setCurrentIndex(3)
 
-            twophase_maps = TwophaseMaps()
+            twophase_maps = TwophaseMaps(units_switch)
             twophase_files_dict = twophase_maps.check_twophase_files(output_directory)
 
             twophase_rbs = {
@@ -495,7 +496,7 @@ class FLO2DMapCrafter:
 
         # Hazard Maps
         self.dlg.tab5.setEnabled(True)
-        hazard_maps = HazardMaps()
+        hazard_maps = HazardMaps(units_switch)
         hazard_maps_dict = hazard_maps.check_hazard_files(output_directory)
 
         hazard_rbs = {
@@ -545,6 +546,7 @@ class FLO2DMapCrafter:
 
         with open(flo2d_results_dir + r"\CONT.DAT", "r") as file:
             lines = file.readlines()
+            units_switch = lines[1].split()[3]
             elements = lines[2].split()
             mud_switch = elements[3]
             sed_switch = elements[4]
@@ -589,7 +591,7 @@ class FLO2DMapCrafter:
                 r"STATICPRESS.OUT": self.dlg.sp_cw_cb.isChecked(),
             }
 
-            flood_maps = FloodMaps()
+            flood_maps = FloodMaps(units_switch)
             flood_maps.create_maps(
                 flood_rbs, flo2d_results_dir, map_output_dir, mapping_group, self.crs
             )
@@ -626,7 +628,7 @@ class FLO2DMapCrafter:
                 ],
             }
 
-            sediment_maps = SedimentMaps()
+            sediment_maps = SedimentMaps(units_switch)
             sediment_maps.create_maps(
                 sediment_rbs, flo2d_results_dir, map_output_dir, mapping_group, self.crs
             )
@@ -660,7 +662,7 @@ class FLO2DMapCrafter:
                 r"FINALCVFP.OUT": self.dlg.fs_mf_cb.isChecked(),
             }
 
-            mudflow_maps = MudflowMaps()
+            mudflow_maps = MudflowMaps(units_switch)
             mudflow_maps.create_maps(
                 mudflow_rbs, flo2d_results_dir, map_output_dir, mapping_group, self.crs
             )
@@ -704,7 +706,7 @@ class FLO2DMapCrafter:
                 r"STATICPRESS.OUT": self.dlg.sp_tp_cb.isChecked(),
             }
 
-            twophase_maps = TwophaseMaps()
+            twophase_maps = TwophaseMaps(units_switch)
             twophase_maps.create_maps(
                 twophase_rbs, flo2d_results_dir, map_output_dir, mapping_group, self.crs
             )
@@ -728,7 +730,7 @@ class FLO2DMapCrafter:
             "FEMA": self.dlg.fema_hm_cb.isChecked()
         }
 
-        hazard_maps = HazardMaps()
+        hazard_maps = HazardMaps(units_switch)
         hazard_maps.create_maps(
             hazard_rbs, flo2d_results_dir, map_output_dir, mapping_group, self.crs
         )

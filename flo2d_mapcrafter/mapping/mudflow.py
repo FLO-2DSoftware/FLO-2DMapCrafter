@@ -29,7 +29,14 @@ from qgis._core import QgsProject, QgsVectorLayer, QgsVectorFileWriter, QgsGeome
 from flo2d_mapcrafter.mapping.scripts import read_ASCII, set_raster_style, set_velocity_vector_style
 
 
-class MudflowMaps():
+class MudflowMaps:
+
+    def __init__(self, units_switch):
+        """
+        Class constructor
+        :param units_switch: 0 english 1 metric
+        """
+        self.units_switch = units_switch
 
     def check_mudflow_files(self, output_dir):
         """

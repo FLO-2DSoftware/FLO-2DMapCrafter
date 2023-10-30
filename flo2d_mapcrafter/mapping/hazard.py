@@ -32,7 +32,14 @@ from flo2d_mapcrafter.mapping.scripts import read_ASCII, remove_layer, set_raste
 
 import processing
 
-class HazardMaps():
+class HazardMaps:
+
+    def __init__(self, units_switch):
+        """
+        Class constructor
+        :param units_switch: 0 english 1 metric
+        """
+        self.units_switch = units_switch
 
     def check_hazard_files(self, output_dir):
         """
@@ -215,7 +222,7 @@ class HazardMaps():
                 print(f"Error deleting {hydro_risk}: {str(e)}")
 
         # adjust units
-        if crs.mapUnits() == QgsUnitTypes.DistanceMeters:
+        if self.units_switch == 1:
             uc = 1
         else:
             uc = 3.28
@@ -249,8 +256,8 @@ class HazardMaps():
     def create_usbr_map(self, name, hydro_risk, depth_data, vel_data, map_type, crs):
         """Create the USBR hydrodynamic risk map"""
 
-        # adjust units TODO: Perform the units adjustment
-        if crs.mapUnits() == QgsUnitTypes.DistanceMeters:
+        # adjust units
+        if self.units_switch == 1:
             uc = 3.28
         else:
             uc = 1

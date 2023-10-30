@@ -31,7 +31,14 @@ from flo2d_mapcrafter.mapping.scripts import read_ASCII, get_extent, remove_laye
     set_velocity_vector_style
 
 
-class FloodMaps():
+class FloodMaps:
+
+    def __init__(self, units_switch):
+        """
+        Class constructor
+        :param units_switch: 0 english 1 metric
+        """
+        self.units_switch = units_switch
 
     def check_flood_files(self, output_dir):
         """
