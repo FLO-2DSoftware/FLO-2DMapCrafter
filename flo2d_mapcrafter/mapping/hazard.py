@@ -23,8 +23,10 @@
 """
 import os
 
+import numpy as np
 from PyQt5.QtWidgets import QMessageBox
-from qgis._core import QgsProject, QgsRasterLayer, QgsUnitTypes
+from osgeo import gdal
+from qgis._core import QgsProject, QgsRasterLayer, QgsUnitTypes, QgsMessageLog
 
 from flo2d_mapcrafter.mapping.scripts import read_ASCII, remove_layer, set_raster_style
 
@@ -60,6 +62,12 @@ class HazardMaps():
             r"VEL_X_DEPTH.OUT": False
         }
 
+        # US Bureau of Reclamation
+        usbr_files = {
+            r"DEPTH.OUT": False,
+            r"VELFP.OUT": False,
+        }
+
         files = os.listdir(output_dir)
         for file in files:
             for key, value in arr_files.items():
@@ -68,6 +76,9 @@ class HazardMaps():
             for key, value in swiss_files.items():
                 if file.startswith(key):
                     swiss_files[key] = True
+            for key, value in usbr_files.items():
+                if file.startswith(key):
+                    usbr_files[key] = True
 
         # ARR Check if all files are true
         if all(value for value in arr_files.values()):
@@ -76,6 +87,9 @@ class HazardMaps():
         # SWISS Check if all files are true
         if all(value for value in arr_files.values()):
             hazard_maps["Swiss"] = True
+
+        if all(value for value in usbr_files.values()):
+            hazard_maps["USBR"] = True
 
         return hazard_maps
 
@@ -112,6 +126,58 @@ class HazardMaps():
 
                 mapping_group.insertLayer(0, hydro_risk_raster)
 
+            usbr_maps = hazard_rbs.get("USBR")
+            for index, hazard_type in enumerate(usbr_maps):
+                if hazard_type.isChecked():
+                    depth_file = flo2d_results_dir + r"\DEPTH.OUT"
+                    vel_file = flo2d_results_dir + r"\VELFP.OUT"
+                    vel_data = np.loadtxt(vel_file, skiprows=0)
+                    depth_data = np.loadtxt(depth_file, skiprows=0)
+                    # Houses
+                    if index == 0:
+                        hydro_risk = map_output_dir + r"\USBR_HOUSES_HAZARD.tif"
+                        hydro_risk_raster = self.create_usbr_map(
+                            "USBR_HOUSES_HAZARD", hydro_risk, depth_data, vel_data, index, crs
+                        )
+                        QgsProject.instance().addMapLayer(hydro_risk_raster, False)
+                        set_raster_style(hydro_risk_raster, 8)
+                        mapping_group.insertLayer(0, hydro_risk_raster)
+                    # mobile house
+                    if index == 1:
+                        hydro_risk = map_output_dir + r"\USBR_MOBILE_HAZARD.tif"
+                        hydro_risk_raster = self.create_usbr_map(
+                            "USBR_MOBILE_HAZARD", hydro_risk, depth_data, vel_data, index, crs
+                        )
+                        QgsProject.instance().addMapLayer(hydro_risk_raster, False)
+                        set_raster_style(hydro_risk_raster, 8)
+                        mapping_group.insertLayer(0, hydro_risk_raster)
+                    # vehicle
+                    if index == 2:
+                        hydro_risk = map_output_dir + r"\USBR_VEHICLE_HAZARD.tif"
+                        hydro_risk_raster = self.create_usbr_map(
+                            "USBR_VEHICLE_HAZARD", hydro_risk, depth_data, vel_data, index, crs
+                        )
+                        QgsProject.instance().addMapLayer(hydro_risk_raster, False)
+                        set_raster_style(hydro_risk_raster, 8)
+                        mapping_group.insertLayer(0, hydro_risk_raster)
+                    # adults
+                    if index == 3:
+                        hydro_risk = map_output_dir + r"\USBR_ADULTS_HAZARD.tif"
+                        hydro_risk_raster = self.create_usbr_map(
+                            "USBR_ADULTS_HAZARD", hydro_risk, depth_data, vel_data, index, crs
+                        )
+                        QgsProject.instance().addMapLayer(hydro_risk_raster, False)
+                        set_raster_style(hydro_risk_raster, 8)
+                        mapping_group.insertLayer(0, hydro_risk_raster)
+                    # children
+                    if index == 4:
+                        hydro_risk = map_output_dir + r"\USBR_CHILDREN_HAZARD.tif"
+                        hydro_risk_raster = self.create_usbr_map(
+                            "USBR_CHILDREN_HAZARD", hydro_risk, depth_data, vel_data, index, crs
+                        )
+                        QgsProject.instance().addMapLayer(hydro_risk_raster, False)
+                        set_raster_style(hydro_risk_raster, 8)
+                        mapping_group.insertLayer(0, hydro_risk_raster)
 
     def create_arr_map(
         self, map_output_dir, hydro_risk, depth_file, vel_file, vel_x_depth_file, crs
@@ -124,19 +190,22 @@ class HazardMaps():
         h_x_v = map_output_dir + r"\HxV.tif"
 
         if os.path.isfile(flood_depth):
-            depth_layer = QgsProject.instance().addMapLayer(QgsRasterLayer(flood_depth, "FLOOD_DEPTH"), True)
+            QgsProject.instance().addMapLayer(QgsRasterLayer(flood_depth, "FLOOD_DEPTH"), True)
         else:
             read_ASCII(depth_file, flood_depth, "FLOOD_DEPTH", crs)
+            QgsProject.instance().addMapLayer(QgsRasterLayer(flood_depth, "FLOOD_DEPTH"), True)
 
         if os.path.isfile(flow_speed):
-            vel_layer = QgsProject.instance().addMapLayer(QgsRasterLayer(flow_speed, "FLOW_SPEED"), True)
+            QgsProject.instance().addMapLayer(QgsRasterLayer(flow_speed, "FLOW_SPEED"), True)
         else:
             read_ASCII(vel_file, flow_speed, "FLOW_SPEED", crs)
+            QgsProject.instance().addMapLayer(QgsRasterLayer(flow_speed, "FLOW_SPEED"), True)
 
         if os.path.isfile(h_x_v):
-            hxv_layer = QgsProject.instance().addMapLayer(QgsRasterLayer(h_x_v, "HxV"), True)
+            QgsProject.instance().addMapLayer(QgsRasterLayer(h_x_v, "HxV"), True)
         else:
             read_ASCII(vel_x_depth_file, h_x_v, "HxV", crs)
+            QgsProject.instance().addMapLayer(QgsRasterLayer(h_x_v, "HxV"), True)
 
         if os.path.isfile(hydro_risk):
             try:
@@ -176,3 +245,122 @@ class HazardMaps():
         remove_layer("HxV")
 
         return QgsRasterLayer(arr_class, "ARR_FLOOD_HAZARD")
+
+    def create_usbr_map(self, name, hydro_risk, depth_data, vel_data, map_type, crs):
+        """Create the USBR hydrodynamic risk map"""
+
+        # adjust units TODO: Perform the units adjustment
+        if crs.mapUnits() == QgsUnitTypes.DistanceMeters:
+            uc = 3.28
+        else:
+            uc = 1
+
+        values = []
+        cellSize_data = []
+        for (id_v, x, y, velocity), (_, _, _, depth) in zip(vel_data, depth_data):
+
+            if depth != 0 and velocity != 0:
+
+                # Unit conversion
+                depth = depth * uc
+                velocity = velocity * uc
+
+                # Houses
+                if map_type == 0:
+                    low_curve_value = 0.0004 * velocity ** 3 - 0.0121 * velocity ** 2 - 0.0809 * velocity + 3.076
+                    high_curve_value = 0.0007 * velocity ** 3 - 0.0276 * velocity ** 2 + 0.0206 * velocity + 5.9005
+                # Mobile
+                if map_type == 1:
+                    low_curve_value = -0.0007 * velocity ** 2 - 0.0308 * velocity + 1.9458
+                    high_curve_value = -0.0009 * velocity ** 2 - 0.0262 * velocity + 2.5373
+                # Vehicles
+                if map_type == 2:
+                    low_curve_value = 0.0002 * velocity ** 3 - 0.0009 * velocity ** 2 - 0.0904 * velocity + 2.0311
+                    high_curve_value = 0.0004 * velocity ** 3 - 0.0056 * velocity ** 2 - 0.1036 * velocity + 3.0877
+                # Adults
+                if map_type == 3:
+                    low_curve_value = -0.0053 * velocity ** 3 + 0.1241 * velocity ** 2 - 1.0323 * velocity + 3.1671
+                    high_curve_value = -0.0011 * velocity ** 4 + 0.0282 * velocity ** 3 - 0.1888 * velocity ** 2 - 0.2374 * velocity + 4.633
+                # Children
+                if map_type == 4:
+                    low_curve_value = 0.0726 * velocity ** 2 - 0.6786 * velocity + 1.5994
+                    high_curve_value = 0.0029 * velocity ** 5 - 0.0526 * velocity ** 4 + 0.3337 * velocity ** 3 - 0.7657 * velocity ** 2 - 0.2936 * velocity + 3.0475
+
+                # low danger
+                if depth < low_curve_value:
+                    values.append((x, y, 1))
+                    if len(cellSize_data) < 2:
+                        cellSize_data.append((x, y))
+                # high danger
+                elif depth > high_curve_value:
+                    values.append((x, y, 3))
+                    if len(cellSize_data) < 2:
+                        cellSize_data.append((x, y))
+                # judgment
+                else:
+                    values.append((x, y, 2))
+                    if len(cellSize_data) < 2:
+                        cellSize_data.append((x, y))
+
+                # Fix maximums:
+                if map_type == 0 and (depth > 10 or velocity > 25):
+                    values.append((x, y, 3))
+                if map_type == 1 and (depth > 3 or velocity > 16):
+                    values.append((x, y, 3))
+                if map_type == 2 and (depth > 4 or velocity > 16):
+                    values.append((x, y, 3))
+                if map_type == 3 and (depth > 5 or velocity > 12):
+                    values.append((x, y, 3))
+                if map_type == 4 and (depth > 4 or velocity > 8):
+                    values.append((x, y, 3))
+
+
+            # Calculate the differences in X and Y coordinates
+        dx = cellSize_data[1][0] - cellSize_data[0][0]
+        dy = cellSize_data[1][1] - cellSize_data[0][1]
+
+        if dx != 0:
+            cellSize = int(abs(dx))
+        if dy != 0:
+            cellSize = int(abs(dy))
+
+        # Get the extent and number of rows and columns
+        min_x = min(point[0] for point in values)
+        max_x = max(point[0] for point in values)
+        min_y = min(point[1] for point in values)
+        max_y = max(point[1] for point in values)
+        num_cols = int((max_x - min_x) / cellSize) + 1
+        num_rows = int((max_y - min_y) / cellSize) + 1
+
+        # Convert the list of values to an array.
+        raster_data = np.full((num_rows, num_cols), -9999, dtype=np.float32)
+        for point in values:
+            if point[2] != 0:
+                col = int((point[0] - min_x) / cellSize)
+                row = int((max_y - point[1]) / cellSize)
+                raster_data[row, col] = point[2]
+
+        # Initialize the raster
+        driver = gdal.GetDriverByName("GTiff")
+        raster = driver.Create(hydro_risk, num_cols, num_rows, 1, gdal.GDT_Float32)
+        raster.SetGeoTransform(
+            (
+                min_x - cellSize / 2,
+                cellSize,
+                0,
+                max_y + cellSize / 2,
+                0,
+                -cellSize,
+            )
+        )
+        raster.SetProjection(crs.toWkt())
+
+        band = raster.GetRasterBand(1)
+        band.SetNoDataValue(-9999)  # Set a no-data value if needed
+        band.WriteArray(raster_data)
+
+        raster.FlushCache()
+
+        layer = QgsRasterLayer(hydro_risk, name)
+
+        return layer

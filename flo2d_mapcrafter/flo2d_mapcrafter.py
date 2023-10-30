@@ -108,6 +108,7 @@ class FLO2DMapCrafter:
         self.dlg.check_mf_cb.stateChanged.connect(self.check_mf)
         self.dlg.check_tp_cb.stateChanged.connect(self.check_tp)
         self.dlg.check_sd_cb.stateChanged.connect(self.check_sd)
+        self.dlg.check_hm_cb.stateChanged.connect(self.check_hm)
 
         self.dlg.runButton_2.clicked.connect(self.run_open_layout)
 
@@ -539,10 +540,6 @@ class FLO2DMapCrafter:
         if map_output_dir == "":
             map_output_dir = QgsProcessingUtils.tempFolder()
 
-        # if not self.check_input(map_output_dir, "Please, select the output folder."):
-        #     QgsMessageLog.logMessage(QgsProcessingUtils.tempFolder())
-        #     return
-
         if not self.check_checkboxes():
             return
 
@@ -721,7 +718,13 @@ class FLO2DMapCrafter:
             "Austrian": self.dlg.fh_austrian_cb.isChecked(),
             "Swiss": self.dlg.fi_swiss_cb.isChecked(),
             "UK": self.dlg.fh_uk_cb.isChecked(),
-            #"USBR": self.dlg.usbr_hm_cb.isChecked(),
+            "USBR": [
+                self.dlg.usbrh_hm_cb,
+                self.dlg.usbrm_hm_cb,
+                self.dlg.usbrv_hm_cb,
+                self.dlg.usbra_hm_cb,
+                self.dlg.usbrc_hm_cb,
+            ],
             "FEMA": self.dlg.fema_hm_cb.isChecked()
         }
 
@@ -1093,6 +1096,35 @@ class FLO2DMapCrafter:
             for cb in sediment_rbs:
                 cb.setChecked(False)
 
+    def check_hm(self):
+        """
+        Function to check all available hazard maps
+        """
+        hazard_rbs = [
+            self.dlg.fh_australian_cb,
+            self.dlg.fh_austrian_cb,
+            self.dlg.flo_hm_cb,
+            self.dlg.fi_swiss_cb,
+            self.dlg.di_swiss_cb,
+            self.dlg.fh_uk_cb,
+            self.dlg.usbrh_hm_cb,
+            self.dlg.usbrm_hm_cb,
+            self.dlg.usbrv_hm_cb,
+            self.dlg.usbra_hm_cb,
+            self.dlg.usbrc_hm_cb,
+            self.dlg.fema_hm_cb,
+        ]
+
+        if self.dlg.check_hm_cb.isChecked():
+            for cb in hazard_rbs:
+                if cb.isEnabled():
+                    cb.setChecked(True)
+                else:
+                    cb.setChecked(False)
+        else:
+            for cb in hazard_rbs:
+                cb.setChecked(False)
+
     def check_mf(self):
         """
         Function to check all available mudflow maps
@@ -1227,30 +1259,36 @@ class FLO2DMapCrafter:
             self.dlg.hp_tp_cgb,
         ]
         hm_grps = [
-            self.dlg.sc_cw_cgb,
-            self.dlg.bv_cw_cgb,
-            self.dlg.dv_cw_cgb,
-            self.dlg.tv_cw_cgb,
-            self.dlg.ch_cw_cgb,
-            self.dlg.sv_cw_cgb,
-            self.dlg.hp_cw_cgb,
+            self.dlg.australian_hm_cgb,
+            self.dlg.austrian_hm_cgb,
+            self.dlg.flo_hm_cgb,
+            self.dlg.swiss_hm_cgb,
+            self.dlg.uk_hm_cgb,
+            self.dlg.usbr_hm_cgb,
+            self.dlg.fema_hz_cgb,
         ]
 
         if self.dlg.tab0.isEnabled():
             for grp in sd_grps:
-                grp.setCollapsed(True)
+                if grp.isEnabled():
+                    grp.setCollapsed(True)
         if self.dlg.tab1.isEnabled():
             for grp in cw_grps:
-                grp.setCollapsed(True)
+                if grp.isEnabled():
+                    grp.setCollapsed(True)
         if self.dlg.tab2.isEnabled():
             for grp in md_grps:
-                grp.setCollapsed(True)
+                if grp.isEnabled():
+                    grp.setCollapsed(True)
         if self.dlg.tab3.isEnabled():
             for grp in tp_grps:
-                grp.setCollapsed(True)
+                if grp.isEnabled():
+                    grp.setCollapsed(True)
         if self.dlg.tab5.isEnabled():
             for grp in hm_grps:
-                grp.setCollapsed(True)
+                if grp.isEnabled():
+                    grp.setCollapsed(True)
+
     def expand_all_groups(self):
         """
         Function to expand all groups
@@ -1296,27 +1334,32 @@ class FLO2DMapCrafter:
             self.dlg.hp_tp_cgb,
         ]
         hm_grps = [
-            self.dlg.sc_cw_cgb,
-            self.dlg.bv_cw_cgb,
-            self.dlg.dv_cw_cgb,
-            self.dlg.tv_cw_cgb,
-            self.dlg.ch_cw_cgb,
-            self.dlg.sv_cw_cgb,
-            self.dlg.hp_cw_cgb,
+            self.dlg.australian_hm_cgb,
+            self.dlg.austrian_hm_cgb,
+            self.dlg.flo_hm_cgb,
+            self.dlg.swiss_hm_cgb,
+            self.dlg.uk_hm_cgb,
+            self.dlg.usbr_hm_cgb,
+            self.dlg.fema_hz_cgb,
         ]
 
         if self.dlg.tab0.isEnabled():
             for grp in sd_grps:
-                grp.setCollapsed(False)
+                if grp.isEnabled():
+                    grp.setCollapsed(False)
         if self.dlg.tab1.isEnabled():
             for grp in cw_grps:
-                grp.setCollapsed(False)
+                if grp.isEnabled():
+                    grp.setCollapsed(False)
         if self.dlg.tab2.isEnabled():
             for grp in md_grps:
-                grp.setCollapsed(False)
+                if grp.isEnabled():
+                    grp.setCollapsed(False)
         if self.dlg.tab3.isEnabled():
             for grp in tp_grps:
-                grp.setCollapsed(False)
+                if grp.isEnabled():
+                    grp.setCollapsed(False)
         if self.dlg.tab5.isEnabled():
             for grp in hm_grps:
-                grp.setCollapsed(False)
+                if grp.isEnabled():
+                    grp.setCollapsed(False)

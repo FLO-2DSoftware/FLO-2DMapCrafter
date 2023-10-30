@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>728</width>
-    <height>510</height>
+    <width>724</width>
+    <height>501</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -57,17 +57,20 @@
        <property name="enabled">
         <bool>false</bool>
        </property>
+       <property name="acceptDrops">
+        <bool>false</bool>
+       </property>
        <property name="statusTip">
-        <string>teste</string>
+        <string/>
        </property>
        <property name="whatsThis">
-        <string>teste</string>
+        <string/>
        </property>
        <property name="accessibleName">
-        <string>teste</string>
+        <string/>
        </property>
        <property name="accessibleDescription">
-        <string>teste</string>
+        <string/>
        </property>
        <property name="fileWidgetButtonVisible">
         <bool>true</bool>
@@ -80,6 +83,9 @@
        </property>
        <property name="dialogTitle">
         <string>FLO-2D MapCrafter Output Folder</string>
+       </property>
+       <property name="defaultRoot">
+        <string/>
        </property>
        <property name="storageMode">
         <enum>QgsFileWidget::GetDirectory</enum>
@@ -141,7 +147,7 @@
       <enum>QTabWidget::Rounded</enum>
      </property>
      <property name="currentIndex">
-      <number>0</number>
+      <number>4</number>
      </property>
      <property name="elideMode">
       <enum>Qt::ElideNone</enum>
@@ -173,8 +179,8 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>684</width>
-            <height>333</height>
+            <width>680</width>
+            <height>324</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_99">
@@ -666,8 +672,8 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>684</width>
-            <height>333</height>
+            <width>680</width>
+            <height>324</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_100">
@@ -1286,8 +1292,8 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>684</width>
-            <height>333</height>
+            <width>680</width>
+            <height>324</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_101">
@@ -1792,8 +1798,8 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>684</width>
-            <height>333</height>
+            <width>680</width>
+            <height>324</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_102">
@@ -2435,8 +2441,8 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>684</width>
-            <height>333</height>
+            <width>680</width>
+            <height>324</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_103">
@@ -2444,8 +2450,14 @@
             <layout class="QGridLayout" name="gridLayout_45">
              <item row="1" column="0">
               <widget class="QgsCollapsibleGroupBox" name="austrian_hm_cgb">
+               <property name="enabled">
+                <bool>false</bool>
+               </property>
                <property name="title">
                 <string>Austrian</string>
+               </property>
+               <property name="flat">
+                <bool>true</bool>
                </property>
                <property name="collapsed">
                 <bool>true</bool>
@@ -2470,6 +2482,9 @@
              </item>
              <item row="3" column="0">
               <widget class="QgsCollapsibleGroupBox" name="swiss_hm_cgb">
+               <property name="enabled">
+                <bool>false</bool>
+               </property>
                <property name="title">
                 <string>Swiss</string>
                </property>
@@ -2513,6 +2528,9 @@
              </item>
              <item row="4" column="0">
               <widget class="QgsCollapsibleGroupBox" name="uk_hm_cgb">
+               <property name="enabled">
+                <bool>false</bool>
+               </property>
                <property name="title">
                 <string>UK Hazard Mapping</string>
                </property>
@@ -2550,6 +2568,15 @@
                  <layout class="QGridLayout" name="gridLayout_2">
                   <item row="0" column="0">
                    <widget class="QCheckBox" name="fh_australian_cb">
+                    <property name="toolTip">
+                     <string>H1: Generally safe for vehicles, people and buildings
+H2: Unsafe for small vehicles
+H3: Unsafe for vehicles. children and the elderly
+H4: Unsafe for vehicles and people
+H5: Unsafe for vehicles and people. All buildings vulnerable to structural damage. Some less robust buildings subject to failure
+H6: Unsafe for vehicles and people. All building types considered vulnerable to failure.
+</string>
+                    </property>
                     <property name="toolTipDuration">
                      <number>0</number>
                     </property>
@@ -2576,6 +2603,12 @@
                  <layout class="QGridLayout" name="gridLayout_79">
                   <item row="0" column="1">
                    <widget class="QCheckBox" name="usbrm_hm_cb">
+                    <property name="toolTip">
+                     <string>HIGH DANGER ZONE: Occupants of almost any size mobile home are in danger from flood water
+JUDGMENT ZONE: Danger level is based upon engineering judgment
+LOW DANGER ZONE: Occupants of almost any size mobile home are not seriously in danger from flood water
+</string>
+                    </property>
                     <property name="toolTipDuration">
                      <number>0</number>
                     </property>
@@ -2586,6 +2619,12 @@
                   </item>
                   <item row="0" column="2">
                    <widget class="QCheckBox" name="usbrv_hm_cb">
+                    <property name="toolTip">
+                     <string>HIGH DANGER ZONE: Occupants of almost any size passenger vehicle are in danger from flood water
+JUDGMENT ZONE: Danger level is based upon engineering judgment
+LOW DANGER ZONE: Occupants of almost any size passenger vehicle are not seriously in danger from flood water
+</string>
+                    </property>
                     <property name="toolTipDuration">
                      <number>0</number>
                     </property>
@@ -2596,6 +2635,12 @@
                   </item>
                   <item row="0" column="0">
                    <widget class="QCheckBox" name="usbrh_hm_cb">
+                    <property name="toolTip">
+                     <string>HIGH DANGER ZONE: Occupants of most houses are in danger from flood water
+JUDGMENT ZONE: Danger level is based upon engineering judgment
+LOW DANGER ZONE: Occupants of most houses are not seriously in danger from flood water
+</string>
+                    </property>
                     <property name="toolTipDuration">
                      <number>0</number>
                     </property>
@@ -2606,6 +2651,12 @@
                   </item>
                   <item row="1" column="0">
                    <widget class="QCheckBox" name="usbra_hm_cb">
+                    <property name="toolTip">
+                     <string>HIGH DANGER ZONE: Almost any size adult is in danger from flood water
+JUDGMENT ZONE: Danger level is based upon engineering judgment
+LOW DANGER ZONE: Almost any size adult is not seriously threatened by flood water
+</string>
+                    </property>
                     <property name="toolTipDuration">
                      <number>0</number>
                     </property>
@@ -2616,6 +2667,12 @@
                   </item>
                   <item row="1" column="1">
                    <widget class="QCheckBox" name="usbrc_hm_cb">
+                    <property name="toolTip">
+                     <string>HIGH DANGER ZONE: Almost any size child is in danger from flood water
+JUDGMENT ZONE: Danger level is based upon engineering judgment
+LOW DANGER ZONE: Almost any size child (excluding infants) is not seriously threatened by flood water
+</string>
+                    </property>
                     <property name="toolTipDuration">
                      <number>0</number>
                     </property>
@@ -2631,6 +2688,9 @@
              </item>
              <item row="6" column="0">
               <widget class="QgsCollapsibleGroupBox" name="fema_hz_cgb">
+               <property name="enabled">
+                <bool>false</bool>
+               </property>
                <property name="title">
                 <string>US Federal Emergency Management Agency</string>
                </property>
@@ -2657,6 +2717,9 @@
              </item>
              <item row="2" column="0">
               <widget class="QgsCollapsibleGroupBox" name="flo_hm_cgb">
+               <property name="enabled">
+                <bool>false</bool>
+               </property>
                <property name="title">
                 <string>FLO-2D </string>
                </property>
@@ -2748,8 +2811,8 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>684</width>
-            <height>333</height>
+            <width>680</width>
+            <height>324</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_104">
