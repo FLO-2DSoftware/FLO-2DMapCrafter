@@ -147,7 +147,7 @@
       <enum>QTabWidget::Rounded</enum>
      </property>
      <property name="currentIndex">
-      <number>4</number>
+      <number>0</number>
      </property>
      <property name="elideMode">
       <enum>Qt::ElideNone</enum>
@@ -2489,13 +2489,19 @@
                 <string>Swiss</string>
                </property>
                <property name="collapsed">
-                <bool>false</bool>
+                <bool>true</bool>
                </property>
                <layout class="QGridLayout" name="gridLayout_78">
                 <item row="0" column="0">
                  <layout class="QGridLayout" name="gridLayout_77">
                   <item row="0" column="0">
                    <widget class="QCheckBox" name="fi_swiss_cb">
+                    <property name="toolTip">
+                     <string>HIGH INTENSITY: Depth &gt; 2 m or Depth * Velocity &gt; 2 m²/s
+MODERATE INTENSITY: 0.5 &gt; Depth &gt; 2 m or 0.5 &gt; Depth * Velocity &gt; 2 m²/s
+LOW INTENSITY: Depth &lt; 0.5 m or Depth * Velocity &lt; 0.5 m²/s
+</string>
+                    </property>
                     <property name="toolTipDuration">
                      <number>0</number>
                     </property>
@@ -2506,6 +2512,11 @@
                   </item>
                   <item row="0" column="1">
                    <widget class="QCheckBox" name="di_swiss_cb">
+                    <property name="toolTip">
+                     <string>HIGH INTENSITY: Depth &gt; 1 m and Velocity &gt; 1 m/s
+MODERATE INTENSITY: Depth &lt; 1 m or Velocity &lt; 1 m/s
+</string>
+                    </property>
                     <property name="toolTipDuration">
                      <number>0</number>
                     </property>
