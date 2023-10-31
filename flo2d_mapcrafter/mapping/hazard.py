@@ -66,7 +66,8 @@ class HazardMaps:
         # SWISS FLOOD INTENSITY
         swiss_files = {
             r"DEPTH.OUT": False,
-            r"VEL_X_DEPTH.OUT": False
+            r"VEL_X_DEPTH.OUT": False,
+            r"VELFP.OUT": False
         }
 
         # US Bureau of Reclamation
@@ -186,6 +187,136 @@ class HazardMaps:
                         set_raster_style(hydro_risk_raster, 8)
                         mapping_group.insertLayer(0, hydro_risk_raster)
 
+            swiss_maps = hazard_rbs.get("Swiss")
+            for index, hazard_type in enumerate(swiss_maps):
+                if hazard_type.isChecked():
+                    depth_file = flo2d_results_dir + r"\DEPTH.OUT"
+                    vel_file = flo2d_results_dir + r"\VELFP.OUT"
+                    vel_x_depth_file = flo2d_results_dir + r"\VEL_X_DEPTH.OUT"
+                    vel_x_depth_data = np.loadtxt(vel_x_depth_file, skiprows=0)
+                    depth_data = np.loadtxt(depth_file, skiprows=0)
+                    vel_data = np.loadtxt(vel_file, skiprows=0)
+                    # Flood intensity
+                    if index == 0:
+                        hydro_risk = map_output_dir + r"\SWISS_FLOOD_INTENSITY.tif"
+                        hydro_risk_raster = self.create_swiss_map(
+                            "SWISS_FLOOD_INTENSITY", hydro_risk, depth_data, vel_data, vel_x_depth_data, index, crs
+                        )
+                        QgsProject.instance().addMapLayer(hydro_risk_raster, False)
+                        set_raster_style(hydro_risk_raster, 8)
+                        mapping_group.insertLayer(0, hydro_risk_raster)
+                    if index == 1:
+                        hydro_risk = map_output_dir + r"\SWISS_DEBRIS_INTENSITY.tif"
+                        hydro_risk_raster = self.create_swiss_map(
+                            "SWISS_DEBRIS_INTENSITY", hydro_risk, depth_data, vel_data, vel_x_depth_data, index, crs
+                        )
+                        QgsProject.instance().addMapLayer(hydro_risk_raster, False)
+                        set_raster_style(hydro_risk_raster, 8)
+                        mapping_group.insertLayer(0, hydro_risk_raster)
+
+    def create_swiss_map(self, name, hydro_risk, depth_data, vel_data, vel_x_depth_data, map_type, crs):
+        """Create the SWISS flood intensity map"""
+
+        # adjust units
+        if self.units_switch == "1":
+            uc = 1
+        else:
+            uc = 3.28
+
+        values = []
+        cellSize_data = []
+
+        # Flood Intensity
+        if map_type == 0:
+            for (id_v, x, y, depth_x_velocity), (_, _, _, depth) in zip(vel_x_depth_data, depth_data):
+                if depth != 0:
+                    # Unit conversion
+                    depth = depth * uc
+                    depth_x_velocity = depth_x_velocity * (uc ** 2)
+                    # low intensity
+                    if depth > 2 or depth_x_velocity > 2:
+                        values.append((x, y, 3))
+                        if len(cellSize_data) < 2:
+                            cellSize_data.append((x, y))
+                    # moderate intensity
+                    elif 0.5 < depth < 2 or 0.5 < depth_x_velocity < 2:
+                        values.append((x, y, 2))
+                        if len(cellSize_data) < 2:
+                            cellSize_data.append((x, y))
+                    # high intensity
+                    else:
+                        values.append((x, y, 1))
+                        if len(cellSize_data) < 2:
+                            cellSize_data.append((x, y))
+
+        # Debris Intensity
+        if map_type == 1:
+            for (id_v, x, y, depth), (_, _, _, velocity) in zip(depth_data, vel_data):
+                if depth != 0:
+                    # Unit conversion
+                    depth = depth * uc
+                    velocity = velocity * uc
+                    # high intensity
+                    if depth > 1 and velocity > 1:
+                        values.append((x, y, 3))
+                        if len(cellSize_data) < 2:
+                            cellSize_data.append((x, y))
+                    # moderate intensity
+                    elif depth < 1 or velocity < 1:
+                        values.append((x, y, 2))
+                        if len(cellSize_data) < 2:
+                            cellSize_data.append((x, y))
+
+        # Calculate the differences in X and Y coordinates
+        dx = cellSize_data[1][0] - cellSize_data[0][0]
+        dy = cellSize_data[1][1] - cellSize_data[0][1]
+
+        if dx != 0:
+            cellSize = int(abs(dx))
+        if dy != 0:
+            cellSize = int(abs(dy))
+
+        # Get the extent and number of rows and columns
+        min_x = min(point[0] for point in values)
+        max_x = max(point[0] for point in values)
+        min_y = min(point[1] for point in values)
+        max_y = max(point[1] for point in values)
+        num_cols = int((max_x - min_x) / cellSize) + 1
+        num_rows = int((max_y - min_y) / cellSize) + 1
+
+        # Convert the list of values to an array.
+        raster_data = np.full((num_rows, num_cols), -9999, dtype=np.float32)
+        for point in values:
+            if point[2] != 0:
+                col = int((point[0] - min_x) / cellSize)
+                row = int((max_y - point[1]) / cellSize)
+                raster_data[row, col] = point[2]
+
+        # Initialize the raster
+        driver = gdal.GetDriverByName("GTiff")
+        raster = driver.Create(hydro_risk, num_cols, num_rows, 1, gdal.GDT_Float32)
+        raster.SetGeoTransform(
+            (
+                min_x - cellSize / 2,
+                cellSize,
+                0,
+                max_y + cellSize / 2,
+                0,
+                -cellSize,
+            )
+        )
+        raster.SetProjection(crs.toWkt())
+
+        band = raster.GetRasterBand(1)
+        band.SetNoDataValue(-9999)  # Set a no-data value if needed
+        band.WriteArray(raster_data)
+
+        raster.FlushCache()
+
+        layer = QgsRasterLayer(hydro_risk, name)
+
+        return layer
+
     def create_arr_map(
         self, map_output_dir, hydro_risk, depth_file, vel_file, vel_x_depth_file, crs
     ):
@@ -222,7 +353,7 @@ class HazardMaps:
                 print(f"Error deleting {hydro_risk}: {str(e)}")
 
         # adjust units
-        if self.units_switch == 1:
+        if self.units_switch == "1":
             uc = 1
         else:
             uc = 3.28
@@ -257,7 +388,7 @@ class HazardMaps:
         """Create the USBR hydrodynamic risk map"""
 
         # adjust units
-        if self.units_switch == 1:
+        if self.units_switch == "1":
             uc = 3.28
         else:
             uc = 1

@@ -306,7 +306,7 @@ class FLO2DMapCrafter:
         with open(output_directory + r"\CONT.DAT", "r") as file:
             lines = file.readlines()
             elements = lines[2].split()
-            units_switch = lines[1].split()[3]
+            units_switch = lines[0].split()[3]
             mud_switch = elements[3]
             sed_switch = elements[4]
             file.close()
@@ -546,7 +546,7 @@ class FLO2DMapCrafter:
 
         with open(flo2d_results_dir + r"\CONT.DAT", "r") as file:
             lines = file.readlines()
-            units_switch = lines[1].split()[3]
+            units_switch = lines[0].split()[3]
             elements = lines[2].split()
             mud_switch = elements[3]
             sed_switch = elements[4]
@@ -718,7 +718,10 @@ class FLO2DMapCrafter:
         hazard_rbs = {
             "ARR": self.dlg.fh_australian_cb.isChecked(),
             "Austrian": self.dlg.fh_austrian_cb.isChecked(),
-            "Swiss": self.dlg.fi_swiss_cb.isChecked(),
+            "Swiss": [
+                self.dlg.fi_swiss_cb,
+                self.dlg.di_swiss_cb
+            ],
             "UK": self.dlg.fh_uk_cb.isChecked(),
             "USBR": [
                 self.dlg.usbrh_hm_cb,
