@@ -233,6 +233,14 @@ class FloodMaps:
             file = flo2d_results_dir + r"\IMPACT.OUT"
             self.process_maps(name, raster, file, crs, mapping_group, 1)
 
+        # Uncheck and Collapse the layers added
+        allLayers = mapping_group.findLayers()
+        for layer in allLayers:
+            if not layer.name() == "GROUND_ELEVATION":
+                lyr = QgsProject.instance().layerTreeRoot().findLayer(layer.layerId())
+                lyr.setItemVisibilityChecked(False)
+                lyr.setExpanded(False)
+
     def process_maps(self, name, raster, file, crs, mapping_group, style):
         """
         Function to process the maps
