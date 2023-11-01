@@ -529,6 +529,10 @@ class FLO2DMapCrafter:
                 else:
                     hazard_rbs[key].setEnabled(False)
 
+        map_output_dir = output_directory + r"\MapCrafter"
+        self.dlg.mapper_out_folder.setFilePath(map_output_dir)
+        if not os.path.exists(map_output_dir):
+            os.makedirs(map_output_dir)
 
     def run_map_creator(self):
         """Run method that performs all the real work"""
