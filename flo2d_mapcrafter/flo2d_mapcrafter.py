@@ -490,13 +490,27 @@ class FLO2DMapCrafter:
                 r"SPECENERGY.OUT": self.dlg.se_tp_cb,
                 r"STATICPRESS.OUT": self.dlg.sp_tp_cb,
                 r"IMPACT.OUT": self.dlg.if_tp_cb,
+                r"SEDFP.OUT": [
+                    self.dlg.ms_tp_cb,
+                    self.dlg.md_tp_cb,
+                    self.dlg.fdb_tp_cb
+                ],
             }
 
             for key, value in twophase_files_dict.items():
                 if value:
-                    twophase_rbs[key].setEnabled(True)
+                    if isinstance(twophase_rbs[key], list):
+                        for cb in twophase_rbs[key]:
+                            cb.setEnabled(True)
+                    else:
+                        twophase_rbs[key].setEnabled(True)
                 else:
-                    twophase_rbs[key].setEnabled(False)
+                    if isinstance(twophase_rbs[key], list):
+                        for cb in twophase_rbs[key]:
+                            cb.setEnabled(False)
+                    else:
+                        twophase_rbs[key].setEnabled(False)
+
 
         # Hazard Maps
         self.dlg.tab5.setEnabled(True)
@@ -716,6 +730,11 @@ class FLO2DMapCrafter:
                 r"SPECENERGY.OUT": self.dlg.se_tp_cb.isChecked(),
                 r"STATICPRESS.OUT": self.dlg.sp_tp_cb.isChecked(),
                 r"IMPACT.OUT": self.dlg.if_tp_cb.isChecked(),
+                r"SEDFP.OUT": [
+                self.dlg.ms_tp_cb.isChecked(),
+                self.dlg.md_tp_cb.isChecked(),
+                self.dlg.fdb_tp_cb.isChecked()
+                ],
             }
 
             twophase_maps = TwophaseMaps(units_switch)
@@ -731,24 +750,29 @@ class FLO2DMapCrafter:
             "ARR": self.dlg.fh_australian_cb.isChecked(),
             "Austrian": self.dlg.fh_austrian_cb.isChecked(),
             "Swiss": [
-                self.dlg.fi_swiss_cb,
-                self.dlg.di_swiss_cb
+                self.dlg.fi_swiss_cb.isChecked(),
+                self.dlg.di_swiss_cb.isChecked()
             ],
             "UK": self.dlg.fh_uk_cb.isChecked(),
             "USBR": [
-                self.dlg.usbrh_hm_cb,
-                self.dlg.usbrm_hm_cb,
-                self.dlg.usbrv_hm_cb,
-                self.dlg.usbra_hm_cb,
-                self.dlg.usbrc_hm_cb,
+                self.dlg.usbrh_hm_cb.isChecked(),
+                self.dlg.usbrm_hm_cb.isChecked(),
+                self.dlg.usbrv_hm_cb.isChecked(),
+                self.dlg.usbra_hm_cb.isChecked(),
+                self.dlg.usbrc_hm_cb.isChecked(),
             ],
             "FEMA": self.dlg.fema_hm_cb.isChecked()
         }
 
-        hazard_maps = HazardMaps(units_switch)
-        hazard_maps.create_maps(
-            hazard_rbs, flo2d_results_dir, map_output_dir, mapping_group, self.crs
-        )
+        at_least_one_checked = any(
+            value if not isinstance(value, list) else any(value) for value in hazard_rbs.values())
+
+        if at_least_one_checked:
+
+            hazard_maps = HazardMaps(units_switch)
+            hazard_maps.create_maps(
+                hazard_rbs, flo2d_results_dir, map_output_dir, mapping_group, self.crs
+            )
 
         msg_box = QMessageBox()
         msg_box.setIcon(QMessageBox.Information)

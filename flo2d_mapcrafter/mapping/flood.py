@@ -91,124 +91,180 @@ class FloodMaps:
         vector_style_directory = os.path.dirname(os.path.realpath(__file__))[:-8] + r"\vector_styles"
         raster_style_directory = os.path.dirname(os.path.realpath(__file__))[:-8] + r"\raster_styles"
 
+        # Site Characteristics
+        sc_group_name = "Site Characteristics"
+        if mapping_group.findGroup(sc_group_name):
+            sc_group = mapping_group.findGroup(sc_group_name)
+        else:
+            sc_group = mapping_group.insertGroup(0, sc_group_name)
+
+        # Basic
+        bv_group_name = "Basic"
+        if mapping_group.findGroup(bv_group_name):
+            bv_group = mapping_group.findGroup(bv_group_name)
+        else:
+            bv_group = mapping_group.insertGroup(0, bv_group_name)
+
+        # Derived
+        dv_group_name = "Derived"
+        if mapping_group.findGroup(dv_group_name):
+            dv_group = mapping_group.findGroup(dv_group_name)
+        else:
+            dv_group = mapping_group.insertGroup(0, dv_group_name)
+
+        # Derived
+        tv_group_name = "Time"
+        if mapping_group.findGroup(tv_group_name):
+            tv_group = mapping_group.findGroup(tv_group_name)
+        else:
+            tv_group = mapping_group.insertGroup(0, tv_group_name)
+
+        # Channel
+        cv_group_name = "Channel"
+        if mapping_group.findGroup(cv_group_name):
+            cv_group = mapping_group.findGroup(cv_group_name)
+        else:
+            cv_group = mapping_group.insertGroup(0, cv_group_name)
+
+        # Structures
+        sv_group_name = "Structures"
+        if mapping_group.findGroup(sv_group_name):
+            sv_group = mapping_group.findGroup(sv_group_name)
+        else:
+            sv_group = mapping_group.insertGroup(0, sv_group_name)
+
+        # Hydraulics
+        hv_group_name = "Hydraulics"
+        if mapping_group.findGroup(hv_group_name):
+            hv_group = mapping_group.findGroup(hv_group_name)
+        else:
+            hv_group = mapping_group.insertGroup(0, hv_group_name)
+
         # Ground elevation
         if flood_rbs.get(r"TOPO.DAT"):
             name = "GROUND_ELEVATION"
             raster = map_output_dir + r"\GROUND_ELEVATION.tif"
             file = flo2d_results_dir + r"\TOPO.DAT"
-            self.process_maps(name, raster, file, crs, mapping_group, 6)
+            self.process_maps(name, raster, file, crs, sc_group, 6)
 
         # Maximum Depth
         if flood_rbs.get(r"DEPTH.OUT"):
             name = "MAXIMUM_DEPTH"
             raster = map_output_dir + r"\MAXIMUM_DEPTH.tif"
             file = flo2d_results_dir + r"\DEPFP.OUT"
-            self.process_maps(name, raster, file, crs, mapping_group, 0)
+            self.process_maps(name, raster, file, crs, bv_group, 0)
 
         # Maximum Velocity
         if flood_rbs.get(r"VELFP.OUT"):
             name = "MAXIMUM_VELOCITY"
             raster = map_output_dir + r"\MAXIMUM_VELOCITY.tif"
             file = flo2d_results_dir + r"\VELFP.OUT"
-            self.process_maps(name, raster, file, crs, mapping_group, 1)
+            self.process_maps(name, raster, file, crs, bv_group, 1)
 
         # Maximum WSE - TODO: Check this map
         if flood_rbs.get(r"MAXWSELEV.OUT"):
             name = "MAXIMUM_WSE"
             raster = map_output_dir + r"\MAXIMUM_WSE.tif"
             file = flo2d_results_dir + r"\MAXWSELEV.OUT"
-            self.process_maps(name, raster, file, crs, mapping_group, 6)
+            self.process_maps(name, raster, file, crs, bv_group, 6)
 
         # Final Depth
         if flood_rbs.get(r"FINALDEP.OUT"):
             name = "FINAL_DEPTH"
             raster = map_output_dir + r"\FINAL_DEPTH.tif"
             file = flo2d_results_dir + r"\FINALDEP.OUT"
-            self.process_maps(name, raster, file, crs, mapping_group, 0)
+            self.process_maps(name, raster, file, crs, bv_group, 0)
 
         # Final Velocity
         if flood_rbs.get(r"FINALVEL.OUT"):
             name = "FINAL_VELOCITY"
             raster = map_output_dir + r"\FINAL_VELOCITY.tif"
             file = flo2d_results_dir + r"\FINALVEL.OUT"
-            self.process_maps(name, raster, file, crs, mapping_group, 1)
+            self.process_maps(name, raster, file, crs, bv_group, 1)
 
         # Depth x Velocity
         if flood_rbs.get(r"VEL_X_DEPTH.OUT"):
             name = "DEPTH_X_VELOCITY"
             raster = map_output_dir + r"\DEPTH_X_VELOCITY.tif"
             file = flo2d_results_dir + r"\VEL_X_DEPTH.OUT"
-            self.process_maps(name, raster, file, crs, mapping_group, 7)
+            self.process_maps(name, raster, file, crs, dv_group, 7)
 
         # Time to one ft
         if flood_rbs.get(r"TIMEONEFT.OUT"):
             name = "TIME_ONE_FT"
             raster = map_output_dir + r"\TIME_ONE_FT.tif"
             file = flo2d_results_dir + r"\TIMEONEFT.OUT"
-            self.process_maps(name, raster, file, crs, mapping_group, 3)
+            self.process_maps(name, raster, file, crs, tv_group, 3)
 
         # Time to two ft
         if flood_rbs.get(r"TIMETOPEAK.OUT"):
             name = "TIME_TWO_FT"
             raster = map_output_dir + r"\TIME_TWO_FT.tif"
             file = flo2d_results_dir + r"\TIMETWOFT.OUT"
-            self.process_maps(name, raster, file, crs, mapping_group, 3)
+            self.process_maps(name, raster, file, crs, tv_group, 3)
 
         # Time to peak
         if flood_rbs.get(r"TIMETOPEAK.OUT"):
             name = "TIME_TO_MAX"
             raster = map_output_dir + r"\TIME_TO_MAX.tif"
             file = flo2d_results_dir + r"\TIMETOPEAK.OUT"
-            self.process_maps(name, raster, file, crs, mapping_group, 3)
+            self.process_maps(name, raster, file, crs, tv_group, 3)
 
         # Static pressure
         if flood_rbs.get(r"STATICPRESS.OUT"):
             name = "STATIC_PRESSURE"
             raster = map_output_dir + r"\STATIC_PRESSURE.tif"
             file = flo2d_results_dir + r"\STATICPRESS.OUT"
-            self.process_maps(name, raster, file, crs, mapping_group, 8)
+            self.process_maps(name, raster, file, crs, hv_group, 8)
 
         # Static pressure
         if flood_rbs.get(r"SPECENERGY.OUT"):
             name = "SPECIFIC_ENERGY"
             raster = map_output_dir + r"\SPECIFIC_ENERGY.tif"
             file = flo2d_results_dir + r"\SPECENERGY.OUT"
-            self.process_maps(name, raster, file, crs, mapping_group, 9)
+            self.process_maps(name, raster, file, crs, hv_group, 9)
 
         # Maximum channel depth
         if flood_rbs.get(r"DEPCH.OUT"):
             name = "MAXIMUM_CHANNEL_DEPTH"
             raster = map_output_dir + r"\MAXIMUM_CHANNEL_DEPTH.tif"
             file = flo2d_results_dir + r"\DEPCH.OUT"
-            self.process_maps(name, raster, file, crs, mapping_group, 0)
+            self.process_maps(name, raster, file, crs, cv_group, 0)
 
         # Final channel depth
         if flood_rbs.get(r"DEPCHFINAL.OUT"):
             name = "FINAL_CHANNEL_DEPTH"
             raster = map_output_dir + r"\FINAL_CHANNEL_DEPTH.tif"
             file = flo2d_results_dir + r"\DEPCHFINAL.OUT"
-            self.process_maps(name, raster, file, crs, mapping_group, 0)
+            self.process_maps(name, raster, file, crs, cv_group, 0)
 
         # Maximum channel velocity
         if flood_rbs.get(r"VELOC.OUT"):
             name = "MAXIMUM_CHANNEL_VELOCITY"
             raster = map_output_dir + r"\MAXIMUM_CHANNEL_VELOCITY.tif"
             file = flo2d_results_dir + r"\VELOC.OUT"
-            self.process_maps(name, raster, file, crs, mapping_group, 1)
+            self.process_maps(name, raster, file, crs, cv_group, 1)
 
         # Final channel velocity
         if flood_rbs.get(r"VELCHFINAL.OUT"):
             name = "FINAL_CHANNEL_VELOCITY"
             raster = map_output_dir + r"\FINAL_CHANNEL_VELOCITY.tif"
             file = flo2d_results_dir + r"\VELCHFINAL.OUT"
-            self.process_maps(name, raster, file, crs, mapping_group, 1)
+            self.process_maps(name, raster, file, crs, cv_group, 1)
 
         # Levee Deficit
         if flood_rbs.get(r"LEVEEDEFIC.OUT"):
             name = "LEVEE_DEFICIT"
             raster = map_output_dir + r"\LEVEE_DEFICIT.tif"
             file = flo2d_results_dir + r"\LEVEEDEFIC.OUT"
-            self.process_maps(name, raster, file, crs, mapping_group, 1)
+            self.process_maps(name, raster, file, crs, sv_group, 1)
+
+        # Impact Force
+        if flood_rbs.get(r"IMPACT.OUT"):
+            name = "IMPACT_FORCE"
+            raster = map_output_dir + r"\IMPACT_FORCE.tif"
+            file = flo2d_results_dir + r"\IMPACT.OUT"
+            self.process_maps(name, raster, file, crs, hv_group, 1)
 
         # Maximum Velocity Vector
         if flood_rbs.get(r"VELDIREC.OUT"):
@@ -216,7 +272,7 @@ class FloodMaps:
             shapefile = map_output_dir + r"\MAXIMUM_VELOCITY_VECTORS.shp"
             value_file = flo2d_results_dir + r"\VELFP.OUT"
             direction_file = flo2d_results_dir + r"\VELDIREC.OUT"
-            self.process_vectors(name, shapefile, value_file, direction_file, crs, mapping_group)
+            self.process_vectors(name, shapefile, value_file, direction_file, crs, bv_group)
 
         # Final Velocity Vector
         if flood_rbs.get(r"FINALDIR.OUT"):
@@ -224,14 +280,7 @@ class FloodMaps:
             shapefile = map_output_dir + r"\FINAL_VELOCITY_VECTORS.shp"
             value_file = flo2d_results_dir + r"\FINALVEL.OUT"
             direction_file = flo2d_results_dir + r"\FINALDIR.OUT"
-            self.process_vectors(name, shapefile, value_file, direction_file, crs, mapping_group)
-
-        # Impact Force
-        if flood_rbs.get(r"IMPACT.OUT"):
-            name = "IMPACT_FORCE"
-            raster = map_output_dir + r"\IMPACT_FORCE.tif"
-            file = flo2d_results_dir + r"\IMPACT.OUT"
-            self.process_maps(name, raster, file, crs, mapping_group, 1)
+            self.process_vectors(name, shapefile, value_file, direction_file, crs, bv_group)
 
         # Uncheck and Collapse the layers added
         allLayers = mapping_group.findLayers()
