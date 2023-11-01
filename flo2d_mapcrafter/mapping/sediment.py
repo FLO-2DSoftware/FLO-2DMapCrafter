@@ -63,6 +63,7 @@ class SedimentMaps:
             r"SPECENERGY.OUT": False,
             r"STATICPRESS.OUT": False,
             r"SEDFP.OUT": False,
+            r"IMPACT.OUT": False,
         }
 
         files = os.listdir(output_dir)
@@ -240,6 +241,13 @@ class SedimentMaps:
             value_file = flo2d_results_dir + r"\FINALVEL.OUT"
             direction_file = flo2d_results_dir + r"\FINALDIR.OUT"
             self.process_vectors(name, shapefile, value_file, direction_file, crs, mapping_group)
+
+        # Impact Force
+        if sediment_rbs.get(r"IMPACT.OUT"):
+            name = "IMPACT_FORCE"
+            raster = map_output_dir + r"\IMPACT_FORCE.tif"
+            file = flo2d_results_dir + r"\IMPACT.OUT"
+            self.process_maps(name, raster, file, crs, mapping_group, 1)
 
     def process_maps(self, name, raster, file, crs, mapping_group, style):
         """

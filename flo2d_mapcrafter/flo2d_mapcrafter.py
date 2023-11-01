@@ -342,6 +342,7 @@ class FLO2DMapCrafter:
                 r"LEVEEDEFIC.OUT": self.dlg.ld_cw_cb,
                 r"SPECENERGY.OUT": self.dlg.se_cw_cb,
                 r"STATICPRESS.OUT": self.dlg.sp_cw_cb,
+                r"IMPACT.OUT": self.dlg.if_cw_cb,
             }
 
             for key, value in flood_files_dict.items():
@@ -386,6 +387,7 @@ class FLO2DMapCrafter:
                     self.dlg.msco_sd_cb,
                     self.dlg.fbd_sd_cb
                                 ],
+                r"IMPACT.OUT": self.dlg.if_sd_cb,
             }
 
             for key, value in sediment_files_dict.items():
@@ -435,6 +437,7 @@ class FLO2DMapCrafter:
                 r"STATICPRESS.OUT": self.dlg.sp_mf_cb,
                 r"CVFPMAX.OUT": self.dlg.ms_mf_cb,
                 r"FINALCVFP.OUT": self.dlg.fs_mf_cb,
+                r"IMPACT.OUT": self.dlg.if_mf_cb,
             }
 
             for key, value in mudflow_files_dict.items():
@@ -486,6 +489,7 @@ class FLO2DMapCrafter:
                 r"LEVEEDEFIC.OUT": self.dlg.ld_tp_cb,
                 r"SPECENERGY.OUT": self.dlg.se_tp_cb,
                 r"STATICPRESS.OUT": self.dlg.sp_tp_cb,
+                r"IMPACT.OUT": self.dlg.if_tp_cb,
             }
 
             for key, value in twophase_files_dict.items():
@@ -593,6 +597,7 @@ class FLO2DMapCrafter:
                 r"LEVEEDEFIC.OUT": self.dlg.ld_cw_cb.isChecked(),
                 r"SPECENERGY.OUT": self.dlg.se_cw_cb.isChecked(),
                 r"STATICPRESS.OUT": self.dlg.sp_cw_cb.isChecked(),
+                r"IMPACT.OUT": self.dlg.if_cw_cb.isChecked(),
             }
 
             flood_maps = FloodMaps(units_switch)
@@ -630,6 +635,7 @@ class FLO2DMapCrafter:
                     self.dlg.msco_sd_cb.isChecked(),
                     self.dlg.fbd_sd_cb.isChecked()
                 ],
+                r"IMPACT.OUT": self.dlg.if_sd_cb.isChecked(),
             }
 
             sediment_maps = SedimentMaps(units_switch)
@@ -664,6 +670,7 @@ class FLO2DMapCrafter:
                 r"STATICPRESS.OUT": self.dlg.sp_mf_cb.isChecked(),
                 r"CVFPMAX.OUT": self.dlg.ms_mf_cb.isChecked(),
                 r"FINALCVFP.OUT": self.dlg.fs_mf_cb.isChecked(),
+                r"IMPACT.OUT": self.dlg.if_mf_cb.isChecked(),
             }
 
             mudflow_maps = MudflowMaps(units_switch)
@@ -708,6 +715,7 @@ class FLO2DMapCrafter:
                 r"LEVEEDEFIC.OUT": self.dlg.ld_tp_cb.isChecked(),
                 r"SPECENERGY.OUT": self.dlg.se_tp_cb.isChecked(),
                 r"STATICPRESS.OUT": self.dlg.sp_tp_cb.isChecked(),
+                r"IMPACT.OUT": self.dlg.if_tp_cb.isChecked(),
             }
 
             twophase_maps = TwophaseMaps(units_switch)
@@ -1053,7 +1061,8 @@ class FLO2DMapCrafter:
             self.dlg.se_cw_cb,
             self.dlg.sp_cw_cb,
             self.dlg.mvv_cw_cb,
-            self.dlg.fvv_cw_cb
+            self.dlg.fvv_cw_cb,
+            self.dlg.if_cw_cb,
         ]
 
         if self.dlg.check_cw_cb.isChecked():
@@ -1093,6 +1102,7 @@ class FLO2DMapCrafter:
             self.dlg.fbd_sd_cb,
             self.dlg.mvv_sd_cb,
             self.dlg.fvv_sd_cb,
+            self.dlg.if_sd_cb,
             ]
 
         if self.dlg.check_sd_cb.isChecked():
@@ -1160,6 +1170,7 @@ class FLO2DMapCrafter:
             self.dlg.sp_mf_cb,
             self.dlg.ms_mf_cb,
             self.dlg.fs_mf_cb,
+            self.dlg.if_mf_cb,
         ]
 
         if self.dlg.check_mf_cb.isChecked():
@@ -1211,6 +1222,7 @@ class FLO2DMapCrafter:
             self.dlg.ffvv_tp_cb,
             self.dlg.fmvv_tp_cb,
             self.dlg.mmvv_tp_cb,
+            self.dlg.if_tp_cb,
         ]
 
         if self.dlg.check_tp_cb.isChecked():

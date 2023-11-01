@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>724</width>
-    <height>501</height>
+    <width>728</width>
+    <height>510</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -179,8 +179,8 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>680</width>
-            <height>324</height>
+            <width>684</width>
+            <height>333</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_99">
@@ -491,13 +491,6 @@
                     </property>
                    </widget>
                   </item>
-                  <item row="0" column="2">
-                   <widget class="QLabel" name="label_18">
-                    <property name="text">
-                     <string/>
-                    </property>
-                   </widget>
-                  </item>
                   <item row="0" column="1">
                    <widget class="QCheckBox" name="sp_cw_cb">
                     <property name="toolTip">
@@ -508,6 +501,19 @@
                     </property>
                     <property name="text">
                      <string>Static Pressure</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="2">
+                   <widget class="QCheckBox" name="if_cw_cb">
+                    <property name="toolTip">
+                     <string>IMPACT.OUT: Impact force per linear foot of structure on the floodplain</string>
+                    </property>
+                    <property name="toolTipDuration">
+                     <number>0</number>
+                    </property>
+                    <property name="text">
+                     <string>Impact Force</string>
                     </property>
                    </widget>
                   </item>
@@ -672,8 +678,8 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>680</width>
-            <height>324</height>
+            <width>684</width>
+            <height>333</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_100">
@@ -964,9 +970,15 @@
                    </widget>
                   </item>
                   <item row="0" column="2">
-                   <widget class="QLabel" name="label_26">
+                   <widget class="QCheckBox" name="if_sd_cb">
+                    <property name="toolTip">
+                     <string>IMPACT.OUT: Impact force per linear foot of structure on the floodplain</string>
+                    </property>
+                    <property name="toolTipDuration">
+                     <number>0</number>
+                    </property>
                     <property name="text">
-                     <string/>
+                     <string>Impact Force</string>
                     </property>
                    </widget>
                   </item>
@@ -1292,8 +1304,8 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>680</width>
-            <height>324</height>
+            <width>684</width>
+            <height>333</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_101">
@@ -1501,19 +1513,6 @@
                <layout class="QGridLayout" name="gridLayout_54">
                 <item row="0" column="0">
                  <layout class="QGridLayout" name="gridLayout_53">
-                  <item row="0" column="0">
-                   <widget class="QCheckBox" name="se_mf_cb">
-                    <property name="toolTip">
-                     <string>SPECENERGY.OUT: Maximum specific energy (ft or m) for a floodplain grid element</string>
-                    </property>
-                    <property name="toolTipDuration">
-                     <number>0</number>
-                    </property>
-                    <property name="text">
-                     <string>Specific Energy</string>
-                    </property>
-                   </widget>
-                  </item>
                   <item row="0" column="1">
                    <widget class="QCheckBox" name="sp_mf_cb">
                     <property name="toolTip">
@@ -1527,10 +1526,29 @@
                     </property>
                    </widget>
                   </item>
-                  <item row="0" column="2">
-                   <widget class="QLabel" name="label_4">
+                  <item row="0" column="0">
+                   <widget class="QCheckBox" name="se_mf_cb">
+                    <property name="toolTip">
+                     <string>SPECENERGY.OUT: Maximum specific energy (ft or m) for a floodplain grid element</string>
+                    </property>
+                    <property name="toolTipDuration">
+                     <number>0</number>
+                    </property>
                     <property name="text">
-                     <string/>
+                     <string>Specific Energy</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="2">
+                   <widget class="QCheckBox" name="if_mf_cb">
+                    <property name="toolTip">
+                     <string>IMPACT.OUT: Impact force per linear foot of structure on the floodplain</string>
+                    </property>
+                    <property name="toolTipDuration">
+                     <number>0</number>
+                    </property>
+                    <property name="text">
+                     <string>Impact Force</string>
                     </property>
                    </widget>
                   </item>
@@ -1798,8 +1816,8 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>680</width>
-            <height>324</height>
+            <width>684</width>
+            <height>333</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_102">
@@ -2216,9 +2234,15 @@
                    </widget>
                   </item>
                   <item row="0" column="2">
-                   <widget class="QLabel" name="label_15">
+                   <widget class="QCheckBox" name="if_tp_cb">
+                    <property name="toolTip">
+                     <string>IMPACT.OUT: Impact force per linear foot of structure on the floodplain</string>
+                    </property>
+                    <property name="toolTipDuration">
+                     <number>0</number>
+                    </property>
                     <property name="text">
-                     <string/>
+                     <string>Impact Force</string>
                     </property>
                    </widget>
                   </item>
@@ -2441,8 +2465,8 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>680</width>
-            <height>324</height>
+            <width>684</width>
+            <height>333</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_103">
@@ -2822,8 +2846,8 @@ LOW DANGER ZONE: Almost any size child (excluding infants) is not seriously thre
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>680</width>
-            <height>324</height>
+            <width>684</width>
+            <height>333</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_104">

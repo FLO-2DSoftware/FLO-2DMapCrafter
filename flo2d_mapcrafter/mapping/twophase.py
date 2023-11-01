@@ -75,6 +75,7 @@ class TwophaseMaps:
             r"LEVEEDEFIC.OUT": None,
             r"SPECENERGY.OUT": None,
             r"STATICPRESS.OUT": None,
+            r"IMPACT.OUT": None,
         }
 
         files = os.listdir(output_dir)
@@ -306,6 +307,13 @@ class TwophaseMaps:
             value_file = flo2d_results_dir + r"\FINALVEL_MUD.OUT"
             direction_file = flo2d_results_dir + r"\FINALDIR_MUD.OUT"
             self.process_vectors(name, shapefile, value_file, direction_file, crs, mapping_group)
+
+        # Impact Force
+        if twophase_rbs.get(r"IMPACT.OUT"):
+            name = "IMPACT_FORCE"
+            raster = map_output_dir + r"\IMPACT_FORCE.tif"
+            file = flo2d_results_dir + r"\IMPACT.OUT"
+            self.process_maps(name, raster, file, crs, mapping_group, 1)
 
     def process_maps(self, name, raster, file, crs, mapping_group, style):
         """
