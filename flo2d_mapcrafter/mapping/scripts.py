@@ -37,7 +37,7 @@ from qgis._core import (
     QgsRuleBasedRenderer, QgsGraduatedSymbolRenderer, QgsClassificationEqualInterval, QgsStyle,
     QgsClassificationQuantile, QgsCategorizedSymbolRenderer, QgsRendererCategory, QgsPointXY, QgsExpression,
     QgsExpressionContext, QgsExpressionContextUtils, QgsProperty, QgsPropertyCollection, QgsSymbolLayer,
-    QgsSimpleMarkerSymbolLayer,
+    QgsSimpleMarkerSymbolLayer, QgsGradientColorRamp, QgsGradientStop,
 )
 from osgeo import gdal
 
@@ -233,133 +233,84 @@ def set_raster_style(layer, style):
 
     provider = layer.dataProvider()
     extent = layer.extent()
+    myRasterShader = QgsRasterShader()
 
     script_directory = os.path.dirname(os.path.realpath(__file__))
     style_directory = script_directory[:-8] + r"\raster_styles"
 
-    # Hydrodynamic Risk
-    if style == 2:
+    stats = provider.bandStatistics(1, QgsRasterBandStats.All, extent, 0)
+    if stats.minimumValue <= 0.001:
+        min = 0.001
+    else:
+        min = stats.minimumValue
+
+    max = stats.maximumValue
+    range = max - min
+    add = range / 2
+    interval = min + add
+    valueList = [min, interval, max]
+
+    # Flood maps
+    if style == 0:
+        color_list = [QColor(colDic["lightblue"]), QColor(colDic["blue"]), QColor(colDic["darkblue"])]
+        set_renderer(layer, color_list, myRasterShader, min, max)
+
+    # Velocity
+    elif style == 1:
+        color_list = [QColor(colDic["lightgreen"]), QColor(colDic["green"]), QColor(colDic["darkgreen"])]
+        set_renderer(layer, color_list, myRasterShader, min, max)
+
+    # Hydrodynamic Risk ARR
+    elif style == 2:
         layer.loadNamedStyle(style_directory + r"\hydro_risk.qml")
+
+    # Time variables TODO: Improve this in next versions
     elif style == 3:
         layer.loadNamedStyle(style_directory + r"\timeoneft.qml")
-    # Other styles
-    else:
-        stats = provider.bandStatistics(1, QgsRasterBandStats.All, extent, 0)
-        if stats.minimumValue <= 0.001:
-            min = 0.001
-        else:
-            min = stats.minimumValue
 
-        max = stats.maximumValue
-        range = max - min
-        add = range / 2
-        interval = min + add
-        valueList = [min, interval, max]
+    # Flow
+    elif style == 4:
+        color_list = [QColor(colDic["white"]), QColor(colDic["lightblue"]), QColor(colDic["blue"])]
+        set_renderer(layer, color_list, myRasterShader, min, max)
 
-        addGE = range / 8
-        valueListGE = [
-            min,
-            min + addGE,
-            min + 2 * addGE,
-            min + 3 * addGE,
-            min + 4 * addGE,
-            min + 5 * addGE,
-            min + 6 * addGE,
-            max,
+    # Mudflow
+    elif style == 5:
+        color_list = [QColor(colDic["mud_lightbrown"]), QColor(colDic["mud_brown"]), QColor(colDic["mud_darkbrown"])]
+        set_renderer(layer, color_list, myRasterShader, min, max)
+
+    # Ground Elevation
+    elif style == 6:
+        color_list = [
+            QColor(colDic["elev1"]),
+            QColor(colDic["elev2"]),
+            QColor(colDic["elev3"]),
+            QColor(colDic["elev4"]),
+            QColor(colDic["elev5"]),
+            QColor(colDic["elev6"]),
+            QColor(colDic["elev7"]),
+            QColor(colDic["elev8"])
         ]
+        set_renderer(layer, color_list, myRasterShader, min, max)
 
-        dep_lst = [
-            QgsColorRampShader.ColorRampItem(valueList[0], QColor(colDic["lightblue"])),
-            QgsColorRampShader.ColorRampItem(valueList[1], QColor(colDic["blue"])),
-            QgsColorRampShader.ColorRampItem(valueList[2], QColor(colDic["darkblue"])),
-        ]
+    # Derived
+    elif style == 7:
+        color_list = [QColor(colDic["dv1"]), QColor(colDic["dv2"]), QColor(colDic["dv3"])]
+        set_renderer(layer, color_list, myRasterShader, min, max)
 
-        vel_lst = [
-            QgsColorRampShader.ColorRampItem(valueList[0], QColor(colDic["lightgreen"])),
-            QgsColorRampShader.ColorRampItem(valueList[1], QColor(colDic["green"])),
-            QgsColorRampShader.ColorRampItem(valueList[2], QColor(colDic["darkgreen"])),
-        ]
+    # Static Pressure
+    elif style == 8:
+        color_list = [QColor(colDic["blue"]), QColor(colDic["yellow"]), QColor(colDic["red"])]
+        set_renderer(layer, color_list, myRasterShader, min, max)
 
-        # time_lst = [
-        #     QgsColorRampShader.ColorRampItem(valueList[0], QColor(colDic["green"])),
-        #     QgsColorRampShader.ColorRampItem(valueList[1], QColor(colDic["yellow"])),
-        #     QgsColorRampShader.ColorRampItem(valueList[2], QColor(colDic["red"])),
-        # ]
+    # Specific Energy
+    elif style == 9:
+        color_list = [QColor(colDic["green"]), QColor(colDic["yellow"]), QColor(colDic["red"])]
+        set_renderer(layer, color_list, myRasterShader, min, max)
 
-        q_lst = [
-            QgsColorRampShader.ColorRampItem(valueList[0], QColor(colDic["white"])),
-            QgsColorRampShader.ColorRampItem(valueList[1], QColor(colDic["lightblue"])),
-            QgsColorRampShader.ColorRampItem(valueList[2], QColor(colDic["blue"])),
-        ]
-
-        mud_lst = [
-            QgsColorRampShader.ColorRampItem(valueList[0], QColor(colDic["mud_lightbrown"])),
-            QgsColorRampShader.ColorRampItem(valueList[1], QColor(colDic["mud_brown"])),
-            QgsColorRampShader.ColorRampItem(valueList[2], QColor(colDic["mud_darkbrown"])),
-        ]
-
-        ge_lst = [
-            QgsColorRampShader.ColorRampItem(valueListGE[0], QColor(colDic["elev1"])),
-            QgsColorRampShader.ColorRampItem(valueListGE[1], QColor(colDic["elev2"])),
-            QgsColorRampShader.ColorRampItem(valueListGE[2], QColor(colDic["elev3"])),
-            QgsColorRampShader.ColorRampItem(valueListGE[3], QColor(colDic["elev4"])),
-            QgsColorRampShader.ColorRampItem(valueListGE[4], QColor(colDic["elev5"])),
-            QgsColorRampShader.ColorRampItem(valueListGE[5], QColor(colDic["elev6"])),
-            QgsColorRampShader.ColorRampItem(valueListGE[6], QColor(colDic["elev7"])),
-            QgsColorRampShader.ColorRampItem(valueListGE[7], QColor(colDic["elev8"])),
-        ]
-
-        dv_lst = [
-            QgsColorRampShader.ColorRampItem(valueList[0], QColor(colDic["dv1"])),
-            QgsColorRampShader.ColorRampItem(valueList[1], QColor(colDic["dv2"])),
-            QgsColorRampShader.ColorRampItem(valueList[2], QColor(colDic["dv3"])),
-        ]
-
-        sp_lst = [
-            QgsColorRampShader.ColorRampItem(valueList[0], QColor(colDic["blue"])),
-            QgsColorRampShader.ColorRampItem(valueList[1], QColor(colDic["yellow"])),
-            QgsColorRampShader.ColorRampItem(valueList[2], QColor(colDic["red"])),
-        ]
-
-        se_lst = [
-            QgsColorRampShader.ColorRampItem(valueList[0], QColor(colDic["green"])),
-            QgsColorRampShader.ColorRampItem(valueList[1], QColor(colDic["yellow"])),
-            QgsColorRampShader.ColorRampItem(valueList[2], QColor(colDic["red"])),
-        ]
-
-        sed_lst = [
-            QgsColorRampShader.ColorRampItem(valueList[0], QColor(colDic["sed1"])),
-            QgsColorRampShader.ColorRampItem(valueList[1], QColor(colDic["sed2"])),
-            QgsColorRampShader.ColorRampItem(valueList[2], QColor(colDic["sed3"])),
-        ]
-
-        style_dict = {
-            0: dep_lst,
-            1: vel_lst,
-            # 3: time_lst,
-            4: q_lst,
-            5: mud_lst,
-            6: ge_lst,
-            7: dv_lst,
-            8: sp_lst,
-            9: se_lst,
-            10: sed_lst
-        }
-
-        myRasterShader = QgsRasterShader()
-        myColorRamp = QgsColorRampShader(minimumValue=min, maximumValue=max)
-
-        myColorRamp.setColorRampItemList(style_dict[style])
-        myColorRamp.setColorRampType(QgsColorRampShader.Interpolated)
-        myColorRamp.setClip(True)
-
-        myRasterShader.setRasterShaderFunction(myColorRamp)
-
-        myPseudoRenderer = QgsSingleBandPseudoColorRenderer(
-            layer.dataProvider(), layer.type(), myRasterShader
-        )
-
-        layer.setRenderer(myPseudoRenderer)
+    # Sediment
+    elif style == 10:
+        color_list = [QColor(colDic["sed1"]), QColor(colDic["sed2"]), QColor(colDic["sed3"])]
+        set_renderer(layer, color_list, myRasterShader, min, max)
 
     layer.triggerRepaint()
 
@@ -414,3 +365,39 @@ def set_velocity_vector_style(layer_name):
 
     # Refresh the layer to apply the changes
     layer_name.triggerRepaint()
+
+def set_renderer(layer, color_list, raster_shader, min, max):
+    """
+    Function to set the render to layer
+    """""
+    # Three colors -> all layers
+    if len(color_list) == 3:
+        color_ramp = QgsGradientColorRamp(
+            QColor(color_list[0]),
+            QColor(color_list[2]),
+            discrete=False, stops=[
+                QgsGradientStop(0.5, QColor(color_list[1])),
+        ])
+    # Ground elevation
+    else:
+        color_ramp = QgsGradientColorRamp(
+            QColor(color_list[0]),
+            QColor(color_list[7]),
+            discrete=False, stops=[
+                QgsGradientStop(0.143, QColor(color_list[1])),
+                QgsGradientStop(0.286, QColor(color_list[2])),
+                QgsGradientStop(0.429, QColor(color_list[3])),
+                QgsGradientStop(0.572, QColor(color_list[4])),
+                QgsGradientStop(0.715, QColor(color_list[5])),
+                QgsGradientStop(0.858, QColor(color_list[6])),
+        ])
+
+    myPseudoRenderer = QgsSingleBandPseudoColorRenderer(
+        layer.dataProvider(), layer.type(), raster_shader
+    )
+
+    myPseudoRenderer.setClassificationMin(min)
+    myPseudoRenderer.setClassificationMax(max)
+    myPseudoRenderer.createShader(color_ramp)
+
+    layer.setRenderer(myPseudoRenderer)
