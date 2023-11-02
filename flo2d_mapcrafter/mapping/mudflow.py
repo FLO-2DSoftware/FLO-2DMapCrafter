@@ -26,6 +26,8 @@ import os
 from PyQt5.QtCore import QVariant
 from qgis._core import QgsProject, QgsVectorLayer, QgsVectorFileWriter, QgsGeometry, QgsPointXY, QgsFeature, QgsField
 
+from flo2d_mapcrafter.mapping.check_data import check_project_id, check_mapping_group, check_raster_file, \
+    check_vector_file
 from flo2d_mapcrafter.mapping.scripts import read_ASCII, set_raster_style, set_velocity_vector_style
 
 
@@ -76,17 +78,13 @@ class MudflowMaps:
 
         return mudflow_files
 
-    def create_maps(self, mudflow_rbs, flo2d_results_dir, map_output_dir, mapping_group, crs):
+    def create_maps(self, mudflow_rbs, flo2d_results_dir, map_output_dir, mapping_group, crs, project_id):
         """
         Function to create the maps
         """
 
-        mapping_group_name = "Mudflow Maps"
-
-        if mapping_group.findGroup(mapping_group_name):
-            mapping_group = mapping_group.findGroup(mapping_group_name)
-        else:
-            mapping_group = mapping_group.insertGroup(0, mapping_group_name)
+        mapping_group_name = check_project_id("Mudflow Maps", project_id)
+        mapping_group = check_mapping_group(mapping_group_name, mapping_group)
 
         vector_style_directory = os.path.dirname(os.path.realpath(__file__))[:-8] + r"\vector_styles"
         raster_style_directory = os.path.dirname(os.path.realpath(__file__))[:-8] + r"\raster_styles"
@@ -149,164 +147,164 @@ class MudflowMaps:
 
         # Ground elevation
         if mudflow_rbs.get(r"TOPO.DAT"):
-            name = "GROUND_ELEVATION"
-            raster = map_output_dir + r"\GROUND_ELEVATION.tif"
+            name = check_project_id("GROUND_ELEVATION", project_id)
+            name, raster = check_raster_file(name, map_output_dir)
             file = flo2d_results_dir + r"\TOPO.DAT"
             self.process_maps(name, raster, file, crs, sc_group, 6)
 
         # Maximum Depth
         if mudflow_rbs.get(r"DEPTH.OUT"):
-            name = "MAXIMUM_DEPTH"
-            raster = map_output_dir + r"\MAXIMUM_DEPTH.tif"
+            name = check_project_id("MAXIMUM_DEPTH", project_id)
+            name, raster = check_raster_file(name, map_output_dir)
             file = flo2d_results_dir + r"\DEPTH.OUT"
             self.process_maps(name, raster, file, crs, bv_group, 5)
 
         # Maximum Velocity
         if mudflow_rbs.get(r"VELFP.OUT"):
-            name = "MAXIMUM_VELOCITY"
-            raster = map_output_dir + r"\MAXIMUM_VELOCITY.tif"
+            name = check_project_id("MAXIMUM_VELOCITY", project_id)
+            name, raster = check_raster_file(name, map_output_dir)
             file = flo2d_results_dir + r"\VELFP.OUT"
             self.process_maps(name, raster, file, crs, bv_group, 1)
 
         # Maximum WSE - CHECK
         if mudflow_rbs.get(r"MAXWSELEV.OUT"):
-            name = "MAXIMUM_WSE"
-            raster = map_output_dir + r"\MAXIMUM_WSE.tif"
+            name = check_project_id("MAXIMUM_WSE", project_id)
+            name, raster = check_raster_file(name, map_output_dir)
             file = flo2d_results_dir + r"\MAXWSELEV.OUT"
             self.process_maps(name, raster, file, crs, bv_group, 6)
 
         # Final Depth
         if mudflow_rbs.get(r"FINALDEP.OUT"):
-            name = "FINAL_DEPTH"
-            raster = map_output_dir + r"\FINAL_DEPTH.tif"
+            name = check_project_id("FINAL_DEPTH", project_id)
+            name, raster = check_raster_file(name, map_output_dir)
             file = flo2d_results_dir + r"\FINALDEP.OUT"
             self.process_maps(name, raster, file, crs, bv_group, 5)
 
         # Final Velocity
         if mudflow_rbs.get(r"FINALVEL.OUT"):
-            name = "FINAL_VELOCITY"
-            raster = map_output_dir + r"\FINAL_VELOCITY.tif"
+            name = check_project_id("FINAL_VELOCITY", project_id)
+            name, raster = check_raster_file(name, map_output_dir)
             file = flo2d_results_dir + r"\FINALVEL.OUT"
             self.process_maps(name, raster, file, crs, bv_group, 1)
 
         # Depth x Velocity
         if mudflow_rbs.get(r"VEL_X_DEPTH.OUT"):
-            name = "DEPTH_X_VELOCITY"
-            raster = map_output_dir + r"\DEPTH_X_VELOCITY.tif"
+            name = check_project_id("DEPTH_X_VELOCITY", project_id)
+            name, raster = check_raster_file(name, map_output_dir)
             file = flo2d_results_dir + r"\VEL_X_DEPTH.OUT"
             self.process_maps(name, raster, file, crs, dv_group, 7)
 
         # Time to one ft
         if mudflow_rbs.get(r"TIMEONEFT.OUT"):
-            name = "TIME_ONE_FT"
-            raster = map_output_dir + r"\TIME_ONE_FT.tif"
+            name = check_project_id("TIME_ONE_FT", project_id)
+            name, raster = check_raster_file(name, map_output_dir)
             file = flo2d_results_dir + r"\TIMEONEFT.OUT"
             self.process_maps(name, raster, file, crs, tv_group, 3)
 
         # Time to two ft
-        if mudflow_rbs.get(r"TIMETOPEAK.OUT"):
-            name = "TIME_TWO_FT"
-            raster = map_output_dir + r"\TIME_TWO_FT.tif"
+        if mudflow_rbs.get(r"TIMETWOFT.OUT"):
+            name = check_project_id("TIME_TWO_FT", project_id)
+            name, raster = check_raster_file(name, map_output_dir)
             file = flo2d_results_dir + r"\TIMETWOFT.OUT"
             self.process_maps(name, raster, file, crs, tv_group, 3)
 
         # Time to peak
         if mudflow_rbs.get(r"TIMETOPEAK.OUT"):
-            name = "TIME_TO_MAX"
-            raster = map_output_dir + r"\TIME_TO_MAX.tif"
+            name = check_project_id("TIME_TO_MAX", project_id)
+            name, raster = check_raster_file(name, map_output_dir)
             file = flo2d_results_dir + r"\TIMETOPEAK.OUT"
             self.process_maps(name, raster, file, crs, tv_group, 3)
 
         # Static pressure
         if mudflow_rbs.get(r"STATICPRESS.OUT"):
-            name = "STATIC_PRESSURE"
-            raster = map_output_dir + r"\STATIC_PRESSURE.tif"
+            name = check_project_id("STATIC_PRESSURE", project_id)
+            name, raster = check_raster_file(name, map_output_dir)
             file = flo2d_results_dir + r"\STATICPRESS.OUT"
             self.process_maps(name, raster, file, crs, hv_group, 8)
 
-        # Static pressure
+        # Specific energy
         if mudflow_rbs.get(r"SPECENERGY.OUT"):
-            name = "SPECIFIC_ENERGY"
-            raster = map_output_dir + r"\SPECIFIC_ENERGY.tif"
+            name = check_project_id("SPECIFIC_ENERGY", project_id)
+            name, raster = check_raster_file(name, map_output_dir)
             file = flo2d_results_dir + r"\SPECENERGY.OUT"
             self.process_maps(name, raster, file, crs, hv_group, 9)
 
         # Maximum channel depth
         if mudflow_rbs.get(r"DEPCH.OUT"):
-            name = "MAXIMUM_CHANNEL_DEPTH"
-            raster = map_output_dir + r"\MAXIMUM_CHANNEL_DEPTH.tif"
+            name = check_project_id("MAXIMUM_CHANNEL_DEPTH", project_id)
+            name, raster = check_raster_file(name, map_output_dir)
             file = flo2d_results_dir + r"\DEPCH.OUT"
             self.process_maps(name, raster, file, crs, cv_group, 5)
 
         # Final channel depth
         if mudflow_rbs.get(r"DEPCHFINAL.OUT"):
-            name = "FINAL_CHANNEL_DEPTH"
-            raster = map_output_dir + r"\FINAL_CHANNEL_DEPTH.tif"
+            name = check_project_id("FINAL_CHANNEL_DEPTH", project_id)
+            name, raster = check_raster_file(name, map_output_dir)
             file = flo2d_results_dir + r"\DEPCHFINAL.OUT"
             self.process_maps(name, raster, file, crs, cv_group, 5)
 
         # Maximum channel velocity
         if mudflow_rbs.get(r"VELOC.OUT"):
-            name = "MAXIMUM_CHANNEL_VELOCITY"
-            raster = map_output_dir + r"\MAXIMUM_CHANNEL_VELOCITY.tif"
+            name = check_project_id("MAXIMUM_CHANNEL_VELOCITY", project_id)
+            name, raster = check_raster_file(name, map_output_dir)
             file = flo2d_results_dir + r"\VELOC.OUT"
             self.process_maps(name, raster, file, crs, cv_group, 1)
 
         # Final channel velocity
         if mudflow_rbs.get(r"VELCHFINAL.OUT"):
-            name = "FINAL_CHANNEL_VELOCITY"
-            raster = map_output_dir + r"\FINAL_CHANNEL_VELOCITY.tif"
+            name = check_project_id("FINAL_CHANNEL_VELOCITY", project_id)
+            name, raster = check_raster_file(name, map_output_dir)
             file = flo2d_results_dir + r"\VELCHFINAL.OUT"
             self.process_maps(name, raster, file, crs, cv_group, 1)
 
         # Levee Deficit
         if mudflow_rbs.get(r"LEVEEDEFIC.OUT"):
-            name = "LEVEE_DEFICIT"
-            raster = map_output_dir + r"\LEVEE_DEFICIT.tif"
+            name = check_project_id("LEVEE_DEFICIT", project_id)
+            name, raster = check_raster_file(name, map_output_dir)
             file = flo2d_results_dir + r"\LEVEEDEFIC.OUT"
             self.process_maps(name, raster, file, crs, sv_group, 1)
 
         # Maximum Sediment Concentration
         if mudflow_rbs.get(r"CVFPMAX.OUT"):
-            name = "MAXIMUM_SEDIMENT_CONCENTRATION"
-            raster = map_output_dir + r"\MAXIMUM_SEDIMENT_CONCENTRATION.tif"
+            name = check_project_id("MAXIMUM_SEDIMENT_CONCENTRATION", project_id)
+            name, raster = check_raster_file(name, map_output_dir)
             file = flo2d_results_dir + r"\CVFPMAX.OUT"
             self.process_maps(name, raster, file, crs, md_group, 10)
 
         # Final Sediment Concentration
         if mudflow_rbs.get(r"FINALCVFP.OUT"):
-            name = "FINAL_SEDIMENT_CONCENTRATION"
-            raster = map_output_dir + r"\FINAL_SEDIMENT_CONCENTRATION.tif"
+            name = check_project_id("FINAL_SEDIMENT_CONCENTRATION", project_id)
+            name, raster = check_raster_file(name, map_output_dir)
             file = flo2d_results_dir + r"\FINALCVFP.OUT"
             self.process_maps(name, raster, file, crs, md_group, 10)
 
         # Maximum Velocity Vector
         if mudflow_rbs.get(r"VELDIREC.OUT"):
-            name = "MAXIMUM_VELOCITY_VECTORS"
-            shapefile = map_output_dir + r"\MAXIMUM_VELOCITY_VECTORS.shp"
+            name = check_project_id("MAXIMUM_VELOCITY_VECTORS", project_id)
+            name, vector = check_vector_file(name, map_output_dir)
             value_file = flo2d_results_dir + r"\VELFP.OUT"
             direction_file = flo2d_results_dir + r"\VELDIREC.OUT"
-            self.process_vectors(name, shapefile, value_file, direction_file, crs, bv_group)
+            self.process_vectors(name, vector, value_file, direction_file, crs, bv_group)
 
         # Final Velocity Vector
         if mudflow_rbs.get(r"FINALDIR.OUT"):
-            name = "FINAL_VELOCITY_VECTORS"
-            shapefile = map_output_dir + r"\FINAL_VELOCITY_VECTORS.shp"
+            name = check_project_id("FINAL_VELOCITY_VECTORS", project_id)
+            name, vector = check_vector_file(name, map_output_dir)
             value_file = flo2d_results_dir + r"\FINALVEL.OUT"
             direction_file = flo2d_results_dir + r"\FINALDIR.OUT"
-            self.process_vectors(name, shapefile, value_file, direction_file, crs, bv_group)
+            self.process_vectors(name, vector, value_file, direction_file, crs, bv_group)
 
         # Impact Force
         if mudflow_rbs.get(r"IMPACT.OUT"):
-            name = "IMPACT_FORCE"
-            raster = map_output_dir + r"\IMPACT_FORCE.tif"
+            name = check_project_id("IMPACT_FORCE", project_id)
+            name, raster = check_raster_file(name, map_output_dir)
             file = flo2d_results_dir + r"\IMPACT.OUT"
             self.process_maps(name, raster, file, crs, hv_group, 1)
 
         # Uncheck and Collapse the layers added
         allLayers = mapping_group.findLayers()
         for layer in allLayers:
-            if not layer.name() == "GROUND_ELEVATION":
+            if not layer.name().split()[0] == "GROUND_ELEVATION":
                 lyr = QgsProject.instance().layerTreeRoot().findLayer(layer.layerId())
                 lyr.setItemVisibilityChecked(False)
                 lyr.setExpanded(False)

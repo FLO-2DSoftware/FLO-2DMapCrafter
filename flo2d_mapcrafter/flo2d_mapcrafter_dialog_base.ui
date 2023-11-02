@@ -97,41 +97,6 @@
      </item>
     </layout>
    </item>
-   <item row="0" column="0">
-    <layout class="QGridLayout" name="gridLayout_43">
-     <item row="0" column="0">
-      <widget class="QLabel" name="label_12">
-       <property name="text">
-        <string>FLO-2D Export Folder</string>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="1">
-      <widget class="QgsFileWidget" name="flo2d_out_folder">
-       <property name="storageMode">
-        <enum>QgsFileWidget::GetDirectory</enum>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="1">
-      <widget class="QgsProjectionSelectionWidget" name="crsselector">
-       <property name="enabled">
-        <bool>true</bool>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="0">
-      <widget class="QLabel" name="label_10">
-       <property name="enabled">
-        <bool>true</bool>
-       </property>
-       <property name="text">
-        <string>CRS</string>
-       </property>
-      </widget>
-     </item>
-    </layout>
-   </item>
    <item row="4" column="0">
     <widget class="QTabWidget" name="tabs">
      <property name="enabled">
@@ -180,7 +145,7 @@
             <x>0</x>
             <y>0</y>
             <width>680</width>
-            <height>309</height>
+            <height>323</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_99">
@@ -337,6 +302,160 @@
                </layout>
               </widget>
              </item>
+             <item row="1" column="0">
+              <widget class="QgsCollapsibleGroupBox" name="sc_cw_cgb">
+               <property name="enabled">
+                <bool>true</bool>
+               </property>
+               <property name="title">
+                <string>Site Characteristics</string>
+               </property>
+               <property name="flat">
+                <bool>true</bool>
+               </property>
+               <property name="collapsed">
+                <bool>true</bool>
+               </property>
+               <layout class="QGridLayout" name="gridLayout_28">
+                <item row="0" column="0">
+                 <layout class="QGridLayout" name="gridLayout_37">
+                  <item row="0" column="0">
+                   <widget class="QCheckBox" name="ge_cw_cb">
+                    <property name="enabled">
+                     <bool>true</bool>
+                    </property>
+                    <property name="acceptDrops">
+                     <bool>true</bool>
+                    </property>
+                    <property name="toolTip">
+                     <string>TOPO.DAT: Grid element, x- and y-coordinates, and their elevations</string>
+                    </property>
+                    <property name="toolTipDuration">
+                     <number>0</number>
+                    </property>
+                    <property name="whatsThis">
+                     <string/>
+                    </property>
+                    <property name="text">
+                     <string>Ground Elevation</string>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </item>
+               </layout>
+              </widget>
+             </item>
+             <item row="4" column="0">
+              <widget class="QgsCollapsibleGroupBox" name="tv_cw_cgb">
+               <property name="title">
+                <string>Time</string>
+               </property>
+               <property name="collapsed">
+                <bool>true</bool>
+               </property>
+               <layout class="QGridLayout" name="gridLayout_31">
+                <item row="0" column="1">
+                 <layout class="QGridLayout" name="gridLayout_39">
+                  <item row="0" column="1">
+                   <widget class="QCheckBox" name="t2ft_cw_cb">
+                    <property name="toolTip">
+                     <string>TIMETWOFT.OUT: Grid element number, the x- and y-coordinates and the initial time to two feet of depth</string>
+                    </property>
+                    <property name="toolTipDuration">
+                     <number>0</number>
+                    </property>
+                    <property name="text">
+                     <string>Time to 2 ft</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="0">
+                   <widget class="QCheckBox" name="t1ft_cw_cb">
+                    <property name="toolTip">
+                     <string>TIMEONEFT.OUT: Grid element number, the x- and y-coordinates and the initial time to one foot of depth</string>
+                    </property>
+                    <property name="toolTipDuration">
+                     <number>0</number>
+                    </property>
+                    <property name="text">
+                     <string>Time to 1 ft</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="2">
+                   <widget class="QCheckBox" name="tmax_cw_cb">
+                    <property name="toolTip">
+                     <string>TIMETOPEAK.OUT: Grid element number, the x- and y-coordinates and the time of occurrence of the maximum depth</string>
+                    </property>
+                    <property name="toolTipDuration">
+                     <number>0</number>
+                    </property>
+                    <property name="text">
+                     <string>Time to Max </string>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </item>
+               </layout>
+              </widget>
+             </item>
+             <item row="7" column="0">
+              <widget class="QgsCollapsibleGroupBox" name="hp_cw_cgb">
+               <property name="title">
+                <string>Hydraulics</string>
+               </property>
+               <property name="collapsed">
+                <bool>true</bool>
+               </property>
+               <layout class="QGridLayout" name="gridLayout_35">
+                <item row="0" column="0">
+                 <layout class="QGridLayout" name="gridLayout_41">
+                  <item row="0" column="0">
+                   <widget class="QCheckBox" name="se_cw_cb">
+                    <property name="toolTip">
+                     <string>SPECENERGY.OUT: Maximum specific energy (ft or m) for a floodplain grid element</string>
+                    </property>
+                    <property name="toolTipDuration">
+                     <number>0</number>
+                    </property>
+                    <property name="text">
+                     <string>Specific Energy</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="1">
+                   <widget class="QCheckBox" name="sp_cw_cb">
+                    <property name="toolTip">
+                     <string>STATICPRESS.OUT: Spatially variable static force per linear foot for each floodplain element</string>
+                    </property>
+                    <property name="toolTipDuration">
+                     <number>0</number>
+                    </property>
+                    <property name="text">
+                     <string>Static Pressure</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="2">
+                   <widget class="QCheckBox" name="if_cw_cb">
+                    <property name="toolTip">
+                     <string>IMPACT.OUT: Impact force per linear foot of structure on the floodplain</string>
+                    </property>
+                    <property name="toolTipDuration">
+                     <number>0</number>
+                    </property>
+                    <property name="text">
+                     <string>Impact Force</string>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </item>
+               </layout>
+              </widget>
+             </item>
              <item row="3" column="0">
               <widget class="QgsCollapsibleGroupBox" name="dv_cw_cgb">
                <property name="title">
@@ -415,160 +534,6 @@
                     </property>
                     <property name="text">
                      <string>Levee Deficit</string>
-                    </property>
-                   </widget>
-                  </item>
-                 </layout>
-                </item>
-               </layout>
-              </widget>
-             </item>
-             <item row="1" column="0">
-              <widget class="QgsCollapsibleGroupBox" name="sc_cw_cgb">
-               <property name="enabled">
-                <bool>true</bool>
-               </property>
-               <property name="title">
-                <string>Site Characteristics</string>
-               </property>
-               <property name="flat">
-                <bool>true</bool>
-               </property>
-               <property name="collapsed">
-                <bool>true</bool>
-               </property>
-               <layout class="QGridLayout" name="gridLayout_28">
-                <item row="0" column="0">
-                 <layout class="QGridLayout" name="gridLayout_37">
-                  <item row="0" column="0">
-                   <widget class="QCheckBox" name="ge_cw_cb">
-                    <property name="enabled">
-                     <bool>true</bool>
-                    </property>
-                    <property name="acceptDrops">
-                     <bool>true</bool>
-                    </property>
-                    <property name="toolTip">
-                     <string>TOPO.DAT: Grid element, x- and y-coordinates, and their elevations</string>
-                    </property>
-                    <property name="toolTipDuration">
-                     <number>0</number>
-                    </property>
-                    <property name="whatsThis">
-                     <string/>
-                    </property>
-                    <property name="text">
-                     <string>Ground Elevation</string>
-                    </property>
-                   </widget>
-                  </item>
-                 </layout>
-                </item>
-               </layout>
-              </widget>
-             </item>
-             <item row="7" column="0">
-              <widget class="QgsCollapsibleGroupBox" name="hp_cw_cgb">
-               <property name="title">
-                <string>Hydraulics</string>
-               </property>
-               <property name="collapsed">
-                <bool>true</bool>
-               </property>
-               <layout class="QGridLayout" name="gridLayout_35">
-                <item row="0" column="0">
-                 <layout class="QGridLayout" name="gridLayout_41">
-                  <item row="0" column="0">
-                   <widget class="QCheckBox" name="se_cw_cb">
-                    <property name="toolTip">
-                     <string>SPECENERGY.OUT: Maximum specific energy (ft or m) for a floodplain grid element</string>
-                    </property>
-                    <property name="toolTipDuration">
-                     <number>0</number>
-                    </property>
-                    <property name="text">
-                     <string>Specific Energy</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="0" column="1">
-                   <widget class="QCheckBox" name="sp_cw_cb">
-                    <property name="toolTip">
-                     <string>STATICPRESS.OUT: Spatially variable static force per linear foot for each floodplain element</string>
-                    </property>
-                    <property name="toolTipDuration">
-                     <number>0</number>
-                    </property>
-                    <property name="text">
-                     <string>Static Pressure</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="0" column="2">
-                   <widget class="QCheckBox" name="if_cw_cb">
-                    <property name="toolTip">
-                     <string>IMPACT.OUT: Impact force per linear foot of structure on the floodplain</string>
-                    </property>
-                    <property name="toolTipDuration">
-                     <number>0</number>
-                    </property>
-                    <property name="text">
-                     <string>Impact Force</string>
-                    </property>
-                   </widget>
-                  </item>
-                 </layout>
-                </item>
-               </layout>
-              </widget>
-             </item>
-             <item row="4" column="0">
-              <widget class="QgsCollapsibleGroupBox" name="tv_cw_cgb">
-               <property name="title">
-                <string>Time</string>
-               </property>
-               <property name="collapsed">
-                <bool>true</bool>
-               </property>
-               <layout class="QGridLayout" name="gridLayout_31">
-                <item row="0" column="1">
-                 <layout class="QGridLayout" name="gridLayout_39">
-                  <item row="0" column="1">
-                   <widget class="QCheckBox" name="t2ft_cw_cb">
-                    <property name="toolTip">
-                     <string>TIMETWOFT.OUT: Grid element number, the x- and y-coordinates and the initial time to two feet of depth</string>
-                    </property>
-                    <property name="toolTipDuration">
-                     <number>0</number>
-                    </property>
-                    <property name="text">
-                     <string>Time to 2 ft</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="0" column="0">
-                   <widget class="QCheckBox" name="t1ft_cw_cb">
-                    <property name="toolTip">
-                     <string>TIMEONEFT.OUT: Grid element number, the x- and y-coordinates and the initial time to one foot of depth</string>
-                    </property>
-                    <property name="toolTipDuration">
-                     <number>0</number>
-                    </property>
-                    <property name="text">
-                     <string>Time to 1 ft</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="0" column="2">
-                   <widget class="QCheckBox" name="tmax_cw_cb">
-                    <property name="toolTip">
-                     <string>TIMETOPEAK.OUT: Grid element number, the x- and y-coordinates and the time of occurrence of the maximum depth</string>
-                    </property>
-                    <property name="toolTipDuration">
-                     <number>0</number>
-                    </property>
-                    <property name="text">
-                     <string>Time to Max </string>
                     </property>
                    </widget>
                   </item>
@@ -679,7 +644,7 @@
             <x>0</x>
             <y>0</y>
             <width>680</width>
-            <height>309</height>
+            <height>323</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_100">
@@ -1305,7 +1270,7 @@
             <x>0</x>
             <y>0</y>
             <width>680</width>
-            <height>309</height>
+            <height>323</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_101">
@@ -1817,7 +1782,7 @@
             <x>0</x>
             <y>0</y>
             <width>680</width>
-            <height>309</height>
+            <height>323</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_102">
@@ -2466,7 +2431,7 @@
             <x>0</x>
             <y>0</y>
             <width>680</width>
-            <height>309</height>
+            <height>323</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_103">
@@ -2846,8 +2811,8 @@ LOW DANGER ZONE: Almost any size child (excluding infants) is not seriously thre
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>659</width>
-            <height>345</height>
+            <width>680</width>
+            <height>323</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_104">
@@ -2969,6 +2934,70 @@ LOW DANGER ZONE: Almost any size child (excluding infants) is not seriously thre
       </layout>
      </widget>
     </widget>
+   </item>
+   <item row="0" column="0">
+    <layout class="QGridLayout" name="gridLayout_43">
+     <item row="0" column="1" colspan="4">
+      <widget class="QgsFileWidget" name="flo2d_out_folder">
+       <property name="storageMode">
+        <enum>QgsFileWidget::GetDirectory</enum>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="3">
+      <widget class="QLabel" name="label_4">
+       <property name="maximumSize">
+        <size>
+         <width>80</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="layoutDirection">
+        <enum>Qt::LeftToRight</enum>
+       </property>
+       <property name="text">
+        <string>Project ID</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="4">
+      <widget class="QLineEdit" name="project_id">
+       <property name="maximumSize">
+        <size>
+         <width>80</width>
+         <height>16777215</height>
+        </size>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1" colspan="2">
+      <widget class="QgsProjectionSelectionWidget" name="crsselector">
+       <property name="enabled">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="0">
+      <widget class="QLabel" name="label_12">
+       <property name="text">
+        <string>FLO-2D Export Folder</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="label_10">
+       <property name="enabled">
+        <bool>true</bool>
+       </property>
+       <property name="text">
+        <string>CRS</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </item>
   </layout>
  </widget>

@@ -47,25 +47,13 @@ import processing
 def read_ASCII(file_path, output_path, name, crs):
     """Read ASCII file and extract the required fields"""
 
-    # check if there is already a file on the output
-    layers = QgsProject.instance().mapLayersByName(name)
-    if layers:
-        # Remove the layer if it exists
-        for layer in layers:
-            QgsProject.instance().removeMapLayer(layer)
-    if os.path.isfile(output_path):
-        try:
-            os.remove(output_path)
-        except OSError as e:
-            print(f"Error deleting {output_path}: {str(e)}")
-
     values = []
     cellSize_data = []
     with open(file_path, "r") as file:
         for line in file:
             line = line.strip()
             fields = line.split()
-            if name == "GROUND_ELEVATION":
+            if name.split()[0] == "GROUND_ELEVATION":
                 x, y, value = (
                     float(fields[0]),
                     float(fields[1]),
@@ -74,7 +62,7 @@ def read_ASCII(file_path, output_path, name, crs):
                 values.append((x, y, value))
                 if len(cellSize_data) < 2:
                     cellSize_data.append((x, y))
-            elif name == "MAXIMUM_DEPOSITION":
+            elif name.split()[0] == "MAXIMUM_DEPOSITION":
                 cell, x, y, value = (
                     float(fields[0]),
                     float(fields[1]),
@@ -84,7 +72,7 @@ def read_ASCII(file_path, output_path, name, crs):
                 values.append((x, y, value))
                 if len(cellSize_data) < 2:
                     cellSize_data.append((x, y))
-            elif name == "MAXIMUM_SCOUR":
+            elif name.split()[0] == "MAXIMUM_SCOUR":
                 cell, x, y, value = (
                     float(fields[0]),
                     float(fields[1]),
@@ -94,7 +82,7 @@ def read_ASCII(file_path, output_path, name, crs):
                 values.append((x, y, value))
                 if len(cellSize_data) < 2:
                     cellSize_data.append((x, y))
-            elif name == "FINAL_BED_DIFFERENCE":
+            elif name.split()[0] == "FINAL_BED_DIFFERENCE":
                 cell, x, y, value = (
                     float(fields[0]),
                     float(fields[1]),

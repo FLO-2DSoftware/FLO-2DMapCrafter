@@ -547,6 +547,7 @@ class FLO2DMapCrafter:
                 else:
                     hazard_rbs[key].setEnabled(False)
 
+        # Add MapCrafter to the output folder
         map_output_dir = output_directory + r"\MapCrafter"
         self.dlg.mapper_out_folder.setFilePath(map_output_dir)
         if not os.path.exists(map_output_dir):
@@ -559,6 +560,7 @@ class FLO2DMapCrafter:
         flo2d_results_dir = self.dlg.flo2d_out_folder.filePath()
         map_output_dir = self.dlg.mapper_out_folder.filePath()
         self.crs = self.dlg.crsselector.crs()
+        project_id = self.dlg.project_id.text()
 
         if map_output_dir == "":
             map_output_dir = QgsProcessingUtils.tempFolder()
@@ -616,7 +618,7 @@ class FLO2DMapCrafter:
 
             flood_maps = FloodMaps(units_switch)
             flood_maps.create_maps(
-                flood_rbs, flo2d_results_dir, map_output_dir, mapping_group, self.crs
+                flood_rbs, flo2d_results_dir, map_output_dir, mapping_group, self.crs, project_id
             )
 
         """
@@ -654,7 +656,7 @@ class FLO2DMapCrafter:
 
             sediment_maps = SedimentMaps(units_switch)
             sediment_maps.create_maps(
-                sediment_rbs, flo2d_results_dir, map_output_dir, mapping_group, self.crs
+                sediment_rbs, flo2d_results_dir, map_output_dir, mapping_group, self.crs, project_id
             )
 
         """"
@@ -689,7 +691,7 @@ class FLO2DMapCrafter:
 
             mudflow_maps = MudflowMaps(units_switch)
             mudflow_maps.create_maps(
-                mudflow_rbs, flo2d_results_dir, map_output_dir, mapping_group, self.crs
+                mudflow_rbs, flo2d_results_dir, map_output_dir, mapping_group, self.crs, project_id
             )
 
         """"
@@ -739,7 +741,7 @@ class FLO2DMapCrafter:
 
             twophase_maps = TwophaseMaps(units_switch)
             twophase_maps.create_maps(
-                twophase_rbs, flo2d_results_dir, map_output_dir, mapping_group, self.crs
+                twophase_rbs, flo2d_results_dir, map_output_dir, mapping_group, self.crs, project_id
             )
 
         """
@@ -1066,6 +1068,7 @@ class FLO2DMapCrafter:
         """
         Function to check all available flood maps
         """
+
         flood_rbs = [
             self.dlg.ge_cw_cb,
             self.dlg.md_cw_cb,
