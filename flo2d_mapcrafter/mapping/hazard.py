@@ -28,6 +28,7 @@ from PyQt5.QtWidgets import QMessageBox
 from osgeo import gdal
 from qgis._core import QgsProject, QgsRasterLayer, QgsUnitTypes, QgsMessageLog
 
+from flo2d_mapcrafter.mapping.check_data import check_project_id, check_mapping_group, check_raster_file
 from flo2d_mapcrafter.mapping.scripts import read_ASCII, remove_layer, set_raster_style
 
 import processing
@@ -101,17 +102,13 @@ class HazardMaps:
 
         return hazard_maps
 
-    def create_maps(self, hazard_rbs, flo2d_results_dir, map_output_dir, mapping_group, crs):
+    def create_maps(self, hazard_rbs, flo2d_results_dir, map_output_dir, mapping_group, crs, project_id):
         """
         Function to create the maps
         """
 
-        mapping_group_name = "Hazard Maps"
-
-        if mapping_group.findGroup(mapping_group_name):
-            mapping_group = mapping_group.findGroup(mapping_group_name)
-        else:
-            mapping_group = mapping_group.insertGroup(0, mapping_group_name)
+        mapping_group_name = check_project_id("Hazard Maps", project_id)
+        mapping_group = check_mapping_group(mapping_group_name, mapping_group)
 
         vector_style_directory = os.path.dirname(os.path.realpath(__file__))[:-8] + r"\vector_styles"
         raster_style_directory = os.path.dirname(os.path.realpath(__file__))[:-8] + r"\raster_styles"
@@ -139,13 +136,14 @@ class HazardMaps:
 
         # ARR
         if hazard_rbs.get("ARR"):
-            hydro_risk = map_output_dir + r"\ARR_FLOOD_HAZARD.tif"
+            name = check_project_id("ARR_FLOOD_HAZARD", project_id)
+            name, raster = check_raster_file(name, map_output_dir)
             depth_file = flo2d_results_dir + r"\DEPTH.OUT"
             vel_file = flo2d_results_dir + r"\VELFP.OUT"
             vel_x_depth_file = flo2d_results_dir + r"\VEL_X_DEPTH.OUT"
 
             hydro_risk_raster = self.create_arr_map(
-                map_output_dir, hydro_risk, depth_file, vel_file, vel_x_depth_file, crs
+                map_output_dir, raster, depth_file, vel_file, vel_x_depth_file, crs, project_id
             )
 
             QgsProject.instance().addMapLayer(hydro_risk_raster, False)
@@ -162,45 +160,50 @@ class HazardMaps:
                 depth_data = np.loadtxt(depth_file, skiprows=0)
                 # Houses
                 if index == 0:
-                    hydro_risk = map_output_dir + r"\USBR_HOUSES_HAZARD.tif"
+                    name = check_project_id("USBR_HOUSES_HAZARD", project_id)
+                    name, raster = check_raster_file(name, map_output_dir)
                     hydro_risk_raster = self.create_usbr_map(
-                        "USBR_HOUSES_HAZARD", hydro_risk, depth_data, vel_data, index, crs
+                        name, raster, depth_data, vel_data, index, crs
                     )
                     QgsProject.instance().addMapLayer(hydro_risk_raster, False)
                     set_raster_style(hydro_risk_raster, 8)
                     USBR_group.insertLayer(0, hydro_risk_raster)
                 # mobile house
                 if index == 1:
-                    hydro_risk = map_output_dir + r"\USBR_MOBILE_HAZARD.tif"
+                    name = check_project_id("USBR_MOBILE_HAZARD", project_id)
+                    name, raster = check_raster_file(name, map_output_dir)
                     hydro_risk_raster = self.create_usbr_map(
-                        "USBR_MOBILE_HAZARD", hydro_risk, depth_data, vel_data, index, crs
+                        name, raster, depth_data, vel_data, index, crs
                     )
                     QgsProject.instance().addMapLayer(hydro_risk_raster, False)
                     set_raster_style(hydro_risk_raster, 8)
                     USBR_group.insertLayer(0, hydro_risk_raster)
                 # vehicle
                 if index == 2:
-                    hydro_risk = map_output_dir + r"\USBR_VEHICLE_HAZARD.tif"
+                    name = check_project_id("USBR_VEHICLE_HAZARD", project_id)
+                    name, raster = check_raster_file(name, map_output_dir)
                     hydro_risk_raster = self.create_usbr_map(
-                        "USBR_VEHICLE_HAZARD", hydro_risk, depth_data, vel_data, index, crs
+                        name, raster, depth_data, vel_data, index, crs
                     )
                     QgsProject.instance().addMapLayer(hydro_risk_raster, False)
                     set_raster_style(hydro_risk_raster, 8)
                     USBR_group.insertLayer(0, hydro_risk_raster)
                 # adults
                 if index == 3:
-                    hydro_risk = map_output_dir + r"\USBR_ADULTS_HAZARD.tif"
+                    name = check_project_id("USBR_ADULTS_HAZARD", project_id)
+                    name, raster = check_raster_file(name, map_output_dir)
                     hydro_risk_raster = self.create_usbr_map(
-                        "USBR_ADULTS_HAZARD", hydro_risk, depth_data, vel_data, index, crs
+                        name, raster, depth_data, vel_data, index, crs
                     )
                     QgsProject.instance().addMapLayer(hydro_risk_raster, False)
                     set_raster_style(hydro_risk_raster, 8)
                     USBR_group.insertLayer(0, hydro_risk_raster)
                 # children
                 if index == 4:
-                    hydro_risk = map_output_dir + r"\USBR_CHILDREN_HAZARD.tif"
+                    name = check_project_id("USBR_CHILDREN_HAZARD", project_id)
+                    name, raster = check_raster_file(name, map_output_dir)
                     hydro_risk_raster = self.create_usbr_map(
-                        "USBR_CHILDREN_HAZARD", hydro_risk, depth_data, vel_data, index, crs
+                        name, raster, depth_data, vel_data, index, crs
                     )
                     QgsProject.instance().addMapLayer(hydro_risk_raster, False)
                     set_raster_style(hydro_risk_raster, 8)
@@ -217,17 +220,19 @@ class HazardMaps:
                 vel_data = np.loadtxt(vel_file, skiprows=0)
                 # Flood intensity
                 if index == 0:
-                    hydro_risk = map_output_dir + r"\SWISS_FLOOD_INTENSITY.tif"
+                    name = check_project_id("SWISS_FLOOD_INTENSITY", project_id)
+                    name, raster = check_raster_file(name, map_output_dir)
                     hydro_risk_raster = self.create_swiss_map(
-                        "SWISS_FLOOD_INTENSITY", hydro_risk, depth_data, vel_data, vel_x_depth_data, index, crs
+                        name, raster, depth_data, vel_data, vel_x_depth_data, index, crs
                     )
                     QgsProject.instance().addMapLayer(hydro_risk_raster, False)
                     set_raster_style(hydro_risk_raster, 8)
                     SWISS_group.insertLayer(0, hydro_risk_raster)
                 if index == 1:
-                    hydro_risk = map_output_dir + r"\SWISS_DEBRIS_INTENSITY.tif"
+                    name = check_project_id("SWISS_DEBRIS_INTENSITY", project_id)
+                    name, raster = check_raster_file(name, map_output_dir)
                     hydro_risk_raster = self.create_swiss_map(
-                        "SWISS_DEBRIS_INTENSITY", hydro_risk, depth_data, vel_data, vel_x_depth_data, index, crs
+                        name, raster, depth_data, vel_data, vel_x_depth_data, index, crs
                     )
                     QgsProject.instance().addMapLayer(hydro_risk_raster, False)
                     set_raster_style(hydro_risk_raster, 8)
@@ -345,39 +350,48 @@ class HazardMaps:
         return layer
 
     def create_arr_map(
-        self, map_output_dir, hydro_risk, depth_file, vel_file, vel_x_depth_file, crs
+        self, map_output_dir, hydro_risk, depth_file, vel_file, vel_x_depth_file, crs, project_id
     ):
         """Create the ARR hydrodynamic risk map"""
 
+        name_speed = check_project_id("FLOW_SPEED", project_id)
+        name, flow_speed = check_raster_file(name_speed, map_output_dir)
+
+        name_depth = check_project_id("FLOOD_DEPTH", project_id)
+        name, flood_depth = check_raster_file(name_depth, map_output_dir)
+
+        name_hxv = check_project_id("HxV", project_id)
+        name, h_x_v = check_raster_file(name_hxv, map_output_dir)
+
         # Check flood depth and flow speed files
-        flow_speed = map_output_dir + r"\FLOW_SPEED.tif"
-        flood_depth = map_output_dir + r"\FLOOD_DEPTH.tif"
-        h_x_v = map_output_dir + r"\HxV.tif"
+        # flow_speed = map_output_dir + r"\FLOW_SPEED.tif"
+        # flood_depth = map_output_dir + r"\FLOOD_DEPTH.tif"
+        # h_x_v = map_output_dir + r"\HxV.tif"
 
         if os.path.isfile(flood_depth):
-            QgsProject.instance().addMapLayer(QgsRasterLayer(flood_depth, "FLOOD_DEPTH"), True)
+            QgsProject.instance().addMapLayer(QgsRasterLayer(flood_depth, name_depth), True)
         else:
-            read_ASCII(depth_file, flood_depth, "FLOOD_DEPTH", crs)
-            QgsProject.instance().addMapLayer(QgsRasterLayer(flood_depth, "FLOOD_DEPTH"), True)
+            read_ASCII(depth_file, flood_depth, name_depth, crs)
+            QgsProject.instance().addMapLayer(QgsRasterLayer(flood_depth, name_depth), True)
 
         if os.path.isfile(flow_speed):
-            QgsProject.instance().addMapLayer(QgsRasterLayer(flow_speed, "FLOW_SPEED"), True)
+            QgsProject.instance().addMapLayer(QgsRasterLayer(flow_speed, name_speed), True)
         else:
-            read_ASCII(vel_file, flow_speed, "FLOW_SPEED", crs)
-            QgsProject.instance().addMapLayer(QgsRasterLayer(flow_speed, "FLOW_SPEED"), True)
+            read_ASCII(vel_file, flow_speed, name_speed, crs)
+            QgsProject.instance().addMapLayer(QgsRasterLayer(flow_speed, name_speed), True)
 
         if os.path.isfile(h_x_v):
-            QgsProject.instance().addMapLayer(QgsRasterLayer(h_x_v, "HxV"), True)
+            QgsProject.instance().addMapLayer(QgsRasterLayer(h_x_v, name_hxv), True)
         else:
-            read_ASCII(vel_x_depth_file, h_x_v, "HxV", crs)
-            QgsProject.instance().addMapLayer(QgsRasterLayer(h_x_v, "HxV"), True)
+            read_ASCII(vel_x_depth_file, h_x_v, name_hxv, crs)
+            QgsProject.instance().addMapLayer(QgsRasterLayer(h_x_v, name_hxv), True)
 
-        if os.path.isfile(hydro_risk):
-            try:
-                remove_layer("ARR_FLOOD_HAZARD")
-                os.remove(hydro_risk)
-            except OSError as e:
-                print(f"Error deleting {hydro_risk}: {str(e)}")
+        # if os.path.isfile(hydro_risk):
+        #     try:
+        #         remove_layer("ARR_FLOOD_HAZARD")
+        #         os.remove(hydro_risk)
+        #     except OSError as e:
+        #         print(f"Error deleting {hydro_risk}: {str(e)}")
 
         # adjust units
         if self.units_switch == "1":
@@ -385,12 +399,12 @@ class HazardMaps:
         else:
             uc = 3.28
 
-        r1_e = f'"HxV@1" <= {0.3 * uc} AND "FLOOD_DEPTH@1" < {0.3 * uc} AND "FLOW_SPEED@1" < {2 * uc}'
-        r2_e = f'"HxV@1" <= {0.6 * uc} AND "FLOOD_DEPTH@1" < {0.5 * uc} AND "FLOW_SPEED@1" < {2 * uc}'
-        r3_e = f'"HxV@1" <= {0.6 * uc} AND "FLOOD_DEPTH@1" < {1.2 * uc} AND "FLOW_SPEED@1" < {2 * uc}'
-        r4_e = f'"HxV@1" <= {1.0 * uc} AND "FLOOD_DEPTH@1" < {2.0 * uc} AND "FLOW_SPEED@1" < {2 * uc}'
-        r5_e = f'"HxV@1" <= {4.0 * uc} AND "FLOOD_DEPTH@1" < {4.0 * uc} AND "FLOW_SPEED@1" < {4 * uc}'
-        r6_e = f'"HxV@1" > {4.0 * uc} OR "FLOOD_DEPTH@1" >= {4.0 * uc} OR "FLOW_SPEED@1" >= {4 * uc}'
+        r1_e = f'"{name_hxv}@1" <= {0.3 * uc} AND "{name_depth}@1" < {0.3 * uc} AND "{name_speed}@1" < {2 * uc}'
+        r2_e = f'"{name_hxv}@1" <= {0.6 * uc} AND "{name_depth}@1" < {0.5 * uc} AND "{name_speed}@1" < {2 * uc}'
+        r3_e = f'"{name_hxv}@1" <= {0.6 * uc} AND "{name_depth}@1" < {1.2 * uc} AND "{name_speed}@1" < {2 * uc}'
+        r4_e = f'"{name_hxv}@1" <= {1.0 * uc} AND "{name_depth}@1" < {2.0 * uc} AND "{name_speed}@1" < {2 * uc}'
+        r5_e = f'"{name_hxv}@1" <= {4.0 * uc} AND "{name_depth}@1" < {4.0 * uc} AND "{name_speed}@1" < {4 * uc}'
+        r6_e = f'"{name_hxv}@1" > {4.0 * uc} OR "{name_depth}@1" >= {4.0 * uc} OR "{name_speed}@1" >= {4 * uc}'
 
         # Australian Rainfall and Runoff Classification
         arr_class = processing.run(
@@ -405,11 +419,13 @@ class HazardMaps:
             },
         )["OUTPUT"]
 
-        remove_layer("FLOOD_DEPTH")
-        remove_layer("FLOW_SPEED")
-        remove_layer("HxV")
+        remove_layer(name_depth)
+        remove_layer(name_speed)
+        remove_layer(name_hxv)
 
-        return QgsRasterLayer(arr_class, "ARR_FLOOD_HAZARD")
+        name_arr = os.path.splitext(os.path.basename(hydro_risk))[0]
+
+        return QgsRasterLayer(arr_class, name_arr)
 
     def create_usbr_map(self, name, hydro_risk, depth_data, vel_data, map_type, crs):
         """Create the USBR hydrodynamic risk map"""

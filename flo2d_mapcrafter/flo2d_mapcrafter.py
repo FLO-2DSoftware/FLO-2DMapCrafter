@@ -773,8 +773,20 @@ class FLO2DMapCrafter:
 
             hazard_maps = HazardMaps(units_switch)
             hazard_maps.create_maps(
-                hazard_rbs, flo2d_results_dir, map_output_dir, mapping_group, self.crs
+                hazard_rbs, flo2d_results_dir, map_output_dir, mapping_group, self.crs, project_id
             )
+
+        # remove empty groups
+        groups = mapping_group.findGroups()
+        for group in groups:
+            subgroups = group.findGroups()
+            for subgroup in subgroups:
+                all_subgrup_layers = subgroup.findLayers()
+                if len(all_subgrup_layers) == 0:
+                    group.removeChildNode(subgroup)
+            all_group_layers = group.findLayers()
+            if len(all_group_layers) == 0:
+                mapping_group.removeChildNode(group)
 
         msg_box = QMessageBox()
         msg_box.setIcon(QMessageBox.Information)
