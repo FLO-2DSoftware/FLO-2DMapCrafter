@@ -466,8 +466,10 @@ class TwophaseMaps:
         options.driverName = "ESRI Shapefile"
         options.layerName = name
         options.fileEncoding = 'utf-8'
-        # TODO: this is deprecated. Check the new function
-        QgsVectorFileWriter.writeAsVectorFormat(vl, shapefile, options)
+
+        coordinateTransformContext = QgsProject.instance().transformContext()
+
+        QgsVectorFileWriter.writeAsVectorFormatV3(vl, shapefile, coordinateTransformContext, options)
 
         # Add the layer to the project
         velocity_vector_lyr = QgsVectorLayer(shapefile, name, 'ogr')
