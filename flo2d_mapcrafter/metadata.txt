@@ -17,12 +17,12 @@ hasProcessingProvider=no
 # Uncomment the following line and add your changelog:
 changelog=
     <p>1.0
-        - First stable version released
+        - First stable version released!
 
 # Tags are comma separated with spaces allowed
 tags=python, mapping, FLO-2D, flow routing
 
-homepage=https://flo-2d.com/
+homepage=https://github.com/FLO-2DSoftware/FLO-2DMapCrafter/wiki
 category=Plugins
 icon=icon.png
 # experimental flag
