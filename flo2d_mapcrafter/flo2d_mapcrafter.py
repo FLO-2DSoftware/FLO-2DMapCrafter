@@ -269,6 +269,7 @@ class FLO2DMapCrafter:
             self.dlg.layer_extent_cb.setLayer(layer[0])
 
         self.dlg.show()
+        self.dlg.activateWindow()
 
     def closeDialog(self):
         """Closes the Dialog"""
