@@ -35,7 +35,7 @@ Layouts
 
 ## Versions
 
-- 1.0 Fist version
+- 1.0 First version
 
 ## Download
 
