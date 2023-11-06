@@ -336,7 +336,7 @@ class TwophaseMaps:
             name = check_project_id("LEVEE_DEFICIT", project_id)
             name, raster = check_raster_file(name, map_output_dir)
             file = flo2d_results_dir + r"\LEVEEDEFIC.OUT"
-            self.process_maps(name, raster, file, crs, sv_group, 1)
+            self.process_maps(name, raster, file, crs, sv_group, 11)
 
         # Maximum Velocity Vector
         if twophase_rbs.get(r"VELDIREC.OUT"):
