@@ -268,17 +268,17 @@ class SedimentMaps:
             name = check_project_id("MAXIMUM_DEPOSITION", project_id)
             name, raster = check_raster_file(name, map_output_dir)
             file = flo2d_results_dir + r"\SEDFP.OUT"
-            self.process_maps(name, raster, file, crs, sd_group, 5)
+            self.process_maps(name, raster, file, crs, sd_group, 12)
         if sedfp_maps[1]:
             name = check_project_id("MAXIMUM_SCOUR", project_id)
             name, raster = check_raster_file(name, map_output_dir)
             file = flo2d_results_dir + r"\SEDFP.OUT"
-            self.process_maps(name, raster, file, crs, sd_group, 1)
+            self.process_maps(name, raster, file, crs, sd_group, 13)
         if sedfp_maps[2]:
             name = check_project_id("FINAL_BED_DIFFERENCE", project_id)
             name, raster = check_raster_file(name, map_output_dir)
             file = flo2d_results_dir + r"\SEDFP.OUT"
-            self.process_maps(name, raster, file, crs, sd_group, 1)
+            self.process_maps(name, raster, file, crs, sd_group, 14)
 
         # Maximum Velocity Vector
         if sediment_rbs.get(r"VELDIREC.OUT"):

@@ -245,10 +245,7 @@ def set_raster_style(layer, style):
     style_directory = script_directory[:-8] + r"\raster_styles"
 
     stats = provider.bandStatistics(1, QgsRasterBandStats.All, extent, 0)
-    if stats.minimumValue <= 0.001:
-        min = 0.001
-    else:
-        min = stats.minimumValue
+    min = stats.minimumValue
 
     max = stats.maximumValue
     range = max - min
@@ -258,11 +255,15 @@ def set_raster_style(layer, style):
 
     # Flood maps
     if style == 0:
+        if stats.minimumValue <= 0.001:
+            min = 0.001
         color_list = [QColor(colDic["lightblue"]), QColor(colDic["blue"]), QColor(colDic["darkblue"])]
         set_renderer(layer, color_list, myRasterShader, min, max)
 
     # Velocity
     elif style == 1:
+        if stats.minimumValue <= 0.001:
+            min = 0.001
         color_list = [QColor(colDic["lightgreen"]), QColor(colDic["green"]), QColor(colDic["darkgreen"])]
         set_renderer(layer, color_list, myRasterShader, min, max)
 
@@ -285,11 +286,15 @@ def set_raster_style(layer, style):
 
     # Flow
     elif style == 4:
+        if stats.minimumValue <= 0.001:
+            min = 0.001
         color_list = [QColor(colDic["white"]), QColor(colDic["lightblue"]), QColor(colDic["blue"])]
         set_renderer(layer, color_list, myRasterShader, min, max)
 
     # Mudflow
     elif style == 5:
+        if stats.minimumValue <= 0.001:
+            min = 0.001
         color_list = [QColor(colDic["mud_lightbrown"]), QColor(colDic["mud_brown"]), QColor(colDic["mud_darkbrown"])]
         set_renderer(layer, color_list, myRasterShader, min, max)
 
@@ -309,24 +314,31 @@ def set_raster_style(layer, style):
 
     # Derived
     elif style == 7:
+        if stats.minimumValue <= 0.001:
+            min = 0.001
         color_list = [QColor(colDic["dv1"]), QColor(colDic["dv2"]), QColor(colDic["dv3"])]
         set_renderer(layer, color_list, myRasterShader, min, max)
 
     # Static Pressure
     elif style == 8:
+        if stats.minimumValue <= 0.001:
+            min = 0.001
         color_list = [QColor(colDic["blue"]), QColor(colDic["yellow"]), QColor(colDic["red"])]
         set_renderer(layer, color_list, myRasterShader, min, max)
 
     # Specific Energy
     elif style == 9:
+        if stats.minimumValue <= 0.001:
+            min = 0.001
         color_list = [QColor(colDic["green"]), QColor(colDic["yellow"]), QColor(colDic["red"])]
         set_renderer(layer, color_list, myRasterShader, min, max)
 
     # Sediment
     elif style == 10:
-        color_list = [QColor(colDic["sed1"]), QColor(colDic["sed2"]), QColor(colDic["sed3"])]
+        color_list = [QColor().fromRgb(255, 0, 0, 0), QColor(colDic["sed1"]), QColor(colDic["sed3"])]
         set_renderer(layer, color_list, myRasterShader, min, max)
 
+    # Levee Deficit
     elif style == 11:
         min = 0
         max = 4
@@ -338,6 +350,42 @@ def set_raster_style(layer, style):
             QColor(colDic["red"])
         ]
         set_renderer(layer, color_list, myRasterShader, min, max)
+
+    # Max deposition
+    elif style == 12:
+        if stats.minimumValue <= 0.001:
+            min = 0.001
+        color_list = [QColor(colDic["green"]), QColor(colDic["yellow"]), QColor(colDic["red"])]
+        set_renderer(layer, color_list, myRasterShader, min, max)
+
+    # Max scour
+    elif style == 13:
+        if stats.maximumValue == 0:
+            max = -0.001
+        color_list = [QColor(colDic["red"]), QColor(colDic["yellow"]), QColor(colDic["green"])]
+        set_renderer(layer, color_list, myRasterShader, min, max)
+
+    # Final bed difference
+    elif style == 14:
+        range_distance = max - min
+        zero_position = 0 - min
+        normalized_position = zero_position / range_distance
+
+        color_ramp = QgsGradientColorRamp(
+            QColor(QColor(colDic["blue"])),
+            QColor(QColor(colDic["red"])),
+            discrete=False, stops=[
+                QgsGradientStop(normalized_position, QColor(colDic["green"])),
+            ])
+
+        myPseudoRenderer = QgsSingleBandPseudoColorRenderer(
+            layer.dataProvider(), layer.type(), myRasterShader
+        )
+
+        myPseudoRenderer.setClassificationMin(min)
+        myPseudoRenderer.setClassificationMax(max)
+        myPseudoRenderer.createShader(color_ramp, clip=True)
+        layer.setRenderer(myPseudoRenderer)
 
     layer.triggerRepaint()
 
