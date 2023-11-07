@@ -295,8 +295,6 @@ def set_raster_style(layer, style):
 
     # Ground Elevation
     elif style == 6:
-        min = 0
-        max = 6
         color_list = [
             QColor(colDic["elev1"]),
             QColor(colDic["elev2"]),
