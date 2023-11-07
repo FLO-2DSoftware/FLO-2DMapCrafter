@@ -206,6 +206,7 @@ def set_raster_style(layer, style):
         "grey": "#808080",
         "red": "#FF0000",
         "yellow": "#FFFF00",
+        "orange": "#FF7f00",
         "risk_red": "#FF0000",
         "risk_orange": "#FFC000",
         "risk_lightgreen": "#92D050",
@@ -312,6 +313,18 @@ def set_raster_style(layer, style):
         color_list = [QColor(colDic["sed1"]), QColor(colDic["sed2"]), QColor(colDic["sed3"])]
         set_renderer(layer, color_list, myRasterShader, min, max)
 
+    elif style == 11:
+        min = 0
+        max = 4
+        color_list = [
+            QColor(colDic["white"]),
+            QColor(colDic["yellow"]),
+            QColor(colDic["risk_orange"]),
+            QColor(colDic["orange"]),
+            QColor(colDic["red"])
+        ]
+        set_renderer(layer, color_list, myRasterShader, min, max)
+
     layer.triggerRepaint()
 
 
@@ -366,31 +379,48 @@ def set_velocity_vector_style(layer_name):
     # Refresh the layer to apply the changes
     layer_name.triggerRepaint()
 
+
 def set_renderer(layer, color_list, raster_shader, min, max):
     """
     Function to set the render to layer
-    """""
+    """ ""
     # Three colors -> all layers
     if len(color_list) == 3:
         color_ramp = QgsGradientColorRamp(
             QColor(color_list[0]),
             QColor(color_list[2]),
-            discrete=False, stops=[
+            discrete=False,
+            stops=[
                 QgsGradientStop(0.5, QColor(color_list[1])),
-        ])
+            ],
+        )
+    # Levee Deficit
+    elif len(color_list) == 5:
+        color_ramp = QgsGradientColorRamp(
+            QColor(color_list[0]),
+            QColor(color_list[4]),
+            discrete=False,
+            stops=[
+                QgsGradientStop(0.25, QColor(color_list[1])),
+                QgsGradientStop(0.50, QColor(color_list[2])),
+                QgsGradientStop(0.75, QColor(color_list[3])),
+            ],
+        )
     # Ground elevation
     else:
         color_ramp = QgsGradientColorRamp(
             QColor(color_list[0]),
             QColor(color_list[7]),
-            discrete=False, stops=[
+            discrete=False,
+            stops=[
                 QgsGradientStop(0.143, QColor(color_list[1])),
                 QgsGradientStop(0.286, QColor(color_list[2])),
                 QgsGradientStop(0.429, QColor(color_list[3])),
                 QgsGradientStop(0.572, QColor(color_list[4])),
                 QgsGradientStop(0.715, QColor(color_list[5])),
                 QgsGradientStop(0.858, QColor(color_list[6])),
-        ])
+            ],
+        )
 
     myPseudoRenderer = QgsSingleBandPseudoColorRenderer(
         layer.dataProvider(), layer.type(), raster_shader
