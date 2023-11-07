@@ -124,10 +124,9 @@ def read_ASCII(file_path, output_path, name, crs):
     # Convert the list of values to an array.
     raster_data = np.full((num_rows, num_cols), -9999, dtype=np.float32)
     for point in values:
-        if point[2] != 0:
-            col = int((point[0] - min_x) / cellSize)
-            row = int((max_y - point[1]) / cellSize)
-            raster_data[row, col] = point[2]
+        col = int((point[0] - min_x) / cellSize)
+        row = int((max_y - point[1]) / cellSize)
+        raster_data[row, col] = point[2]
 
     # Initialize the raster
     driver = gdal.GetDriverByName("GTiff")
@@ -229,7 +228,13 @@ def set_raster_style(layer, style):
         "dv3": "#440154",
         "sed1": "#440154",
         "sed2": "#27808e",
-        "sed3": "#fde725"
+        "sed3": "#fde725",
+        "arr1": "#0033cc",
+        "arr2": "#bdd6ee",
+        "arr3": "#006600",
+        "arr4": "#92d050",
+        "arr5": "#ffc000",
+        "arr6": "#ff0000",
     }
 
     provider = layer.dataProvider()
@@ -263,11 +268,20 @@ def set_raster_style(layer, style):
 
     # Hydrodynamic Risk ARR
     elif style == 2:
-        layer.loadNamedStyle(style_directory + r"\hydro_risk.qml")
+        color_list = [
+            QColor().fromRgb(255, 0, 0, 0),
+            QColor(colDic["arr1"]),
+            QColor(colDic["arr2"]),
+            QColor(colDic["arr3"]),
+            QColor(colDic["arr4"]),
+            QColor(colDic["arr5"]),
+            QColor(colDic["arr6"]),
+        ]
+        set_renderer(layer, color_list, myRasterShader, min, max)
 
     # Time variables TODO: Improve this in next versions
     elif style == 3:
-        layer.loadNamedStyle(style_directory + r"\timeoneft.qml")
+        layer.loadNamedStyle(style_directory + r"\time.qml")
 
     # Flow
     elif style == 4:
@@ -281,6 +295,8 @@ def set_raster_style(layer, style):
 
     # Ground Elevation
     elif style == 6:
+        min = 0
+        max = 6
         color_list = [
             QColor(colDic["elev1"]),
             QColor(colDic["elev2"]),
@@ -317,7 +333,7 @@ def set_raster_style(layer, style):
         min = 0
         max = 4
         color_list = [
-            QColor(colDic["white"]),
+            QColor().fromRgb(255, 0, 0, 0),  # transparent
             QColor(colDic["yellow"]),
             QColor(colDic["risk_orange"]),
             QColor(colDic["orange"]),
@@ -406,6 +422,20 @@ def set_renderer(layer, color_list, raster_shader, min, max):
                 QgsGradientStop(0.75, QColor(color_list[3])),
             ],
         )
+    # ARR
+    elif len(color_list) == 7:
+        color_ramp = QgsGradientColorRamp(
+            QColor(color_list[0]),
+            QColor(color_list[6]),
+            discrete=False,
+            stops=[
+                QgsGradientStop(0.167, QColor(color_list[1])),
+                QgsGradientStop(0.333, QColor(color_list[2])),
+                QgsGradientStop(0.50, QColor(color_list[3])),
+                QgsGradientStop(0.667, QColor(color_list[4])),
+                QgsGradientStop(0.833, QColor(color_list[5])),
+            ],
+        )
     # Ground elevation
     else:
         color_ramp = QgsGradientColorRamp(
@@ -428,6 +458,6 @@ def set_renderer(layer, color_list, raster_shader, min, max):
 
     myPseudoRenderer.setClassificationMin(min)
     myPseudoRenderer.setClassificationMax(max)
-    myPseudoRenderer.createShader(color_ramp)
+    myPseudoRenderer.createShader(color_ramp, clip=True)
 
     layer.setRenderer(myPseudoRenderer)

@@ -832,7 +832,7 @@ class FLO2DMapCrafter:
         if style == 2:
             layer.loadNamedStyle(style_directory + r"/hydro_risk.qml")
         elif style == 3:
-            layer.loadNamedStyle(style_directory + r"/timeoneft.qml")
+            layer.loadNamedStyle(style_directory + r"/time.qml")
         # Other styles
         else:
             stats = provider.bandStatistics(1, QgsRasterBandStats.All, extent, 0)
