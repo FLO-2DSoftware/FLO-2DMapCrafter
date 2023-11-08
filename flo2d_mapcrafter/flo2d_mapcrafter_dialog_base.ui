@@ -145,7 +145,7 @@
             <x>0</x>
             <y>0</y>
             <width>680</width>
-            <height>323</height>
+            <height>324</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_99">
@@ -644,7 +644,7 @@
             <x>0</x>
             <y>0</y>
             <width>680</width>
-            <height>323</height>
+            <height>324</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_100">
@@ -1092,6 +1092,12 @@
                   </item>
                   <item row="0" column="2">
                    <widget class="QCheckBox" name="mvv_sd_cb">
+                    <property name="toolTip">
+                     <string>VELFP.OUT &amp; VELDIREC.OUT: Combination of these two files to generate the maximum velocity vectors </string>
+                    </property>
+                    <property name="toolTipDuration">
+                     <number>0</number>
+                    </property>
                     <property name="text">
                      <string>Maximum Velocity Vectors</string>
                     </property>
@@ -1270,7 +1276,7 @@
             <x>0</x>
             <y>0</y>
             <width>680</width>
-            <height>323</height>
+            <height>324</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_101">
@@ -1782,7 +1788,7 @@
             <x>0</x>
             <y>0</y>
             <width>680</width>
-            <height>323</height>
+            <height>324</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_102">
@@ -2111,6 +2117,9 @@
                  <layout class="QGridLayout" name="gridLayout_62">
                   <item row="0" column="1">
                    <widget class="QCheckBox" name="mchv_tp_cb">
+                    <property name="toolTip">
+                     <string>VELOC.OUT: Maximum channel flow velocity</string>
+                    </property>
                     <property name="toolTipDuration">
                      <number>0</number>
                     </property>
@@ -2121,6 +2130,9 @@
                   </item>
                   <item row="0" column="0">
                    <widget class="QCheckBox" name="mchd_tp_cb">
+                    <property name="toolTip">
+                     <string>DEPCH.OUT: Maximum channel flow depths</string>
+                    </property>
                     <property name="toolTipDuration">
                      <number>0</number>
                     </property>
@@ -2138,6 +2150,9 @@
                   </item>
                   <item row="1" column="0">
                    <widget class="QCheckBox" name="fchd_tp_cb">
+                    <property name="toolTip">
+                     <string>DEPCHFINAL.OUT: Final channel flow depths</string>
+                    </property>
                     <property name="toolTipDuration">
                      <number>0</number>
                     </property>
@@ -2148,6 +2163,9 @@
                   </item>
                   <item row="1" column="1">
                    <widget class="QCheckBox" name="fchv_tp_cb">
+                    <property name="toolTip">
+                     <string>VELCHFINAL.OUT: Final channel flow velocities</string>
+                    </property>
                     <property name="toolTipDuration">
                      <number>0</number>
                     </property>
@@ -2431,7 +2449,7 @@
             <x>0</x>
             <y>0</y>
             <width>680</width>
-            <height>323</height>
+            <height>324</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_103">
@@ -2812,7 +2830,7 @@ LOW DANGER ZONE: Almost any size child (excluding infants) is not seriously thre
             <x>0</x>
             <y>0</y>
             <width>680</width>
-            <height>323</height>
+            <height>324</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_104">
