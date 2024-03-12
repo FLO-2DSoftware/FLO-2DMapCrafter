@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>728</width>
-    <height>510</height>
+    <width>732</width>
+    <height>519</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -208,8 +208,8 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>663</width>
-            <height>522</height>
+            <width>688</width>
+            <height>342</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_99">
@@ -707,8 +707,8 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>663</width>
-            <height>603</height>
+            <width>688</width>
+            <height>342</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_100">
@@ -1339,8 +1339,8 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>663</width>
-            <height>603</height>
+            <width>688</width>
+            <height>342</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_101">
@@ -1851,8 +1851,8 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>663</width>
-            <height>753</height>
+            <width>688</width>
+            <height>342</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_102">
@@ -2512,8 +2512,8 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>663</width>
-            <height>476</height>
+            <width>688</width>
+            <height>342</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_103">
@@ -2889,8 +2889,8 @@ LOW DANGER ZONE: Almost any size child (excluding infants) is not seriously thre
           <property name="geometry">
            <rect>
             <x>0</x>
-            <y>-25</y>
-            <width>663</width>
+            <y>0</y>
+            <width>671</width>
             <height>358</height>
            </rect>
           </property>
@@ -2904,7 +2904,7 @@ LOW DANGER ZONE: Almost any size child (excluding infants) is not seriously thre
               <item row="0" column="0">
                <layout class="QGridLayout" name="gridLayout_115">
                 <item row="0" column="5">
-                 <widget class="QDoubleSpinBox" name="doubleSpinBox">
+                 <widget class="QDoubleSpinBox" name="threshold_dsb">
                   <property name="sizePolicy">
                    <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                     <horstretch>0</horstretch>
@@ -3288,8 +3288,8 @@ LOW DANGER ZONE: Almost any size child (excluding infants) is not seriously thre
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>684</width>
-            <height>333</height>
+            <width>688</width>
+            <height>342</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_104">

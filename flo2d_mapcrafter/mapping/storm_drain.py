@@ -26,9 +26,13 @@ import os
 from PyQt5.QtWidgets import QProgressDialog
 from matplotlib import pyplot as plt
 
+import geopandas as gpd
+from shapely.geometry import Point
+
+
 try:
     import swmmio
-    from swmmio import dataframe_from_rpt, Model
+    from swmmio import dataframe_from_rpt, Model, Nodes
 except ImportError:
     import pathlib as pl
     import subprocess
@@ -191,6 +195,160 @@ class StormDrainPlots:
                         except:
                             pass
 
+    def plot_graphics(self, graph_type, threshold, flo2d_results_dir, sd_output_dir, authid):
+        """
+        Function to create the graphics plot
+        """
+        mymodel = swmmio.Model(flo2d_results_dir)
+        sd_output_dir = sd_output_dir + r"\Graphics"
+        nodes = Nodes(
+            model=mymodel,
+            inp_sections=['junctions', 'storages', 'outfalls'],
+            rpt_sections=['Node Flooding Summary'],
+        )
 
+        # access data
+        nodes = nodes.dataframe
+        if not os.path.exists(sd_output_dir):
+            os.makedirs(sd_output_dir)
 
+        # HoursFlooded
+        if graph_type == 0:
+            filtered_nodes = nodes.loc[nodes.HoursFlooded > float(threshold)]
+            if not filtered_nodes.empty:
+                # Isolate nodes that have flooded for more than the threshold
+                flooded_series = nodes.loc[nodes.HoursFlooded > float(threshold), 'TotalFloodVol']
+                flood_vol = sum(flooded_series)  # total flood volume (million gallons)
+                flooded_count = len(flooded_series)  # count of flooded nodes
 
+                # highlight these nodes in a graphic
+                nodes['draw_color'] = '#787882'  # grey, default node color
+                nodes.loc[nodes.HoursFlooded > float(threshold), 'draw_color'] = '#FF0000'
+                nodes.loc[nodes.HoursFlooded > float(threshold), 'draw_size'] = 10
+
+                links = mymodel.links.dataframe
+                links['draw_color'] = '#787882'
+                links['draw_size'] = 2
+
+                # Create the shapefile
+                geometry = [Point(xy) for xy in zip(filtered_nodes['X'], filtered_nodes['Y'])]
+
+                # Create a GeoDataFrame
+                crs = {'init': authid}
+                nodes_to_shapefile = filtered_nodes.astype(str)
+                gdf = gpd.GeoDataFrame(nodes_to_shapefile, crs=crs, geometry=geometry)
+
+                # Save as shapefile
+                output_shapefile = sd_output_dir + rf'\HoursFlooded_{threshold}.shp'
+                gdf.to_file(output_shapefile, driver='ESRI Shapefile')
+
+                # add an informative annotation, and draw:
+                file = sd_output_dir + rf'\HoursFlooded_{threshold}.png'
+                annotation = 'Flooded Volume: {}MG\nTotal Nodes:{}'.format(round(flood_vol), flooded_count)
+                swmmio.draw_model(model=None, nodes=nodes, conduits=links, parcels=None, title=annotation,
+                                  annotation=None, file_path=file, bbox=None, px_width=2048.0)
+
+                return [output_shapefile, f'HoursFlooded_{threshold}']
+
+        # MaxQFlooding
+        if graph_type == 1:
+            filtered_nodes = nodes.loc[nodes.MaxQFlooding > float(threshold)]
+            if not filtered_nodes.empty:
+                # nodes in a graphic
+                nodes['draw_color'] = '#787882'  # grey
+                nodes.loc[nodes.MaxQFlooding > float(threshold), 'draw_color'] = '#FF0000'
+                nodes.loc[nodes.MaxQFlooding > float(threshold), 'draw_size'] = 10
+                nodes_count = len(nodes.loc[nodes.MaxQFlooding > float(threshold)])
+
+                links = mymodel.links.dataframe
+                links['draw_color'] = '#787882'  # grey
+                links['draw_size'] = 2
+
+                # Create the shapefile
+                geometry = [Point(xy) for xy in zip(filtered_nodes['X'], filtered_nodes['Y'])]
+
+                # Create a GeoDataFrame
+                crs = {'init': authid}
+                nodes_to_shapefile = filtered_nodes.astype(str)
+                gdf = gpd.GeoDataFrame(nodes_to_shapefile, crs=crs, geometry=geometry)
+
+                # Save as shapefile
+                output_shapefile = sd_output_dir + rf'\MaxQFlooding_{threshold}.shp'
+                gdf.to_file(output_shapefile, driver='ESRI Shapefile')
+
+                # add an informative annotation, and draw:
+                file = sd_output_dir + rf'\MaxQFlooding_{threshold}.png'
+                annotation = f'Total Nodes: {nodes_count}'
+                swmmio.draw_model(model=None, nodes=nodes, conduits=links, parcels=None, title=annotation,
+                                  annotation=None, file_path=file, bbox=None, px_width=2048.0)
+
+                return [output_shapefile, f'MaxQFlooding_{threshold}']
+
+        # TotalFloodVol
+        if graph_type == 2:
+            filtered_nodes = nodes.loc[nodes.TotalFloodVol > float(threshold)]
+            if not filtered_nodes.empty:
+                # nodes in a graphic
+                nodes['draw_color'] = '#787882'  # grey
+                nodes.loc[nodes.TotalFloodVol > float(threshold), 'draw_color'] = '#FF0000'
+                nodes.loc[nodes.TotalFloodVol > float(threshold), 'draw_size'] = 10
+
+                nodes_count = len(nodes.loc[nodes.TotalFloodVol > float(threshold)])
+
+                links = mymodel.links.dataframe
+                links['draw_color'] = '#787882'  # grey
+                links['draw_size'] = 2
+
+                # Create the shapefile
+                geometry = [Point(xy) for xy in zip(filtered_nodes['X'], filtered_nodes['Y'])]
+
+                # Create a GeoDataFrame
+                crs = {'init': authid}
+                nodes_to_shapefile = filtered_nodes.astype(str)
+                gdf = gpd.GeoDataFrame(nodes_to_shapefile, crs=crs, geometry=geometry)
+
+                # Save as shapefile
+                output_shapefile = sd_output_dir + rf'\TotalFloodVol_{threshold}.shp'
+                gdf.to_file(output_shapefile, driver='ESRI Shapefile')
+
+                # add an informative annotation, and draw:
+                file = sd_output_dir + rf'\TotalFloodVol_{threshold}.png'
+                annotation = f'Total Nodes: {nodes_count}'
+                swmmio.draw_model(model=None, nodes=nodes, conduits=links, parcels=None, title=annotation,
+                                  annotation=None, file_path=file, bbox=None, px_width=2048.0)
+
+                return [output_shapefile, f'TotalFloodVol_{threshold}']
+
+        #MaximumPondDepth
+        if graph_type == 3:
+            filtered_nodes = nodes.loc[nodes.MaximumPondDepth > float(threshold)]
+            if not filtered_nodes.empty:
+                # nodes in a graphic
+                nodes['draw_color'] = '#787882'  # grey
+                nodes.loc[nodes.MaximumPondDepth > float(threshold), 'draw_color'] = '#FF0000'
+                nodes.loc[nodes.MaximumPondDepth > float(threshold), 'draw_size'] = 10
+                nodes_count = len(nodes.loc[nodes.MaximumPondDepth > float(threshold)])
+
+                links = mymodel.links.dataframe
+                links['draw_color'] = '#787882'  # grey
+                links['draw_size'] = 2
+
+                # Create the shapefile
+                geometry = [Point(xy) for xy in zip(filtered_nodes['X'], filtered_nodes['Y'])]
+
+                # Create a GeoDataFrame
+                crs = {'init': authid}
+                nodes_to_shapefile = filtered_nodes.astype(str)
+                gdf = gpd.GeoDataFrame(nodes_to_shapefile, crs=crs, geometry=geometry)
+
+                # Save as shapefile
+                output_shapefile = sd_output_dir + rf'\MaximumPondDepth_{threshold}.shp'
+                gdf.to_file(output_shapefile, driver='ESRI Shapefile')
+
+                # add an informative annotation, and draw:
+                file = sd_output_dir + rf'\MaximumPondDepth_{threshold}.png'
+                annotation = f'Total Nodes: {nodes_count}'
+                swmmio.draw_model(model=None, nodes=nodes, conduits=links, parcels=None, title=annotation,
+                                  annotation=None, file_path=file, bbox=None, px_width=2048.0)
+
+                return [output_shapefile, f'MaximumPondDepth_{threshold}']

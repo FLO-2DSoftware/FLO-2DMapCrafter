@@ -85,6 +85,7 @@ class FLO2DMapCrafter:
         :type iface: QgsInterface
         """
         # Save reference to the QGIS interface
+        self.units_switch = None
         self.iface = iface
         self.dlg = FLO2DMapCrafterDialog()
         # initialize plugin directory
@@ -163,6 +164,9 @@ class FLO2DMapCrafter:
         set_icon(self.dlg.eg_hm_btn, "expand_groups.svg")
         set_icon(self.dlg.cg_storm_drain_btn, "collapse_groups.svg")
         set_icon(self.dlg.eg_storm_drain_btn, "expand_groups.svg")
+
+        # Storm Drain subplots
+        self.dlg.plot_graphics_btn.clicked.connect(self.plot_storm_drain_graphics)
 
         # DEBUG Map layouts
         # self.dlg.map_title_le.setText("Mudflow")
@@ -614,7 +618,9 @@ class FLO2DMapCrafter:
 
             graphics_type = [
                 "HoursFlooded",
-                "MaxNodeDepth"
+                "MaxQFlooding",
+                "TotalFloodVol",
+                "MaximumPondDepth"
             ]
 
             self.dlg.graphics_type_cbo.addItems(graphics_type)
@@ -636,7 +642,7 @@ class FLO2DMapCrafter:
 
         with open(flo2d_results_dir + r"\CONT.DAT", "r") as file:
             lines = file.readlines()
-            units_switch = lines[0].split()[3]
+            self.units_switch = lines[0].split()[3]
             elements = lines[2].split()
             mud_switch = elements[3]
             sed_switch = elements[4]
@@ -682,7 +688,7 @@ class FLO2DMapCrafter:
                 r"IMPACT.OUT": self.dlg.if_cw_cb.isChecked(),
             }
 
-            flood_maps = FloodMaps(units_switch)
+            flood_maps = FloodMaps(self.units_switch)
             flood_maps.create_maps(
                 flood_rbs, flo2d_results_dir, map_output_dir, mapping_group, self.crs, project_id
             )
@@ -720,7 +726,7 @@ class FLO2DMapCrafter:
                 r"IMPACT.OUT": self.dlg.if_sd_cb.isChecked(),
             }
 
-            sediment_maps = SedimentMaps(units_switch)
+            sediment_maps = SedimentMaps(self.units_switch)
             sediment_maps.create_maps(
                 sediment_rbs, flo2d_results_dir, map_output_dir, mapping_group, self.crs, project_id
             )
@@ -755,7 +761,7 @@ class FLO2DMapCrafter:
                 r"IMPACT.OUT": self.dlg.if_mf_cb.isChecked(),
             }
 
-            mudflow_maps = MudflowMaps(units_switch)
+            mudflow_maps = MudflowMaps(self.units_switch)
             mudflow_maps.create_maps(
                 mudflow_rbs, flo2d_results_dir, map_output_dir, mapping_group, self.crs, project_id
             )
@@ -805,7 +811,7 @@ class FLO2DMapCrafter:
                 ],
             }
 
-            twophase_maps = TwophaseMaps(units_switch)
+            twophase_maps = TwophaseMaps(self.units_switch)
             twophase_maps.create_maps(
                 twophase_rbs, flo2d_results_dir, map_output_dir, mapping_group, self.crs, project_id
             )
@@ -837,7 +843,7 @@ class FLO2DMapCrafter:
 
         if at_least_one_checked:
 
-            hazard_maps = HazardMaps(units_switch)
+            hazard_maps = HazardMaps(self.units_switch)
             hazard_maps.create_maps(
                 hazard_rbs, flo2d_results_dir, map_output_dir, mapping_group, self.crs, project_id
             )
@@ -879,7 +885,7 @@ class FLO2DMapCrafter:
                 sd_output_dir = map_output_dir + rf"\StormDrain"
             if not os.path.exists(sd_output_dir):
                 os.makedirs(sd_output_dir)
-            storm_drain_plots = StormDrainPlots(units_switch)
+            storm_drain_plots = StormDrainPlots(self.units_switch)
             storm_drain_plots.create_plots(
                 storm_drain_rbs, flo2d_results_dir, sd_output_dir
             )
@@ -891,6 +897,37 @@ class FLO2DMapCrafter:
         msg_box.exec_()
 
         self.closeDialog()
+
+    def plot_storm_drain_graphics(self):
+        """
+        Function to plot the storm drain graphics
+        """
+        graph_type = self.dlg.graphics_type_cbo.currentIndex()
+        threshold = self.dlg.threshold_dsb.value()
+        project_id = self.dlg.project_id.text()
+        map_output_dir = self.dlg.mapper_out_folder.filePath()
+        flo2d_results_dir = self.dlg.flo2d_out_folder.filePath()
+        self.crs = self.dlg.crsselector.crs()
+        if map_output_dir == "":
+            map_output_dir = QgsProcessingUtils.tempFolder()
+
+        if project_id:
+            sd_output_dir = map_output_dir + rf"\StormDrain - {project_id}"
+        else:
+            sd_output_dir = map_output_dir + rf"\StormDrain"
+
+        storm_drain_plots = StormDrainPlots(self.units_switch)
+        shape_data = storm_drain_plots.plot_graphics(graph_type, threshold,
+                                                     flo2d_results_dir, sd_output_dir, self.crs.authid())
+
+        layer = QgsVectorLayer(shape_data[0], shape_data[1], "ogr")
+        QgsProject.instance().addMapLayer(layer)
+
+        msg_box = QMessageBox()
+        msg_box.setIcon(QMessageBox.Information)
+        msg_box.setWindowTitle("Plot completed!")
+        msg_box.setText("The graphic plot was created and saved to the export folder.")
+        msg_box.exec_()
 
     def set_raster_style(self, layer, style):
         """Define the raster styles"""
