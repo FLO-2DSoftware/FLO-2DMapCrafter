@@ -44,17 +44,34 @@ from qgis._core import (
     QgsReadWriteContext,
     QgsMessageLog, QgsApplication, QgsProcessingUtils,
 )
+from swmmio import Model
 
 from .mapping.flood import FloodMaps
 from .mapping.hazard import HazardMaps
 from .mapping.mudflow import MudflowMaps
 from .mapping.scripts import set_icon
 from .mapping.sediment import SedimentMaps
+from .mapping.storm_drain import StormDrainPlots
 from .mapping.twophase import TwophaseMaps
 from .resources import *
 from .flo2d_mapcrafter_dialog import FLO2DMapCrafterDialog
 import os.path
 import processing
+
+try:
+    import swmmio
+except ImportError:
+    import pathlib as pl
+    import subprocess
+    import sys
+
+    qgis_Path = pl.Path(sys.executable)
+    qgis_python_path = (qgis_Path.parent / "python3.exe").as_posix()
+
+    subprocess.check_call(
+        [qgis_python_path, "-m", "pip", "install", "--user", "swmmio==0.6.11"]
+    )
+    import swmmio
 
 class FLO2DMapCrafter:
     """QGIS Plugin Implementation."""
@@ -109,6 +126,7 @@ class FLO2DMapCrafter:
         self.dlg.check_tp_cb.stateChanged.connect(self.check_tp)
         self.dlg.check_sd_cb.stateChanged.connect(self.check_sd)
         self.dlg.check_hm_cb.stateChanged.connect(self.check_hm)
+        self.dlg.check_storm_drain_chbox.stateChanged.connect(self.check_storm_drain)
 
         self.dlg.runButton_2.clicked.connect(self.run_open_layout)
 
@@ -118,6 +136,7 @@ class FLO2DMapCrafter:
         self.dlg.tab3.setEnabled(False)
         self.dlg.tab4.setEnabled(False)
         self.dlg.tab5.setEnabled(False)
+        self.dlg.tab.setEnabled(False)
 
         self.dlg.cg_cw_btn.clicked.connect(self.collapse_all_groups)
         self.dlg.eg_cw_btn.clicked.connect(self.expand_all_groups)
@@ -129,6 +148,8 @@ class FLO2DMapCrafter:
         self.dlg.eg_tp_btn.clicked.connect(self.expand_all_groups)
         self.dlg.cg_hm_btn.clicked.connect(self.collapse_all_groups)
         self.dlg.eg_hm_btn.clicked.connect(self.expand_all_groups)
+        self.dlg.cg_storm_drain_btn.clicked.connect(self.collapse_all_groups)
+        self.dlg.eg_storm_drain_btn.clicked.connect(self.expand_all_groups)
 
         set_icon(self.dlg.cg_cw_btn, "collapse_groups.svg")
         set_icon(self.dlg.eg_cw_btn, "expand_groups.svg")
@@ -140,6 +161,8 @@ class FLO2DMapCrafter:
         set_icon(self.dlg.eg_tp_btn, "expand_groups.svg")
         set_icon(self.dlg.cg_hm_btn, "collapse_groups.svg")
         set_icon(self.dlg.eg_hm_btn, "expand_groups.svg")
+        set_icon(self.dlg.cg_storm_drain_btn, "collapse_groups.svg")
+        set_icon(self.dlg.eg_storm_drain_btn, "expand_groups.svg")
 
         # DEBUG Map layouts
         # self.dlg.map_title_le.setText("Mudflow")
@@ -512,7 +535,6 @@ class FLO2DMapCrafter:
                     else:
                         twophase_rbs[key].setEnabled(False)
 
-
         # Hazard Maps
         self.dlg.tab5.setEnabled(True)
         hazard_maps = HazardMaps(units_switch)
@@ -553,6 +575,49 @@ class FLO2DMapCrafter:
         self.dlg.mapper_out_folder.setFilePath(map_output_dir)
         if not os.path.exists(map_output_dir):
             os.makedirs(map_output_dir)
+
+        inp_present = False
+        rpt_present = False
+
+        for file_name in files_in_directory:
+            if file_name.lower() == 'swmm.inp':
+                inp_present = True
+            elif file_name.lower() == 'swmm.rpt':
+                rpt_present = True
+
+        if inp_present and rpt_present:
+            self.dlg.tab.setEnabled(True)
+            # sd_output_dir = map_output_dir + r"\StormDrain"
+            # self.dlg.mapper_out_folder.setFilePath(sd_output_dir)
+            # if not os.path.exists(sd_output_dir):
+            #     os.makedirs(sd_output_dir)
+
+            RPT_file = output_directory + r"\swmm.RPT"
+            rpt_file = output_directory + r"\swmm.rpt"
+            INP_file = output_directory + r"\SWMM.INP"
+            inp_file = output_directory + r"\SWMM.inp"
+
+            # SWMMIO only read small cap extensions
+            if not os.path.isfile(inp_file):
+                os.rename(INP_file, INP_file[:-4] + '.inp')
+
+            if not os.path.isfile(rpt_file):
+                os.rename(RPT_file, RPT_file[:-4] + '.rpt')
+
+            mymodel = Model(inp_file)
+            rpt = swmmio.rpt(rpt_file)
+
+            nodes_list = list(mymodel.nodes.dataframe.index)
+
+            self.dlg.start_cbo.addItems(nodes_list)
+            self.dlg.end_cbo.addItems(nodes_list)
+
+            graphics_type = [
+                "HoursFlooded",
+                "MaxNodeDepth"
+            ]
+
+            self.dlg.graphics_type_cbo.addItems(graphics_type)
 
     def run_map_creator(self):
         """Run method that performs all the real work"""
@@ -788,6 +853,36 @@ class FLO2DMapCrafter:
             all_group_layers = group.findLayers()
             if len(all_group_layers) == 0:
                 mapping_group.removeChildNode(group)
+
+        """
+        STORM DRAIN PLOTS
+        """
+
+        storm_drain_rbs = {
+            "Inflow": self.dlg.inflow_chbox.isChecked(),
+            "Flooding": self.dlg.flooding_chbox.isChecked(),
+            "Node Depth": self.dlg.node_depth_chbox.isChecked(),
+            "Head": self.dlg.head_chbox.isChecked(),
+            "Flow": self.dlg.flow_chbox.isChecked(),
+            "Velocity": self.dlg.velocity_chbox.isChecked(),
+            "Link Depth": self.dlg.link_depth_chbox.isChecked(),
+            "Percent Full": self.dlg.percent_full_chbox.isChecked(),
+        }
+
+        at_least_one_checked = any(
+            value if not isinstance(value, list) else any(value) for value in storm_drain_rbs.values())
+
+        if at_least_one_checked:
+            if project_id:
+                sd_output_dir = map_output_dir + rf"\StormDrain - {project_id}"
+            else:
+                sd_output_dir = map_output_dir + rf"\StormDrain"
+            if not os.path.exists(sd_output_dir):
+                os.makedirs(sd_output_dir)
+            storm_drain_plots = StormDrainPlots(units_switch)
+            storm_drain_plots.create_plots(
+                storm_drain_rbs, flo2d_results_dir, sd_output_dir
+            )
 
         msg_box = QMessageBox()
         msg_box.setIcon(QMessageBox.Information)
@@ -1155,6 +1250,31 @@ class FLO2DMapCrafter:
             for cb in sediment_rbs:
                 cb.setChecked(False)
 
+    def check_storm_drain(self):
+        """
+        Function to check all storm drain plots
+        """
+        storm_drain_rbs = [
+            self.dlg.inflow_chbox,
+            self.dlg.flooding_chbox,
+            self.dlg.node_depth_chbox,
+            self.dlg.head_chbox,
+            self.dlg.flow_chbox,
+            self.dlg.velocity_chbox,
+            self.dlg.link_depth_chbox,
+            self.dlg.percent_full_chbox,
+        ]
+
+        if self.dlg.check_storm_drain_chbox.isChecked():
+            for cb in storm_drain_rbs:
+                if cb.isEnabled():
+                    cb.setChecked(True)
+                else:
+                    cb.setChecked(False)
+        else:
+            for cb in storm_drain_rbs:
+                cb.setChecked(False)
+
     def check_hm(self):
         """
         Function to check all available hazard maps
@@ -1328,6 +1448,12 @@ class FLO2DMapCrafter:
             self.dlg.usbr_hm_cgb,
             self.dlg.fema_hz_cgb,
         ]
+        storm_drain_grps = [
+            self.dlg.nodes_cgb,
+            self.dlg.links_cgb,
+            self.dlg.profile_plot_cgb,
+            self.dlg.graphics_plot_cgb,
+        ]
 
         if self.dlg.tab0.isEnabled():
             for grp in sd_grps:
@@ -1347,6 +1473,10 @@ class FLO2DMapCrafter:
                     grp.setCollapsed(True)
         if self.dlg.tab5.isEnabled():
             for grp in hm_grps:
+                if grp.isEnabled():
+                    grp.setCollapsed(True)
+        if self.dlg.tab.isEnabled():
+            for grp in storm_drain_grps:
                 if grp.isEnabled():
                     grp.setCollapsed(True)
 
@@ -1403,6 +1533,12 @@ class FLO2DMapCrafter:
             self.dlg.usbr_hm_cgb,
             self.dlg.fema_hz_cgb,
         ]
+        storm_drain_grps = [
+            self.dlg.nodes_cgb,
+            self.dlg.links_cgb,
+            self.dlg.profile_plot_cgb,
+            self.dlg.graphics_plot_cgb,
+        ]
 
         if self.dlg.tab0.isEnabled():
             for grp in sd_grps:
@@ -1422,5 +1558,9 @@ class FLO2DMapCrafter:
                     grp.setCollapsed(False)
         if self.dlg.tab5.isEnabled():
             for grp in hm_grps:
+                if grp.isEnabled():
+                    grp.setCollapsed(False)
+        if self.dlg.tab.isEnabled():
+            for grp in storm_drain_grps:
                 if grp.isEnabled():
                     grp.setCollapsed(False)
