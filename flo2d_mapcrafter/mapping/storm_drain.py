@@ -27,12 +27,14 @@ from PyQt5.QtWidgets import QProgressDialog
 from matplotlib import pyplot as plt
 
 import geopandas as gpd
+from qgis._core import Qgis, QgsVectorLayer, QgsProject
 from shapely.geometry import Point
 
 
 try:
     import swmmio
-    from swmmio import dataframe_from_rpt, Model, Nodes
+    from swmmio import dataframe_from_rpt, Model, Nodes, find_network_trace, build_profile_plot, add_hgl_plot, \
+    add_node_labels_plot, add_link_labels_plot
 except ImportError:
     import pathlib as pl
     import subprocess
@@ -49,17 +51,20 @@ except ImportError:
 
 class StormDrainPlots:
 
-    def __init__(self, units_switch):
+    def __init__(self, units_switch, iface):
         """
         Class constructor
         :param units_switch: 0 english 1 metric
         """
+        self.iface = iface
         self.units_switch = units_switch
 
     def create_plots(self, storm_drain_rbs, flo2d_results_dir, sd_output_dir):
         """
         Function to create the plots
         """
+
+        was_created = False
 
         nodes_plots = [
             "Inflow",
@@ -78,9 +83,13 @@ class StormDrainPlots:
         swmm_inp = swmmio.Model(flo2d_results_dir + r"\swmm.inp")
         swmm_rpt = flo2d_results_dir + r"\swmm.rpt"
 
+        nname_grid = self.get_nname_grid(flo2d_results_dir)
+
         for plot in (nodes_plots + links_plots):
             if plot in nodes_plots:
-                if storm_drain_rbs.get(plot):
+                storm_drain_values = storm_drain_rbs.get(plot)
+                if storm_drain_values[0]:
+                    was_created = True
                     plot_type = nodes_plots.index(plot) + 1
                     sd_node_output_dir = sd_output_dir + r"\Nodes"
                     if not os.path.exists(sd_node_output_dir):
@@ -117,8 +126,10 @@ class StormDrainPlots:
 
                                 plt.plot(x_numeric, list(nodes_df.iloc[:, plot_type]))
 
-                                # Customize the plot (if needed)
-                                plt.title(f'Node {node} {plot}')
+                                if nname_grid.get(node):
+                                    plt.title(f'{node} {nname_grid.get(node)} Node')
+                                else:
+                                    plt.title(f'{node} Node')
                                 plt.xlabel('hours')
                                 plt.ylabel(unit)
 
@@ -127,7 +138,10 @@ class StormDrainPlots:
                                     os.makedirs(sd_node_dir)
 
                                 # Save the plot to a file
-                                plt.savefig(sd_node_dir + rf"\{node}_{plot}.png")
+                                if nname_grid.get(node):
+                                    plt.savefig(sd_node_dir + fr'\{node}_{nname_grid.get(node)}_Node.png')
+                                else:
+                                    plt.savefig(sd_node_dir + fr'\{node}_Node.png')
 
                             progDialog.setValue(i)
                             i += 1
@@ -135,7 +149,9 @@ class StormDrainPlots:
                             pass
 
             if plot in links_plots:
-                if storm_drain_rbs.get(plot):
+                storm_drain_values = storm_drain_rbs.get(plot)
+                if storm_drain_values[0]:
+                    was_created = True
                     plot_type = links_plots.index(plot) + 1
                     sd_link_output_dir = sd_output_dir + r"\Links"
                     if not os.path.exists(sd_link_output_dir):
@@ -179,7 +195,10 @@ class StormDrainPlots:
                                 plt.plot(x_numeric, list(links_df.iloc[:, plot_type]))
 
                                 # Customize the plot (if needed)
-                                plt.title(f'Link {link} {plot}')
+                                if nname_grid.get(link):
+                                    plt.title(f'{link} {nname_grid.get(link)} Link')
+                                else:
+                                    plt.title(f'{link} Link')
                                 plt.xlabel('hours')
                                 plt.ylabel(unit)
 
@@ -188,167 +207,274 @@ class StormDrainPlots:
                                     os.makedirs(sd_link_dir)
 
                                 # Save the plot to a file
-                                plt.savefig(sd_link_dir + rf"\{link}_{plot}.png")
+                                if nname_grid.get(link):
+                                    plt.savefig(sd_link_dir + fr'\{link}_{nname_grid.get(link)}_Link.png')
+                                else:
+                                    plt.savefig(sd_link_dir + fr'\{link}_Link.png')
 
                             progDialog.setValue(i)
                             i += 1
                         except:
                             pass
 
-    def plot_graphics(self, graph_type, threshold, flo2d_results_dir, sd_output_dir, authid):
+        return was_created
+
+    def plot_graphics(self, storm_drain_rbs, flo2d_results_dir, sd_output_dir, authid, mapping_group):
         """
         Function to create the graphics plot
         """
-        mymodel = swmmio.Model(flo2d_results_dir)
-        sd_output_dir = sd_output_dir + r"\Graphics"
-        nodes = Nodes(
-            model=mymodel,
-            inp_sections=['junctions', 'storages', 'outfalls'],
-            rpt_sections=['Node Flooding Summary'],
-        )
 
-        # access data
-        nodes = nodes.dataframe
+        graphics_plots = [
+            "Hours Flooded",
+            "Maximum Flooding",
+            "Total Flooding",
+            "Maximum Pond"
+        ]
+
+        sd_output_dir = sd_output_dir + r"\Graphics"
         if not os.path.exists(sd_output_dir):
             os.makedirs(sd_output_dir)
 
-        # HoursFlooded
-        if graph_type == 0:
-            filtered_nodes = nodes.loc[nodes.HoursFlooded > float(threshold)]
-            if not filtered_nodes.empty:
-                # Isolate nodes that have flooded for more than the threshold
-                flooded_series = nodes.loc[nodes.HoursFlooded > float(threshold), 'TotalFloodVol']
-                flood_vol = sum(flooded_series)  # total flood volume (million gallons)
-                flooded_count = len(flooded_series)  # count of flooded nodes
+        for plot in graphics_plots:
+            storm_drain_values = storm_drain_rbs.get(plot)
+            if storm_drain_values[0]:
+                storm_drain_group_name = "Storm Drain"
+                if mapping_group.findGroup(storm_drain_group_name):
+                    storm_drain_group = mapping_group.findGroup(storm_drain_group_name)
+                else:
+                    storm_drain_group = mapping_group.insertGroup(0, storm_drain_group_name)
 
-                # highlight these nodes in a graphic
-                nodes['draw_color'] = '#787882'  # grey, default node color
-                nodes.loc[nodes.HoursFlooded > float(threshold), 'draw_color'] = '#FF0000'
-                nodes.loc[nodes.HoursFlooded > float(threshold), 'draw_size'] = 10
+                mymodel = swmmio.Model(flo2d_results_dir)
 
-                links = mymodel.links.dataframe
-                links['draw_color'] = '#787882'
-                links['draw_size'] = 2
+                nodes = Nodes(
+                    model=mymodel,
+                    inp_sections=['junctions', 'storages', 'outfalls'],
+                    rpt_sections=['Node Flooding Summary'],
+                )
 
-                # Create the shapefile
-                geometry = [Point(xy) for xy in zip(filtered_nodes['X'], filtered_nodes['Y'])]
+                # access data
+                nodes = nodes.dataframe
 
-                # Create a GeoDataFrame
-                crs = {'init': authid}
-                nodes_to_shapefile = filtered_nodes.astype(str)
-                gdf = gpd.GeoDataFrame(nodes_to_shapefile, crs=crs, geometry=geometry)
+                if plot == "Hours Flooded":
+                    filtered_nodes = nodes.loc[nodes.HoursFlooded > float(storm_drain_values[1])]
+                    if not filtered_nodes.empty:
+                        # Isolate nodes that have flooded for more than the threshold
+                        flooded_series = nodes.loc[nodes.HoursFlooded > float(storm_drain_values[1]), 'TotalFloodVol']
+                        flood_vol = sum(flooded_series)  # total flood volume (million gallons)
+                        flooded_count = len(flooded_series)  # count of flooded nodes
 
-                # Save as shapefile
-                output_shapefile = sd_output_dir + rf'\HoursFlooded_{threshold}.shp'
-                gdf.to_file(output_shapefile, driver='ESRI Shapefile')
+                        # highlight these nodes in a graphic
+                        nodes['draw_color'] = '#787882'  # grey, default node color
+                        nodes.loc[nodes.HoursFlooded > float(storm_drain_values[1]), 'draw_color'] = '#FF0000'
+                        nodes.loc[nodes.HoursFlooded > float(storm_drain_values[1]), 'draw_size'] = 10
 
-                # add an informative annotation, and draw:
-                file = sd_output_dir + rf'\HoursFlooded_{threshold}.png'
-                annotation = 'Flooded Volume: {}MG\nTotal Nodes:{}'.format(round(flood_vol), flooded_count)
-                swmmio.draw_model(model=None, nodes=nodes, conduits=links, parcels=None, title=annotation,
-                                  annotation=None, file_path=file, bbox=None, px_width=2048.0)
+                        links = mymodel.links.dataframe
+                        links['draw_color'] = '#787882'
+                        links['draw_size'] = 2
 
-                return [output_shapefile, f'HoursFlooded_{threshold}']
+                        # Create the shapefile
+                        geometry = [Point(xy) for xy in zip(filtered_nodes['X'], filtered_nodes['Y'])]
 
-        # MaxQFlooding
-        if graph_type == 1:
-            filtered_nodes = nodes.loc[nodes.MaxQFlooding > float(threshold)]
-            if not filtered_nodes.empty:
-                # nodes in a graphic
-                nodes['draw_color'] = '#787882'  # grey
-                nodes.loc[nodes.MaxQFlooding > float(threshold), 'draw_color'] = '#FF0000'
-                nodes.loc[nodes.MaxQFlooding > float(threshold), 'draw_size'] = 10
-                nodes_count = len(nodes.loc[nodes.MaxQFlooding > float(threshold)])
+                        # Create a GeoDataFrame
+                        crs = {'init': authid}
+                        nodes_to_shapefile = filtered_nodes.astype(str)
+                        gdf = gpd.GeoDataFrame(nodes_to_shapefile, crs=crs, geometry=geometry)
 
-                links = mymodel.links.dataframe
-                links['draw_color'] = '#787882'  # grey
-                links['draw_size'] = 2
+                        # Save as shapefile
+                        output_shapefile = sd_output_dir + rf'\HoursFlooded_{storm_drain_values[1]}.shp'
+                        gdf.to_file(output_shapefile, driver='ESRI Shapefile')
 
-                # Create the shapefile
-                geometry = [Point(xy) for xy in zip(filtered_nodes['X'], filtered_nodes['Y'])]
+                        # add an informative annotation, and draw:
+                        file = sd_output_dir + rf'\HoursFlooded_{storm_drain_values[1]}.png'
+                        annotation = 'Flooded Volume: {}MG\nTotal Nodes:{}'.format(round(flood_vol), flooded_count)
+                        swmmio.draw_model(model=None, nodes=nodes, conduits=links, parcels=None, title=annotation,
+                                          annotation=None, file_path=file, bbox=None, px_width=2048.0)
 
-                # Create a GeoDataFrame
-                crs = {'init': authid}
-                nodes_to_shapefile = filtered_nodes.astype(str)
-                gdf = gpd.GeoDataFrame(nodes_to_shapefile, crs=crs, geometry=geometry)
+                        layer = QgsVectorLayer(output_shapefile, f'HoursFlooded_{storm_drain_values[1]}', "ogr")
+                        QgsProject.instance().addMapLayer(layer, False)
+                        storm_drain_group.insertLayer(0, layer)
 
-                # Save as shapefile
-                output_shapefile = sd_output_dir + rf'\MaxQFlooding_{threshold}.shp'
-                gdf.to_file(output_shapefile, driver='ESRI Shapefile')
+                        # return [output_shapefile, f'HoursFlooded_{storm_drain_values[1]}']
 
-                # add an informative annotation, and draw:
-                file = sd_output_dir + rf'\MaxQFlooding_{threshold}.png'
-                annotation = f'Total Nodes: {nodes_count}'
-                swmmio.draw_model(model=None, nodes=nodes, conduits=links, parcels=None, title=annotation,
-                                  annotation=None, file_path=file, bbox=None, px_width=2048.0)
+                if plot == "Maximum Flooding":
+                    filtered_nodes = nodes.loc[nodes.MaxQFlooding > float(storm_drain_values[1])]
+                    if not filtered_nodes.empty:
+                        # nodes in a graphic
+                        nodes['draw_color'] = '#787882'  # grey
+                        nodes.loc[nodes.MaxQFlooding > float(storm_drain_values[1]), 'draw_color'] = '#FF0000'
+                        nodes.loc[nodes.MaxQFlooding > float(storm_drain_values[1]), 'draw_size'] = 10
+                        nodes_count = len(nodes.loc[nodes.MaxQFlooding > float(storm_drain_values[1])])
 
-                return [output_shapefile, f'MaxQFlooding_{threshold}']
+                        links = mymodel.links.dataframe
+                        links['draw_color'] = '#787882'  # grey
+                        links['draw_size'] = 2
 
-        # TotalFloodVol
-        if graph_type == 2:
-            filtered_nodes = nodes.loc[nodes.TotalFloodVol > float(threshold)]
-            if not filtered_nodes.empty:
-                # nodes in a graphic
-                nodes['draw_color'] = '#787882'  # grey
-                nodes.loc[nodes.TotalFloodVol > float(threshold), 'draw_color'] = '#FF0000'
-                nodes.loc[nodes.TotalFloodVol > float(threshold), 'draw_size'] = 10
+                        # Create the shapefile
+                        geometry = [Point(xy) for xy in zip(filtered_nodes['X'], filtered_nodes['Y'])]
 
-                nodes_count = len(nodes.loc[nodes.TotalFloodVol > float(threshold)])
+                        # Create a GeoDataFrame
+                        crs = {'init': authid}
+                        nodes_to_shapefile = filtered_nodes.astype(str)
+                        gdf = gpd.GeoDataFrame(nodes_to_shapefile, crs=crs, geometry=geometry)
 
-                links = mymodel.links.dataframe
-                links['draw_color'] = '#787882'  # grey
-                links['draw_size'] = 2
+                        # Save as shapefile
+                        output_shapefile = sd_output_dir + rf'\MaxQFlooding_{storm_drain_values[1]}.shp'
+                        gdf.to_file(output_shapefile, driver='ESRI Shapefile')
 
-                # Create the shapefile
-                geometry = [Point(xy) for xy in zip(filtered_nodes['X'], filtered_nodes['Y'])]
+                        # add an informative annotation, and draw:
+                        file = sd_output_dir + rf'\MaxQFlooding_{storm_drain_values[1]}.png'
+                        annotation = f'Total Nodes: {nodes_count}'
+                        swmmio.draw_model(model=None, nodes=nodes, conduits=links, parcels=None, title=annotation,
+                                          annotation=None, file_path=file, bbox=None, px_width=2048.0)
 
-                # Create a GeoDataFrame
-                crs = {'init': authid}
-                nodes_to_shapefile = filtered_nodes.astype(str)
-                gdf = gpd.GeoDataFrame(nodes_to_shapefile, crs=crs, geometry=geometry)
+                        layer = QgsVectorLayer(output_shapefile, f'MaxQFlooding_{storm_drain_values[1]}', "ogr")
+                        QgsProject.instance().addMapLayer(layer, False)
+                        storm_drain_group.insertLayer(0, layer)
 
-                # Save as shapefile
-                output_shapefile = sd_output_dir + rf'\TotalFloodVol_{threshold}.shp'
-                gdf.to_file(output_shapefile, driver='ESRI Shapefile')
+                        # return [output_shapefile, f'MaxQFlooding_{storm_drain_values[1]}']
 
-                # add an informative annotation, and draw:
-                file = sd_output_dir + rf'\TotalFloodVol_{threshold}.png'
-                annotation = f'Total Nodes: {nodes_count}'
-                swmmio.draw_model(model=None, nodes=nodes, conduits=links, parcels=None, title=annotation,
-                                  annotation=None, file_path=file, bbox=None, px_width=2048.0)
+                # TotalFloodVol
+                if plot == 'Total Flooding':
+                    filtered_nodes = nodes.loc[nodes.TotalFloodVol > float(storm_drain_values[1])]
+                    if not filtered_nodes.empty:
+                        # nodes in a graphic
+                        nodes['draw_color'] = '#787882'  # grey
+                        nodes.loc[nodes.TotalFloodVol > float(storm_drain_values[1]), 'draw_color'] = '#FF0000'
+                        nodes.loc[nodes.TotalFloodVol > float(storm_drain_values[1]), 'draw_size'] = 10
 
-                return [output_shapefile, f'TotalFloodVol_{threshold}']
+                        nodes_count = len(nodes.loc[nodes.TotalFloodVol > float(storm_drain_values[1])])
 
-        #MaximumPondDepth
-        if graph_type == 3:
-            filtered_nodes = nodes.loc[nodes.MaximumPondDepth > float(threshold)]
-            if not filtered_nodes.empty:
-                # nodes in a graphic
-                nodes['draw_color'] = '#787882'  # grey
-                nodes.loc[nodes.MaximumPondDepth > float(threshold), 'draw_color'] = '#FF0000'
-                nodes.loc[nodes.MaximumPondDepth > float(threshold), 'draw_size'] = 10
-                nodes_count = len(nodes.loc[nodes.MaximumPondDepth > float(threshold)])
+                        links = mymodel.links.dataframe
+                        links['draw_color'] = '#787882'  # grey
+                        links['draw_size'] = 2
 
-                links = mymodel.links.dataframe
-                links['draw_color'] = '#787882'  # grey
-                links['draw_size'] = 2
+                        # Create the shapefile
+                        geometry = [Point(xy) for xy in zip(filtered_nodes['X'], filtered_nodes['Y'])]
 
-                # Create the shapefile
-                geometry = [Point(xy) for xy in zip(filtered_nodes['X'], filtered_nodes['Y'])]
+                        # Create a GeoDataFrame
+                        crs = {'init': authid}
+                        nodes_to_shapefile = filtered_nodes.astype(str)
+                        gdf = gpd.GeoDataFrame(nodes_to_shapefile, crs=crs, geometry=geometry)
 
-                # Create a GeoDataFrame
-                crs = {'init': authid}
-                nodes_to_shapefile = filtered_nodes.astype(str)
-                gdf = gpd.GeoDataFrame(nodes_to_shapefile, crs=crs, geometry=geometry)
+                        # Save as shapefile
+                        output_shapefile = sd_output_dir + rf'\TotalFloodVol_{storm_drain_values[1]}.shp'
+                        gdf.to_file(output_shapefile, driver='ESRI Shapefile')
 
-                # Save as shapefile
-                output_shapefile = sd_output_dir + rf'\MaximumPondDepth_{threshold}.shp'
-                gdf.to_file(output_shapefile, driver='ESRI Shapefile')
+                        # add an informative annotation, and draw:
+                        file = sd_output_dir + rf'\TotalFloodVol_{storm_drain_values[1]}.png'
+                        annotation = f'Total Nodes: {nodes_count}'
+                        swmmio.draw_model(model=None, nodes=nodes, conduits=links, parcels=None, title=annotation,
+                                          annotation=None, file_path=file, bbox=None, px_width=2048.0)
 
-                # add an informative annotation, and draw:
-                file = sd_output_dir + rf'\MaximumPondDepth_{threshold}.png'
-                annotation = f'Total Nodes: {nodes_count}'
-                swmmio.draw_model(model=None, nodes=nodes, conduits=links, parcels=None, title=annotation,
-                                  annotation=None, file_path=file, bbox=None, px_width=2048.0)
+                        layer = QgsVectorLayer(output_shapefile, f'TotalFloodVol_{storm_drain_values[1]}', "ogr")
+                        QgsProject.instance().addMapLayer(layer, False)
+                        storm_drain_group.insertLayer(0, layer)
 
-                return [output_shapefile, f'MaximumPondDepth_{threshold}']
+                        # return [output_shapefile, f'TotalFloodVol_{storm_drain_values[1]}']
+
+                if plot == "Maximum Pond":
+                    filtered_nodes = nodes.loc[nodes.MaximumPondDepth > float(storm_drain_values[1])]
+                    if not filtered_nodes.empty:
+                        # nodes in a graphic
+                        nodes['draw_color'] = '#787882'  # grey
+                        nodes.loc[nodes.MaximumPondDepth > float(storm_drain_values[1]), 'draw_color'] = '#FF0000'
+                        nodes.loc[nodes.MaximumPondDepth > float(storm_drain_values[1]), 'draw_size'] = 10
+                        nodes_count = len(nodes.loc[nodes.MaximumPondDepth > float(storm_drain_values[1])])
+
+                        links = mymodel.links.dataframe
+                        links['draw_color'] = '#787882'  # grey
+                        links['draw_size'] = 2
+
+                        # Create the shapefile
+                        geometry = [Point(xy) for xy in zip(filtered_nodes['X'], filtered_nodes['Y'])]
+
+                        # Create a GeoDataFrame
+                        crs = {'init': authid}
+                        nodes_to_shapefile = filtered_nodes.astype(str)
+                        gdf = gpd.GeoDataFrame(nodes_to_shapefile, crs=crs, geometry=geometry)
+
+                        # Save as shapefile
+                        output_shapefile = sd_output_dir + rf'\MaximumPondDepth_{storm_drain_values[1]}.shp'
+                        gdf.to_file(output_shapefile, driver='ESRI Shapefile')
+
+                        # add an informative annotation, and draw:
+                        file = sd_output_dir + rf'\MaximumPondDepth_{storm_drain_values[1]}.png'
+                        annotation = f'Total Nodes: {nodes_count}'
+                        swmmio.draw_model(model=None, nodes=nodes, conduits=links, parcels=None, title=annotation,
+                                          annotation=None, file_path=file, bbox=None, px_width=2048.0)
+
+                        layer = QgsVectorLayer(output_shapefile, f'MaximumPondDepth_{storm_drain_values[1]}', "ogr")
+                        QgsProject.instance().addMapLayer(layer, False)
+                        storm_drain_group.insertLayer(0, layer)
+
+                        # return [output_shapefile, f'MaximumPondDepth_{storm_drain_values[1]}']
+
+    def storm_drain_profile(self, storm_drain_rbs, flo2d_results_dir, sd_output_dir, plot=False):
+        """
+        Function to plot the storm drain profile
+        """
+
+        storm_drain_values = storm_drain_rbs.get("Profile")
+        if storm_drain_values[0]:
+            mymodel = Model(flo2d_results_dir)
+            rpt = swmmio.rpt(flo2d_results_dir + r'\swmm.rpt')
+
+            plt.clf()
+            plt.close()
+            fig = plt.figure(figsize=(11, 9))
+            ax = fig.add_subplot(1, 1, 1)
+
+            try:
+                path_selection = find_network_trace(mymodel, storm_drain_values[1], storm_drain_values[2])
+                max_depth = rpt.node_depth_summary.MaxNodeDepth
+                ave_depth = rpt.node_depth_summary.AvgDepth
+            except:
+                self.iface.messageBar().pushMessage("No path found!", level=Qgis.Warning, duration=5)
+                plt.clf()
+                plt.close()
+                return
+            profile_config = build_profile_plot(ax, mymodel, path_selection)
+            add_hgl_plot(ax, profile_config, depth=max_depth, color='red', label="Maximum Depth")
+            add_hgl_plot(ax, profile_config, depth=ave_depth, label="Average Depth")
+            add_node_labels_plot(ax, mymodel, profile_config)
+            add_link_labels_plot(ax, mymodel, profile_config)
+            ax.legend(loc='best')
+            ax.grid('xy')
+            ax.get_xaxis().set_ticklabels([])
+
+            if self.units_switch == "0":
+                unit = "ft"
+            else:
+                unit = "m"
+
+            ax.set_xlabel(f"Length ({unit})")
+            ax.set_ylabel(f"Elevation ({unit})")
+
+            fig.tight_layout()
+            if plot:
+                sd_profile_dir = sd_output_dir + fr"\Profile"
+                if not os.path.exists(sd_profile_dir):
+                    os.makedirs(sd_profile_dir)
+                fig.savefig(sd_profile_dir + rf"\{storm_drain_values[1]} - {storm_drain_values[2]}.png")
+            plt.show()
+            # plt.close()
+
+    def get_nname_grid(self, flo2d_results_dir):
+        """
+        Function to get a dictionary {"node name":"grid"}
+        """
+        swmmflo = flo2d_results_dir + r"\SWMMFLO.DAT"
+        swmmoutf = flo2d_results_dir + r"\SWMMOUTF.DAT"
+
+        nname_grid = {}
+
+        with open(swmmflo, 'r') as file:
+            for line in file:
+                line = line.split()
+                nname_grid[line[2]] = line[1]
+        with open(swmmoutf, 'r') as file:
+            for line in file:
+                line = line.split()
+                nname_grid[line[0]] = line[1]
+
+        return nname_grid

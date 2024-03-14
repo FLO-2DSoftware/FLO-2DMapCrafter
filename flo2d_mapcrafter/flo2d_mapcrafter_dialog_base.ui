@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>732</width>
-    <height>519</height>
+    <height>594</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -20,83 +20,6 @@
    <number>0</number>
   </property>
   <layout class="QGridLayout" name="gridLayout">
-   <item row="6" column="0">
-    <layout class="QGridLayout" name="gridLayout_44">
-     <item row="0" column="0">
-      <widget class="QLabel" name="label_2">
-       <property name="enabled">
-        <bool>false</bool>
-       </property>
-       <property name="text">
-        <string>FLO-2D MapCrafter Output Folder</string>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="1" colspan="2">
-      <widget class="QPushButton" name="runButton">
-       <property name="enabled">
-        <bool>false</bool>
-       </property>
-       <property name="text">
-        <string>Create maps</string>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="3">
-      <widget class="QPushButton" name="cancelButton">
-       <property name="enabled">
-        <bool>true</bool>
-       </property>
-       <property name="text">
-        <string>Cancel</string>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="1" colspan="3">
-      <widget class="QgsFileWidget" name="mapper_out_folder">
-       <property name="enabled">
-        <bool>false</bool>
-       </property>
-       <property name="acceptDrops">
-        <bool>false</bool>
-       </property>
-       <property name="statusTip">
-        <string/>
-       </property>
-       <property name="whatsThis">
-        <string/>
-       </property>
-       <property name="accessibleName">
-        <string/>
-       </property>
-       <property name="accessibleDescription">
-        <string/>
-       </property>
-       <property name="fileWidgetButtonVisible">
-        <bool>true</bool>
-       </property>
-       <property name="useLink">
-        <bool>false</bool>
-       </property>
-       <property name="fullUrl">
-        <bool>false</bool>
-       </property>
-       <property name="dialogTitle">
-        <string>FLO-2D MapCrafter Output Folder</string>
-       </property>
-       <property name="defaultRoot">
-        <string/>
-       </property>
-       <property name="storageMode">
-        <enum>QgsFileWidget::GetDirectory</enum>
-       </property>
-       <property name="options">
-        <set>QFileDialog::ShowDirsOnly</set>
-       </property>
-      </widget>
-     </item>
-    </layout>
-   </item>
    <item row="0" column="0">
     <layout class="QGridLayout" name="gridLayout_43">
      <item row="0" column="1" colspan="4">
@@ -176,7 +99,7 @@
       <enum>QTabWidget::Rounded</enum>
      </property>
      <property name="currentIndex">
-      <number>5</number>
+      <number>0</number>
      </property>
      <property name="elideMode">
       <enum>Qt::ElideNone</enum>
@@ -209,7 +132,7 @@
             <x>0</x>
             <y>0</y>
             <width>688</width>
-            <height>342</height>
+            <height>401</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_99">
@@ -708,7 +631,7 @@
             <x>0</x>
             <y>0</y>
             <width>688</width>
-            <height>342</height>
+            <height>401</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_100">
@@ -1340,7 +1263,7 @@
             <x>0</x>
             <y>0</y>
             <width>688</width>
-            <height>342</height>
+            <height>401</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_101">
@@ -1852,7 +1775,7 @@
             <x>0</x>
             <y>0</y>
             <width>688</width>
-            <height>342</height>
+            <height>401</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_102">
@@ -2513,7 +2436,7 @@
             <x>0</x>
             <y>0</y>
             <width>688</width>
-            <height>342</height>
+            <height>401</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_103">
@@ -2890,84 +2813,125 @@ LOW DANGER ZONE: Almost any size child (excluding infants) is not seriously thre
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>671</width>
-            <height>358</height>
+            <width>688</width>
+            <height>401</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_111">
-           <item row="3" column="0">
-            <widget class="QgsCollapsibleGroupBox" name="graphics_plot_cgb">
+           <item row="4" column="0">
+            <widget class="QgsCollapsibleGroupBox" name="profile_plot_cgb">
              <property name="title">
-              <string>Graphics Plot</string>
+              <string>Profile Plot</string>
              </property>
-             <layout class="QGridLayout" name="gridLayout_120">
+             <property name="collapsed">
+              <bool>true</bool>
+             </property>
+             <layout class="QGridLayout" name="gridLayout_118">
               <item row="0" column="0">
-               <layout class="QGridLayout" name="gridLayout_115">
-                <item row="0" column="5">
-                 <widget class="QDoubleSpinBox" name="threshold_dsb">
+               <layout class="QGridLayout" name="gridLayout_113">
+                <item row="0" column="0">
+                 <widget class="QCheckBox" name="plot_profile_chbox">
+                  <property name="text">
+                   <string>Plot Profile</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="3" colspan="2">
+                 <widget class="QComboBox" name="start_cbo">
                   <property name="sizePolicy">
-                   <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                   <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
                     <horstretch>0</horstretch>
                     <verstretch>0</verstretch>
                    </sizepolicy>
                   </property>
-                  <property name="alignment">
-                   <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                 </widget>
+                </item>
+                <item row="0" column="2">
+                 <widget class="QLabel" name="label_15">
+                  <property name="text">
+                   <string>Start Node</string>
                   </property>
                  </widget>
                 </item>
-                <item row="0" column="6">
-                 <spacer name="horizontalSpacer_3">
+                <item row="0" column="6" colspan="2">
+                 <widget class="QComboBox" name="end_cbo">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="5">
+                 <widget class="QLabel" name="label_18">
+                  <property name="text">
+                   <string>End Node</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="1">
+                 <spacer name="horizontalSpacer">
                   <property name="orientation">
                    <enum>Qt::Horizontal</enum>
                   </property>
+                  <property name="sizeType">
+                   <enum>QSizePolicy::Fixed</enum>
+                  </property>
                   <property name="sizeHint" stdset="0">
                    <size>
-                    <width>40</width>
+                    <width>55</width>
                     <height>20</height>
                    </size>
                   </property>
                  </spacer>
                 </item>
+               </layout>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item row="0" column="0">
+            <widget class="QgsCollapsibleGroupBox" name="nodes_cgb">
+             <property name="title">
+              <string>Nodes</string>
+             </property>
+             <property name="collapsed">
+              <bool>true</bool>
+             </property>
+             <layout class="QGridLayout" name="gridLayout_114">
+              <item row="0" column="0">
+               <layout class="QGridLayout" name="gridLayout_106">
                 <item row="0" column="2">
-                 <widget class="QComboBox" name="graphics_type_cbo">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                 </widget>
-                </item>
-                <item row="0" column="7">
-                 <widget class="QPushButton" name="plot_graphics_btn">
+                 <widget class="QCheckBox" name="node_depth_chbox">
                   <property name="text">
-                   <string>Plot Graphics</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="0" column="0">
-                 <widget class="QLabel" name="label_26">
-                  <property name="text">
-                   <string>Type</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="0" column="3" colspan="2">
-                 <widget class="QLabel" name="label_27">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <property name="text">
-                   <string>Threshold (&gt;)</string>
+                   <string>Depth</string>
                   </property>
                  </widget>
                 </item>
                 <item row="0" column="1">
-                 <spacer name="horizontalSpacer_4">
+                 <widget class="QCheckBox" name="flooding_chbox">
+                  <property name="text">
+                   <string>Flooding</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="0">
+                 <widget class="QCheckBox" name="head_chbox">
+                  <property name="text">
+                   <string>Head</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="0">
+                 <widget class="QCheckBox" name="inflow_chbox">
+                  <property name="text">
+                   <string>Inflow</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="1" colspan="2">
+                 <spacer name="horizontalSpacer_6">
                   <property name="orientation">
                    <enum>Qt::Horizontal</enum>
                   </property>
@@ -2987,16 +2951,33 @@ LOW DANGER ZONE: Almost any size child (excluding infants) is not seriously thre
              </layout>
             </widget>
            </item>
-           <item row="2" column="0">
-            <widget class="QgsCollapsibleGroupBox" name="profile_plot_cgb">
+           <item row="3" column="0">
+            <widget class="QgsCollapsibleGroupBox" name="graphics_plot_cgb">
              <property name="title">
-              <string>Profile Plot</string>
+              <string>Graphics Plot</string>
              </property>
-             <layout class="QGridLayout" name="gridLayout_118">
+             <property name="collapsed">
+              <bool>true</bool>
+             </property>
+             <layout class="QGridLayout" name="gridLayout_120">
               <item row="0" column="0">
-               <layout class="QGridLayout" name="gridLayout_113">
-                <item row="0" column="8">
-                 <spacer name="horizontalSpacer">
+               <layout class="QGridLayout" name="gridLayout_115">
+                <item row="2" column="4">
+                 <widget class="QLabel" name="total_flood_lbl">
+                  <property name="text">
+                   <string>?</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="3">
+                 <widget class="QDoubleSpinBox" name="max_flood_dsb">
+                  <property name="alignment">
+                   <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                  </property>
+                 </widget>
+                </item>
+                <item row="2" column="1">
+                 <spacer name="horizontalSpacer_11">
                   <property name="orientation">
                    <enum>Qt::Horizontal</enum>
                   </property>
@@ -3008,164 +2989,75 @@ LOW DANGER ZONE: Almost any size child (excluding infants) is not seriously thre
                   </property>
                  </spacer>
                 </item>
-                <item row="0" column="0" rowspan="2">
-                 <widget class="QLabel" name="label_15">
+                <item row="0" column="1">
+                 <spacer name="horizontalSpacer_9">
+                  <property name="orientation">
+                   <enum>Qt::Horizontal</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>40</width>
+                    <height>20</height>
+                   </size>
+                  </property>
+                 </spacer>
+                </item>
+                <item row="1" column="0">
+                 <widget class="QCheckBox" name="max_flood_chbox">
                   <property name="text">
-                   <string>Start Node</string>
+                   <string>Maximum Flooding Rate</string>
                   </property>
                  </widget>
                 </item>
                 <item row="0" column="3">
-                 <widget class="QComboBox" name="start_cbo"/>
-                </item>
-                <item row="0" column="1" rowspan="2">
-                 <layout class="QGridLayout" name="gridLayout_121">
-                  <item row="0" column="0">
-                   <widget class="QRadioButton" name="start_le_rb">
-                    <property name="text">
-                     <string/>
-                    </property>
-                    <property name="checked">
-                     <bool>true</bool>
-                    </property>
-                    <property name="autoExclusive">
-                     <bool>true</bool>
-                    </property>
-                    <attribute name="buttonGroup">
-                     <string notr="true">buttonGroup</string>
-                    </attribute>
-                   </widget>
-                  </item>
-                  <item row="1" column="0">
-                   <widget class="QRadioButton" name="start_cbo_rb">
-                    <property name="text">
-                     <string/>
-                    </property>
-                    <property name="checked">
-                     <bool>false</bool>
-                    </property>
-                    <property name="autoExclusive">
-                     <bool>true</bool>
-                    </property>
-                    <attribute name="buttonGroup">
-                     <string notr="true">buttonGroup</string>
-                    </attribute>
-                   </widget>
-                  </item>
-                 </layout>
-                </item>
-                <item row="1" column="8">
-                 <spacer name="horizontalSpacer_2">
-                  <property name="orientation">
-                   <enum>Qt::Horizontal</enum>
+                 <widget class="QDoubleSpinBox" name="hours_flooded_dsb">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
                   </property>
-                  <property name="sizeHint" stdset="0">
-                   <size>
-                    <width>40</width>
-                    <height>20</height>
-                   </size>
-                  </property>
-                 </spacer>
-                </item>
-                <item row="0" column="4" rowspan="2">
-                 <widget class="QLabel" name="label_18">
-                  <property name="text">
-                   <string>End Node</string>
+                  <property name="alignment">
+                   <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                   </property>
                  </widget>
                 </item>
-                <item row="0" column="5" rowspan="2">
-                 <layout class="QGridLayout" name="gridLayout_119">
-                  <item row="0" column="0">
-                   <widget class="QRadioButton" name="end_cbo_rb">
-                    <property name="text">
-                     <string/>
-                    </property>
-                    <property name="checked">
-                     <bool>true</bool>
-                    </property>
-                    <property name="autoExclusive">
-                     <bool>true</bool>
-                    </property>
-                    <attribute name="buttonGroup">
-                     <string notr="true">buttonGroup_2</string>
-                    </attribute>
-                   </widget>
-                  </item>
-                  <item row="1" column="0">
-                   <widget class="QRadioButton" name="end_le_rb">
-                    <property name="text">
-                     <string/>
-                    </property>
-                    <property name="autoExclusive">
-                     <bool>true</bool>
-                    </property>
-                    <attribute name="buttonGroup">
-                     <string notr="true">buttonGroup_2</string>
-                    </attribute>
-                   </widget>
-                  </item>
-                 </layout>
-                </item>
-                <item row="1" column="3">
-                 <widget class="QLineEdit" name="start_le"/>
-                </item>
-                <item row="0" column="9" rowspan="2">
-                 <widget class="QPushButton" name="plot_profile_btn">
-                  <property name="text">
-                   <string>Plot Profile</string>
+                <item row="3" column="3">
+                 <widget class="QDoubleSpinBox" name="max_pond_dsb">
+                  <property name="alignment">
+                   <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                   </property>
                  </widget>
                 </item>
-                <item row="0" column="6" colspan="2">
-                 <widget class="QComboBox" name="end_cbo"/>
-                </item>
-                <item row="1" column="6" colspan="2">
-                 <widget class="QLineEdit" name="end_le"/>
-                </item>
-               </layout>
-              </item>
-             </layout>
-            </widget>
-           </item>
-           <item row="0" column="0">
-            <widget class="QgsCollapsibleGroupBox" name="nodes_cgb">
-             <property name="title">
-              <string>Nodes</string>
-             </property>
-             <layout class="QGridLayout" name="gridLayout_114">
-              <item row="0" column="0">
-               <layout class="QGridLayout" name="gridLayout_106">
-                <item row="0" column="2">
-                 <widget class="QCheckBox" name="node_depth_chbox">
+                <item row="0" column="4">
+                 <widget class="QLabel" name="hours_lbl">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
                   <property name="text">
-                   <string>Depth</string>
+                   <string>?</string>
                   </property>
                  </widget>
                 </item>
-                <item row="0" column="1">
-                 <widget class="QCheckBox" name="flooding_chbox">
+                <item row="2" column="0">
+                 <widget class="QCheckBox" name="total_flood_chbox">
                   <property name="text">
-                   <string>Flooding</string>
+                   <string>Total Flooding Volume</string>
                   </property>
                  </widget>
                 </item>
                 <item row="0" column="0">
-                 <widget class="QCheckBox" name="inflow_chbox">
+                 <widget class="QCheckBox" name="hours_flooded_chbox">
                   <property name="text">
-                   <string>Inflow</string>
+                   <string>Hours Flooded</string>
                   </property>
                  </widget>
                 </item>
-                <item row="1" column="0">
-                 <widget class="QCheckBox" name="head_chbox">
-                  <property name="text">
-                   <string>Head</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="1" column="1" colspan="2">
-                 <spacer name="horizontalSpacer_6">
+                <item row="3" column="1">
+                 <spacer name="horizontalSpacer_12">
                   <property name="orientation">
                    <enum>Qt::Horizontal</enum>
                   </property>
@@ -3177,49 +3069,8 @@ LOW DANGER ZONE: Almost any size child (excluding infants) is not seriously thre
                   </property>
                  </spacer>
                 </item>
-               </layout>
-              </item>
-             </layout>
-            </widget>
-           </item>
-           <item row="1" column="0">
-            <widget class="QgsCollapsibleGroupBox" name="links_cgb">
-             <property name="title">
-              <string>Links</string>
-             </property>
-             <layout class="QGridLayout" name="gridLayout_123">
-              <item row="0" column="0">
-               <layout class="QGridLayout" name="gridLayout_122">
-                <item row="0" column="0">
-                 <widget class="QCheckBox" name="flow_chbox">
-                  <property name="text">
-                   <string>Flow</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="0" column="2">
-                 <widget class="QCheckBox" name="link_depth_chbox">
-                  <property name="text">
-                   <string>Depth</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="0" column="1">
-                 <widget class="QCheckBox" name="velocity_chbox">
-                  <property name="text">
-                   <string>Velocity</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="1" column="0">
-                 <widget class="QCheckBox" name="percent_full_chbox">
-                  <property name="text">
-                   <string>Percent Full</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="1" column="1" colspan="2">
-                 <spacer name="horizontalSpacer_5">
+                <item row="1" column="1">
+                 <spacer name="horizontalSpacer_10">
                   <property name="orientation">
                    <enum>Qt::Horizontal</enum>
                   </property>
@@ -3231,12 +3082,40 @@ LOW DANGER ZONE: Almost any size child (excluding infants) is not seriously thre
                   </property>
                  </spacer>
                 </item>
+                <item row="3" column="0">
+                 <widget class="QCheckBox" name="max_pond_chbox">
+                  <property name="text">
+                   <string>Maximum Pond Depth</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="2" column="3">
+                 <widget class="QDoubleSpinBox" name="total_flood_dsb">
+                  <property name="alignment">
+                   <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="4">
+                 <widget class="QLabel" name="max_flood_lbl">
+                  <property name="text">
+                   <string>?</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="3" column="4">
+                 <widget class="QLabel" name="max_pond_lbl">
+                  <property name="text">
+                   <string>?</string>
+                  </property>
+                 </widget>
+                </item>
                </layout>
               </item>
              </layout>
             </widget>
            </item>
-           <item row="4" column="0">
+           <item row="7" column="0">
             <layout class="QGridLayout" name="gridLayout_116">
              <item row="0" column="1">
               <widget class="QToolButton" name="cg_storm_drain_btn">
@@ -3264,6 +3143,116 @@ LOW DANGER ZONE: Almost any size child (excluding infants) is not seriously thre
              </item>
             </layout>
            </item>
+           <item row="1" column="0">
+            <widget class="QgsCollapsibleGroupBox" name="links_cgb">
+             <property name="title">
+              <string>Links</string>
+             </property>
+             <property name="collapsed">
+              <bool>true</bool>
+             </property>
+             <layout class="QGridLayout" name="gridLayout_123">
+              <item row="0" column="0">
+               <layout class="QGridLayout" name="gridLayout_122">
+                <item row="0" column="2">
+                 <widget class="QCheckBox" name="link_depth_chbox">
+                  <property name="text">
+                   <string>Depth</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="0">
+                 <widget class="QCheckBox" name="flow_chbox">
+                  <property name="text">
+                   <string>Flow</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="0">
+                 <widget class="QCheckBox" name="percent_full_chbox">
+                  <property name="text">
+                   <string>Percent Full</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="1">
+                 <widget class="QCheckBox" name="velocity_chbox">
+                  <property name="text">
+                   <string>Velocity</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="1" colspan="2">
+                 <spacer name="horizontalSpacer_5">
+                  <property name="orientation">
+                   <enum>Qt::Horizontal</enum>
+                  </property>
+                  <property name="sizeType">
+                   <enum>QSizePolicy::Minimum</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>40</width>
+                    <height>20</height>
+                   </size>
+                  </property>
+                 </spacer>
+                </item>
+               </layout>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item row="6" column="0">
+            <layout class="QGridLayout" name="gridLayout_124">
+             <item row="0" column="3">
+              <widget class="QPushButton" name="plot_profile_btn">
+               <property name="enabled">
+                <bool>true</bool>
+               </property>
+               <property name="text">
+                <string>See Profile</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QPushButton" name="see_nodes_results_btn">
+               <property name="enabled">
+                <bool>false</bool>
+               </property>
+               <property name="text">
+                <string>See Results</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="0">
+              <spacer name="horizontalSpacer_3">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+            </layout>
+           </item>
+           <item row="5" column="0">
+            <spacer name="verticalSpacer_7">
+             <property name="orientation">
+              <enum>Qt::Vertical</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>20</width>
+               <height>40</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
           </layout>
          </widget>
         </widget>
@@ -3289,7 +3278,7 @@ LOW DANGER ZONE: Almost any size child (excluding infants) is not seriously thre
             <x>0</x>
             <y>0</y>
             <width>688</width>
-            <height>342</height>
+            <height>401</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_104">
@@ -3412,6 +3401,83 @@ LOW DANGER ZONE: Almost any size child (excluding infants) is not seriously thre
      </widget>
     </widget>
    </item>
+   <item row="6" column="0">
+    <layout class="QGridLayout" name="gridLayout_44">
+     <item row="0" column="0">
+      <widget class="QLabel" name="label_2">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="text">
+        <string>FLO-2D MapCrafter Output Folder</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1" colspan="2">
+      <widget class="QPushButton" name="runButton">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="text">
+        <string>Create maps</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="3">
+      <widget class="QPushButton" name="cancelButton">
+       <property name="enabled">
+        <bool>true</bool>
+       </property>
+       <property name="text">
+        <string>Cancel</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1" colspan="3">
+      <widget class="QgsFileWidget" name="mapper_out_folder">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="acceptDrops">
+        <bool>false</bool>
+       </property>
+       <property name="statusTip">
+        <string/>
+       </property>
+       <property name="whatsThis">
+        <string/>
+       </property>
+       <property name="accessibleName">
+        <string/>
+       </property>
+       <property name="accessibleDescription">
+        <string/>
+       </property>
+       <property name="fileWidgetButtonVisible">
+        <bool>true</bool>
+       </property>
+       <property name="useLink">
+        <bool>false</bool>
+       </property>
+       <property name="fullUrl">
+        <bool>false</bool>
+       </property>
+       <property name="dialogTitle">
+        <string>FLO-2D MapCrafter Output Folder</string>
+       </property>
+       <property name="defaultRoot">
+        <string/>
+       </property>
+       <property name="storageMode">
+        <enum>QgsFileWidget::GetDirectory</enum>
+       </property>
+       <property name="options">
+        <set>QFileDialog::ShowDirsOnly</set>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
   </layout>
  </widget>
  <customwidgets>
@@ -3447,74 +3513,9 @@ LOW DANGER ZONE: Almost any size child (excluding infants) is not seriously thre
   <tabstop>a3_port</tabstop>
  </tabstops>
  <resources/>
- <connections>
-  <connection>
-   <sender>start_le_rb</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>start_cbo</receiver>
-   <slot>setEnabled(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>105</x>
-     <y>217</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>147</x>
-     <y>217</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>start_cbo_rb</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>start_le</receiver>
-   <slot>setEnabled(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>107</x>
-     <y>244</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>136</x>
-     <y>245</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>end_cbo_rb</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>end_cbo</receiver>
-   <slot>setEnabled(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>320</x>
-     <y>222</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>340</x>
-     <y>222</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>end_le_rb</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>end_le</receiver>
-   <slot>setEnabled(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>321</x>
-     <y>246</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>341</x>
-     <y>247</y>
-    </hint>
-   </hints>
-  </connection>
- </connections>
+ <connections/>
  <buttongroups>
-  <buttongroup name="buttonGroup"/>
   <buttongroup name="buttonGroup_2"/>
+  <buttongroup name="buttonGroup"/>
  </buttongroups>
 </ui>

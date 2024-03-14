@@ -22,8 +22,9 @@
  ***************************************************************************/
 """
 import numpy as np
+from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QColor
-from PyQt5.QtWidgets import QMessageBox
+from PyQt5.QtWidgets import QMessageBox, QApplication, QVBoxLayout
 from PyQt5.QtXml import QDomDocument
 from osgeo import gdal
 from qgis.PyQt import QtWidgets
@@ -42,14 +43,16 @@ from qgis._core import (
     QgsUnitTypes,
     QgsPrintLayout,
     QgsReadWriteContext,
-    QgsMessageLog, QgsApplication, QgsProcessingUtils,
+    QgsMessageLog, QgsApplication, QgsProcessingUtils, Qgis,
 )
-from swmmio import Model
+from swmmio import Model, find_network_trace, build_profile_plot, add_hgl_plot, add_node_labels_plot, \
+    add_link_labels_plot
 
 from .mapping.flood import FloodMaps
 from .mapping.hazard import HazardMaps
 from .mapping.mudflow import MudflowMaps
 from .mapping.scripts import set_icon
+from .mapping.sd_results_viewer import SDResultsViewer
 from .mapping.sediment import SedimentMaps
 from .mapping.storm_drain import StormDrainPlots
 from .mapping.twophase import TwophaseMaps
@@ -57,6 +60,10 @@ from .resources import *
 from .flo2d_mapcrafter_dialog import FLO2DMapCrafterDialog
 import os.path
 import processing
+
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
+import matplotlib.pyplot as plt
 
 try:
     import swmmio
@@ -166,7 +173,9 @@ class FLO2DMapCrafter:
         set_icon(self.dlg.eg_storm_drain_btn, "expand_groups.svg")
 
         # Storm Drain subplots
-        self.dlg.plot_graphics_btn.clicked.connect(self.plot_storm_drain_graphics)
+        # self.dlg.plot_graphics_btn.clicked.connect(self.plot_storm_drain_graphics)
+        self.dlg.plot_profile_btn.clicked.connect(self.see_storm_drain_profile)
+        self.dlg.see_nodes_results_btn.clicked.connect(self.see_nodes_results)
 
         # DEBUG Map layouts
         # self.dlg.map_title_le.setText("Mudflow")
@@ -334,7 +343,7 @@ class FLO2DMapCrafter:
         with open(output_directory + r"\CONT.DAT", "r") as file:
             lines = file.readlines()
             elements = lines[2].split()
-            units_switch = lines[0].split()[3]
+            self.units_switch = lines[0].split()[3]
             mud_switch = elements[3]
             sed_switch = elements[4]
             file.close()
@@ -347,7 +356,7 @@ class FLO2DMapCrafter:
             self.dlg.tab3.setEnabled(False)
             self.dlg.tabs.setCurrentIndex(0)
 
-            flood_maps = FloodMaps(units_switch)
+            flood_maps = FloodMaps(self.units_switch)
             flood_files_dict = flood_maps.check_flood_files(output_directory)
 
             flood_rbs = {
@@ -387,7 +396,7 @@ class FLO2DMapCrafter:
             self.dlg.tab3.setEnabled(False)
             self.dlg.tabs.setCurrentIndex(1)
 
-            sediment_maps = SedimentMaps(units_switch)
+            sediment_maps = SedimentMaps(self.units_switch)
             sediment_files_dict = sediment_maps.check_sediment_files(output_directory)
 
             sediment_rbs = {
@@ -440,7 +449,7 @@ class FLO2DMapCrafter:
             self.dlg.tab3.setEnabled(False)
             self.dlg.tabs.setCurrentIndex(2)
 
-            mudflow_maps = MudflowMaps(units_switch)
+            mudflow_maps = MudflowMaps(self.units_switch)
             mudflow_files_dict = mudflow_maps.check_mudflow_files(output_directory)
 
             mudflow_rbs = {
@@ -482,7 +491,7 @@ class FLO2DMapCrafter:
             self.dlg.tab3.setEnabled(True)
             self.dlg.tabs.setCurrentIndex(3)
 
-            twophase_maps = TwophaseMaps(units_switch)
+            twophase_maps = TwophaseMaps(self.units_switch)
             twophase_files_dict = twophase_maps.check_twophase_files(output_directory)
 
             twophase_rbs = {
@@ -541,7 +550,7 @@ class FLO2DMapCrafter:
 
         # Hazard Maps
         self.dlg.tab5.setEnabled(True)
-        hazard_maps = HazardMaps(units_switch)
+        hazard_maps = HazardMaps(self.units_switch)
         hazard_maps_dict = hazard_maps.check_hazard_files(output_directory)
 
         hazard_rbs = {
@@ -613,17 +622,32 @@ class FLO2DMapCrafter:
 
             nodes_list = list(mymodel.nodes.dataframe.index)
 
-            self.dlg.start_cbo.addItems(nodes_list)
-            self.dlg.end_cbo.addItems(nodes_list)
+            self.dlg.start_cbo.addItems(sorted(nodes_list))
+            self.dlg.end_cbo.addItems(sorted(nodes_list))
 
-            graphics_type = [
-                "HoursFlooded",
-                "MaxQFlooding",
-                "TotalFloodVol",
-                "MaximumPondDepth"
-            ]
+            self.dlg.hours_lbl.setText("hrs")
+            if self.units_switch == "0":
+                self.dlg.max_flood_lbl.setText("cfs")
+                self.dlg.total_flood_lbl.setText("mgd")
+                self.dlg.max_pond_lbl.setText("ft")
+            else:
+                self.dlg.max_flood_lbl.setText("cms")
+                self.dlg.total_flood_lbl.setText("mld")
+                self.dlg.max_pond_lbl.setText("m")
 
-            self.dlg.graphics_type_cbo.addItems(graphics_type)
+            # Check if there are results
+            sd_results_dir = map_output_dir + r"\StormDrain"
+            if os.path.exists(sd_results_dir):
+                nodes_dir = sd_results_dir + r"\Nodes"
+                links_dir = sd_results_dir + r"\Links"
+                for dir, sub_dirs, files in os.walk(nodes_dir):
+                    if files:
+                        self.dlg.see_nodes_results_btn.setEnabled(True)
+                        break
+                for dir, sub_dirs, files in os.walk(links_dir):
+                    if files:
+                        self.dlg.see_nodes_results_btn.setEnabled(True)
+                        break
 
     def run_map_creator(self):
         """Run method that performs all the real work"""
@@ -865,18 +889,41 @@ class FLO2DMapCrafter:
         """
 
         storm_drain_rbs = {
-            "Inflow": self.dlg.inflow_chbox.isChecked(),
-            "Flooding": self.dlg.flooding_chbox.isChecked(),
-            "Node Depth": self.dlg.node_depth_chbox.isChecked(),
-            "Head": self.dlg.head_chbox.isChecked(),
-            "Flow": self.dlg.flow_chbox.isChecked(),
-            "Velocity": self.dlg.velocity_chbox.isChecked(),
-            "Link Depth": self.dlg.link_depth_chbox.isChecked(),
-            "Percent Full": self.dlg.percent_full_chbox.isChecked(),
+            "Inflow": [self.dlg.inflow_chbox.isChecked()],
+            "Flooding": [self.dlg.flooding_chbox.isChecked()],
+            "Node Depth": [self.dlg.node_depth_chbox.isChecked()],
+            "Head": [self.dlg.head_chbox.isChecked()],
+            "Flow": [self.dlg.flow_chbox.isChecked()],
+            "Velocity": [self.dlg.velocity_chbox.isChecked()],
+            "Link Depth": [self.dlg.link_depth_chbox.isChecked()],
+            "Percent Full": [self.dlg.percent_full_chbox.isChecked()],
+            "Hours Flooded": [
+                self.dlg.hours_flooded_chbox.isChecked(),
+                self.dlg.hours_flooded_dsb.value()
+            ],
+            "Maximum Flooding": [
+                self.dlg.max_flood_chbox.isChecked(),
+                self.dlg.max_flood_dsb.value()
+            ],
+            "Total Flooding": [
+                self.dlg.total_flood_chbox.isChecked(),
+                self.dlg.total_flood_dsb.value()
+            ],
+            "Maximum Pond": [
+                self.dlg.max_pond_chbox.isChecked(),
+                self.dlg.max_pond_dsb.value()
+            ],
+            "Profile": [
+                self.dlg.plot_profile_chbox.isChecked(),
+                self.dlg.start_cbo.currentText(),
+                self.dlg.end_cbo.currentText()
+            ],
         }
 
         at_least_one_checked = any(
-            value if not isinstance(value, list) else any(value) for value in storm_drain_rbs.values())
+            value[0] if isinstance(value, list) and len(value) > 0 else value
+            for value in storm_drain_rbs.values()
+        )
 
         if at_least_one_checked:
             if project_id:
@@ -885,49 +932,73 @@ class FLO2DMapCrafter:
                 sd_output_dir = map_output_dir + rf"\StormDrain"
             if not os.path.exists(sd_output_dir):
                 os.makedirs(sd_output_dir)
-            storm_drain_plots = StormDrainPlots(self.units_switch)
-            storm_drain_plots.create_plots(
-                storm_drain_rbs, flo2d_results_dir, sd_output_dir
-            )
+            storm_drain_plots = StormDrainPlots(self.units_switch, self.iface)
+            plots = storm_drain_plots.create_plots(storm_drain_rbs, flo2d_results_dir, sd_output_dir)
+            if plots:
+                self.dlg.see_nodes_results_btn.setEnabled(True)
+            storm_drain_plots.plot_graphics(storm_drain_rbs, flo2d_results_dir, sd_output_dir, self.crs.authid(), mapping_group)
+            storm_drain_plots.storm_drain_profile(storm_drain_rbs, flo2d_results_dir, sd_output_dir, True)
 
         msg_box = QMessageBox()
         msg_box.setIcon(QMessageBox.Information)
         msg_box.setWindowTitle("Mapping complete!")
-        msg_box.setText("The selected maps were created and added to the Map Canvas.")
+        msg_box.setText("The selected maps were created!")
         msg_box.exec_()
 
-        self.closeDialog()
+    def see_storm_drain_profile(self):
+        """
+        Function to show the storm drain profile
+        """
+        storm_drain_plots = StormDrainPlots(self.units_switch, self.iface)
+        flo2d_results_dir = self.dlg.flo2d_out_folder.filePath()
+        map_output_dir = self.dlg.mapper_out_folder.filePath()
+        project_id = self.dlg.project_id.text()
+        if project_id:
+            sd_output_dir = map_output_dir + rf"\StormDrain - {project_id}"
+        else:
+            sd_output_dir = map_output_dir + rf"\StormDrain"
+        if not os.path.exists(sd_output_dir):
+            os.makedirs(sd_output_dir)
+        storm_drain_rbs = {
+            "Profile": [
+                True,
+                self.dlg.start_cbo.currentText(),
+                self.dlg.end_cbo.currentText()
+            ],
+        }
+        storm_drain_plots.storm_drain_profile(storm_drain_rbs, flo2d_results_dir, sd_output_dir)
 
-    def plot_storm_drain_graphics(self):
+    def see_nodes_results(self):
         """
-        Function to plot the storm drain graphics
+        Function to open the results viewer
         """
-        graph_type = self.dlg.graphics_type_cbo.currentIndex()
-        threshold = self.dlg.threshold_dsb.value()
         project_id = self.dlg.project_id.text()
         map_output_dir = self.dlg.mapper_out_folder.filePath()
         flo2d_results_dir = self.dlg.flo2d_out_folder.filePath()
-        self.crs = self.dlg.crsselector.crs()
         if map_output_dir == "":
             map_output_dir = QgsProcessingUtils.tempFolder()
-
         if project_id:
             sd_output_dir = map_output_dir + rf"\StormDrain - {project_id}"
         else:
             sd_output_dir = map_output_dir + rf"\StormDrain"
 
-        storm_drain_plots = StormDrainPlots(self.units_switch)
-        shape_data = storm_drain_plots.plot_graphics(graph_type, threshold,
-                                                     flo2d_results_dir, sd_output_dir, self.crs.authid())
+        if not os.path.exists(sd_output_dir):
+            self.iface.messageBar().pushMessage("No results were found!", level=Qgis.Warning, duration=5)
+            return
 
-        layer = QgsVectorLayer(shape_data[0], shape_data[1], "ogr")
-        QgsProject.instance().addMapLayer(layer)
+        mymodel = Model(flo2d_results_dir)
+        nodes_list = list(mymodel.nodes.dataframe.index)
+        links_list = list(mymodel.links.dataframe.index)
+        nname_grid = StormDrainPlots(self.units_switch, self.iface).get_nname_grid(flo2d_results_dir)
 
-        msg_box = QMessageBox()
-        msg_box.setIcon(QMessageBox.Information)
-        msg_box.setWindowTitle("Plot completed!")
-        msg_box.setText("The graphic plot was created and saved to the export folder.")
-        msg_box.exec_()
+        sd_results_viewer = SDResultsViewer(sd_output_dir, nodes_list, links_list, nname_grid)
+        sd_results_viewer.show()
+        while True:
+            ok = sd_results_viewer.exec_()
+            if ok:
+                break
+            else:
+                return
 
     def set_raster_style(self, layer, style):
         """Define the raster styles"""
@@ -1172,7 +1243,6 @@ class FLO2DMapCrafter:
 
         # canvas = self.iface.mapCanvas()
         for item in l.items():
-            # QgsMessageLog.logMessage(str(item))
             if item.type() == 65639:  # Map
                 item.zoomToExtent(layer_extent.extent())
             if item.type() == 65641:  # Label
