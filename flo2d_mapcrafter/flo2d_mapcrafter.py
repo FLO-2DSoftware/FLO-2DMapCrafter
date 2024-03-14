@@ -1585,7 +1585,7 @@ class FLO2DMapCrafter:
         if self.dlg.tab.isEnabled():
             for grp in storm_drain_grps:
                 if grp.isEnabled():
-                    grp.setCollapsed(True)
+                    grp.setCollapsed(False)
 
     def expand_all_groups(self):
         """
