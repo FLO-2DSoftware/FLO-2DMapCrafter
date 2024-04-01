@@ -45,8 +45,6 @@ from qgis._core import (
     QgsReadWriteContext,
     QgsMessageLog, QgsApplication, QgsProcessingUtils, Qgis,
 )
-from swmmio import Model, find_network_trace, build_profile_plot, add_hgl_plot, add_node_labels_plot, \
-    add_link_labels_plot
 
 from .mapping.flood import FloodMaps
 from .mapping.hazard import HazardMaps
@@ -64,21 +62,6 @@ import processing
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 import matplotlib.pyplot as plt
-
-try:
-    import swmmio
-except ImportError:
-    import pathlib as pl
-    import subprocess
-    import sys
-
-    qgis_Path = pl.Path(sys.executable)
-    qgis_python_path = (qgis_Path.parent / "python3.exe").as_posix()
-
-    subprocess.check_call(
-        [qgis_python_path, "-m", "pip", "install", "--user", "swmmio==0.6.11"]
-    )
-    import swmmio
 
 class FLO2DMapCrafter:
     """QGIS Plugin Implementation."""
@@ -589,6 +572,75 @@ class FLO2DMapCrafter:
         if not os.path.exists(map_output_dir):
             os.makedirs(map_output_dir)
 
+        try:
+            import swmmio
+        except ImportError:
+            message = "The swmmio library is not found in your python environment. This external library is required to " \
+                      "run some processes related to swmm files. More information on: https://swmmio.readthedocs.io/en/v0.6.11/.\n\n" \
+                      "Would you like to install it automatically or " \
+                      "manually?\n\nSelect automatic if you have admin rights. Otherwise, contact your admin and " \
+                      "follow the manual steps."
+            title = "External library not found!"
+            button1 = "Automatic"
+            button2 = "Manual"
+
+            msgBox = QMessageBox()
+            msgBox.setWindowTitle(title)
+            msgBox.setText(message)
+            msgBox.setStandardButtons(QMessageBox.Yes | QMessageBox.No | QMessageBox.Close)
+            msgBox.setDefaultButton(QMessageBox.Yes)
+            buttonY = msgBox.button(QMessageBox.Yes)
+            buttonY.setText(button1)
+            buttonN = msgBox.button(QMessageBox.No)
+            buttonN.setText(button2)
+            install_options = msgBox.exec_()
+
+            if install_options == QMessageBox.Yes:
+                QApplication.setOverrideCursor(Qt.WaitCursor)
+                try:
+                    import pathlib as pl
+                    import subprocess
+                    import sys
+
+                    qgis_Path = pl.Path(sys.executable)
+                    qgis_python_path = (qgis_Path.parent / "python3.exe").as_posix()
+
+                    subprocess.check_call(
+                        [qgis_python_path, "-m", "pip", "install", "--user", "swmmio==0.6.11"]
+                    )
+                    import swmmio
+                    QApplication.restoreOverrideCursor()
+                    msgBox = QMessageBox()
+                    msgBox.setText("swmmio successfully installed!")
+                    msgBox.setWindowTitle("FLO-2D")
+                    msgBox.exec_()
+
+                except ImportError as e:
+                    QApplication.restoreOverrideCursor()
+                    msgBox = QMessageBox()
+                    msgBox.setText("Error while installing h5py. Install it manually. " + str(e))
+                    msgBox.setWindowTitle("FLO-2D")
+                    icon = QMessageBox.Critical
+                    msgBox.setIcon(icon)
+                    msgBox.exec_()
+
+            # Manual Installation
+            elif install_options == QMessageBox.No:
+                QApplication.restoreOverrideCursor()
+                message = "1. Run OSGeo4W Shell as admin\n" \
+                          "2. Type this command: pip install swmmio==0.6.11\n\n" \
+                          "Wait the process to finish and rerun this process.\n\n" \
+                          "For more information, access https://flo-2d.com/contact/"
+                msgBox = QMessageBox()
+                msgBox.setText(message)
+                msgBox.setWindowTitle("FLO-2D")
+                icon = QMessageBox.Information
+                msgBox.setIcon(icon)
+                msgBox.exec_()
+                return
+            else:
+                return
+
         inp_present = False
         rpt_present = False
 
@@ -617,7 +669,7 @@ class FLO2DMapCrafter:
             if not os.path.isfile(rpt_file):
                 os.rename(RPT_file, RPT_file[:-4] + '.rpt')
 
-            mymodel = Model(inp_file)
+            mymodel = swmmio.Model(inp_file)
             rpt = swmmio.rpt(rpt_file)
 
             nodes_list = list(mymodel.nodes.dataframe.index)
@@ -972,6 +1024,71 @@ class FLO2DMapCrafter:
         """
         Function to open the results viewer
         """
+        try:
+            import swmmio
+        except ImportError:
+            message = "The swmmio library is not found in your python environment. This external library is required to " \
+                      "run some processes related to swmm files. More information on: https://swmmio.readthedocs.io/en/v0.6.11/.\n\n" \
+                      "Would you like to install it automatically or " \
+                      "manually?\n\nSelect automatic if you have admin rights. Otherwise, contact your admin and " \
+                      "follow the manual steps."
+            title = "External library not found!"
+            button1 = "Automatic"
+            button2 = "Manual"
+
+            msgBox = QMessageBox()
+            msgBox.setWindowTitle(title)
+            msgBox.setText(message)
+            msgBox.setStandardButtons(QMessageBox.Yes | QMessageBox.No | QMessageBox.Close)
+            msgBox.setDefaultButton(QMessageBox.Yes)
+            buttonY = msgBox.button(QMessageBox.Yes)
+            buttonY.setText(button1)
+            buttonN = msgBox.button(QMessageBox.No)
+            buttonN.setText(button2)
+            install_options = msgBox.exec_()
+
+            if install_options == QMessageBox.Yes:
+                QApplication.setOverrideCursor(Qt.WaitCursor)
+                try:
+                    import pathlib as pl
+                    import subprocess
+                    import sys
+
+                    qgis_Path = pl.Path(sys.executable)
+                    qgis_python_path = (qgis_Path.parent / "python3.exe").as_posix()
+
+                    subprocess.check_call(
+                        [qgis_python_path, "-m", "pip", "install", "--user", "swmmio==0.6.11"]
+                    )
+                    import swmmio
+                    QApplication.restoreOverrideCursor()
+
+                except ImportError as e:
+                    QApplication.restoreOverrideCursor()
+                    msgBox = QMessageBox()
+                    msgBox.setText("Error while installing h5py. Install it manually. " + str(e))
+                    msgBox.setWindowTitle("FLO-2D")
+                    icon = QMessageBox.Critical
+                    msgBox.setIcon(icon)
+                    msgBox.exec_()
+
+            # Manual Installation
+            elif install_options == QMessageBox.No:
+                QApplication.restoreOverrideCursor()
+                message = "1. Run OSGeo4W Shell as admin\n" \
+                          "2. Type this command: pip install swmmio==0.6.11\n\n" \
+                          "Wait the process to finish and rerun this process.\n\n" \
+                          "For more information, access https://flo-2d.com/contact/"
+                msgBox = QMessageBox()
+                msgBox.setText(message)
+                msgBox.setWindowTitle("FLO-2D")
+                icon = QMessageBox.Information
+                msgBox.setIcon(icon)
+                msgBox.exec_()
+                return
+            else:
+                return
+
         project_id = self.dlg.project_id.text()
         map_output_dir = self.dlg.mapper_out_folder.filePath()
         flo2d_results_dir = self.dlg.flo2d_out_folder.filePath()
@@ -986,7 +1103,7 @@ class FLO2DMapCrafter:
             self.iface.messageBar().pushMessage("No results were found!", level=Qgis.Warning, duration=5)
             return
 
-        mymodel = Model(flo2d_results_dir)
+        mymodel = swmmio.Model(flo2d_results_dir)
         nodes_list = list(mymodel.nodes.dataframe.index)
         links_list = list(mymodel.links.dataframe.index)
         nname_grid = StormDrainPlots(self.units_switch, self.iface).get_nname_grid(flo2d_results_dir)

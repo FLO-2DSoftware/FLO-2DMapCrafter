@@ -23,31 +23,14 @@
 """
 import os
 
-from PyQt5.QtWidgets import QProgressDialog
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QProgressDialog, QApplication, QMessageBox
 from matplotlib import pyplot as plt
 
 import geopandas as gpd
 from qgis._core import Qgis, QgsVectorLayer, QgsProject
 from shapely.geometry import Point
 
-
-try:
-    import swmmio
-    from swmmio import dataframe_from_rpt, Model, Nodes, find_network_trace, build_profile_plot, add_hgl_plot, \
-    add_node_labels_plot, add_link_labels_plot
-except ImportError:
-    import pathlib as pl
-    import subprocess
-    import sys
-
-    qgis_Path = pl.Path(sys.executable)
-    qgis_python_path = (qgis_Path.parent / "python3.exe").as_posix()
-
-    subprocess.check_call(
-        [qgis_python_path, "-m", "pip", "install", "--user", "swmmio==0.6.11"]
-    )
-    import swmmio
-    from swmmio import dataframe_from_rpt
 
 class StormDrainPlots:
 
@@ -63,6 +46,70 @@ class StormDrainPlots:
         """
         Function to create the plots
         """
+        try:
+            import swmmio
+        except ImportError:
+            message = "The swmmio library is not found in your python environment. This external library is required to " \
+                      "run some processes related to swmm files. More information on: https://swmmio.readthedocs.io/en/v0.6.11/.\n\n" \
+                      "Would you like to install it automatically or " \
+                      "manually?\n\nSelect automatic if you have admin rights. Otherwise, contact your admin and " \
+                      "follow the manual steps."
+            title = "External library not found!"
+            button1 = "Automatic"
+            button2 = "Manual"
+
+            msgBox = QMessageBox()
+            msgBox.setWindowTitle(title)
+            msgBox.setText(message)
+            msgBox.setStandardButtons(QMessageBox.Yes | QMessageBox.No | QMessageBox.Close)
+            msgBox.setDefaultButton(QMessageBox.Yes)
+            buttonY = msgBox.button(QMessageBox.Yes)
+            buttonY.setText(button1)
+            buttonN = msgBox.button(QMessageBox.No)
+            buttonN.setText(button2)
+            install_options = msgBox.exec_()
+
+            if install_options == QMessageBox.Yes:
+                QApplication.setOverrideCursor(Qt.WaitCursor)
+                try:
+                    import pathlib as pl
+                    import subprocess
+                    import sys
+
+                    qgis_Path = pl.Path(sys.executable)
+                    qgis_python_path = (qgis_Path.parent / "python3.exe").as_posix()
+
+                    subprocess.check_call(
+                        [qgis_python_path, "-m", "pip", "install", "--user", "swmmio==0.6.11"]
+                    )
+                    import swmmio
+                    QApplication.restoreOverrideCursor()
+
+                except ImportError as e:
+                    QApplication.restoreOverrideCursor()
+                    msgBox = QMessageBox()
+                    msgBox.setText("Error while installing h5py. Install it manually. " + str(e))
+                    msgBox.setWindowTitle("FLO-2D")
+                    icon = QMessageBox.Critical
+                    msgBox.setIcon(icon)
+                    msgBox.exec_()
+
+            # Manual Installation
+            elif install_options == QMessageBox.No:
+                QApplication.restoreOverrideCursor()
+                message = "1. Run OSGeo4W Shell as admin\n" \
+                          "2. Type this command: pip install swmmio==0.6.11\n\n" \
+                          "Wait the process to finish and rerun this process.\n\n" \
+                          "For more information, access https://flo-2d.com/contact/"
+                msgBox = QMessageBox()
+                msgBox.setText(message)
+                msgBox.setWindowTitle("FLO-2D")
+                icon = QMessageBox.Information
+                msgBox.setIcon(icon)
+                msgBox.exec_()
+                return
+            else:
+                return
 
         was_created = False
 
@@ -104,7 +151,7 @@ class StormDrainPlots:
                     i = 0
                     for node in nodes:
                         try:
-                            nodes_df = dataframe_from_rpt(swmm_rpt, "Node Results", node)
+                            nodes_df = swmmio.dataframe_from_rpt(swmm_rpt, "Node Results", node)
                             # Create a plot
                             x_string = list(nodes_df.iloc[:, 0])
                             x_numeric = [(int(str(t).split(':')[0]) * 60 + int(str(t).split(':')[1])) / 60
@@ -166,7 +213,7 @@ class StormDrainPlots:
                     i = 0
                     for link in links:
                         try:
-                            links_df = dataframe_from_rpt(swmm_rpt, "Link Results", link)
+                            links_df = swmmio.dataframe_from_rpt(swmm_rpt, "Link Results", link)
                             # Create a plot
                             x_string = list(links_df.iloc[:, 0])
                             x_numeric = [(int(str(t).split(':')[0]) * 60 + int(str(t).split(':')[1])) / 60
@@ -223,6 +270,70 @@ class StormDrainPlots:
         """
         Function to create the graphics plot
         """
+        try:
+            import swmmio
+        except ImportError:
+            message = "The swmmio library is not found in your python environment. This external library is required to " \
+                      "run some processes related to swmm files. More information on: https://swmmio.readthedocs.io/en/v0.6.11/.\n\n" \
+                      "Would you like to install it automatically or " \
+                      "manually?\n\nSelect automatic if you have admin rights. Otherwise, contact your admin and " \
+                      "follow the manual steps."
+            title = "External library not found!"
+            button1 = "Automatic"
+            button2 = "Manual"
+
+            msgBox = QMessageBox()
+            msgBox.setWindowTitle(title)
+            msgBox.setText(message)
+            msgBox.setStandardButtons(QMessageBox.Yes | QMessageBox.No | QMessageBox.Close)
+            msgBox.setDefaultButton(QMessageBox.Yes)
+            buttonY = msgBox.button(QMessageBox.Yes)
+            buttonY.setText(button1)
+            buttonN = msgBox.button(QMessageBox.No)
+            buttonN.setText(button2)
+            install_options = msgBox.exec_()
+
+            if install_options == QMessageBox.Yes:
+                QApplication.setOverrideCursor(Qt.WaitCursor)
+                try:
+                    import pathlib as pl
+                    import subprocess
+                    import sys
+
+                    qgis_Path = pl.Path(sys.executable)
+                    qgis_python_path = (qgis_Path.parent / "python3.exe").as_posix()
+
+                    subprocess.check_call(
+                        [qgis_python_path, "-m", "pip", "install", "--user", "swmmio==0.6.11"]
+                    )
+                    import swmmio
+                    QApplication.restoreOverrideCursor()
+
+                except ImportError as e:
+                    QApplication.restoreOverrideCursor()
+                    msgBox = QMessageBox()
+                    msgBox.setText("Error while installing h5py. Install it manually. " + str(e))
+                    msgBox.setWindowTitle("FLO-2D")
+                    icon = QMessageBox.Critical
+                    msgBox.setIcon(icon)
+                    msgBox.exec_()
+
+            # Manual Installation
+            elif install_options == QMessageBox.No:
+                QApplication.restoreOverrideCursor()
+                message = "1. Run OSGeo4W Shell as admin\n" \
+                          "2. Type this command: pip install swmmio==0.6.11\n\n" \
+                          "Wait the process to finish and rerun this process.\n\n" \
+                          "For more information, access https://flo-2d.com/contact/"
+                msgBox = QMessageBox()
+                msgBox.setText(message)
+                msgBox.setWindowTitle("FLO-2D")
+                icon = QMessageBox.Information
+                msgBox.setIcon(icon)
+                msgBox.exec_()
+                return
+            else:
+                return
 
         graphics_plots = [
             "Hours Flooded",
@@ -246,7 +357,7 @@ class StormDrainPlots:
 
                 mymodel = swmmio.Model(flo2d_results_dir)
 
-                nodes = Nodes(
+                nodes = swmmio.Nodes(
                     model=mymodel,
                     inp_sections=['junctions', 'storages', 'outfalls'],
                     rpt_sections=['Node Flooding Summary'],
@@ -413,10 +524,74 @@ class StormDrainPlots:
         """
         Function to plot the storm drain profile
         """
+        try:
+            import swmmio
+        except ImportError:
+            message = "The swmmio library is not found in your python environment. This external library is required to " \
+                      "run some processes related to swmm files. More information on: https://swmmio.readthedocs.io/en/v0.6.11/.\n\n" \
+                      "Would you like to install it automatically or " \
+                      "manually?\n\nSelect automatic if you have admin rights. Otherwise, contact your admin and " \
+                      "follow the manual steps."
+            title = "External library not found!"
+            button1 = "Automatic"
+            button2 = "Manual"
+
+            msgBox = QMessageBox()
+            msgBox.setWindowTitle(title)
+            msgBox.setText(message)
+            msgBox.setStandardButtons(QMessageBox.Yes | QMessageBox.No | QMessageBox.Close)
+            msgBox.setDefaultButton(QMessageBox.Yes)
+            buttonY = msgBox.button(QMessageBox.Yes)
+            buttonY.setText(button1)
+            buttonN = msgBox.button(QMessageBox.No)
+            buttonN.setText(button2)
+            install_options = msgBox.exec_()
+
+            if install_options == QMessageBox.Yes:
+                QApplication.setOverrideCursor(Qt.WaitCursor)
+                try:
+                    import pathlib as pl
+                    import subprocess
+                    import sys
+
+                    qgis_Path = pl.Path(sys.executable)
+                    qgis_python_path = (qgis_Path.parent / "python3.exe").as_posix()
+
+                    subprocess.check_call(
+                        [qgis_python_path, "-m", "pip", "install", "--user", "swmmio==0.6.11"]
+                    )
+                    import swmmio
+                    QApplication.restoreOverrideCursor()
+
+                except ImportError as e:
+                    QApplication.restoreOverrideCursor()
+                    msgBox = QMessageBox()
+                    msgBox.setText("Error while installing h5py. Install it manually. " + str(e))
+                    msgBox.setWindowTitle("FLO-2D")
+                    icon = QMessageBox.Critical
+                    msgBox.setIcon(icon)
+                    msgBox.exec_()
+
+            # Manual Installation
+            elif install_options == QMessageBox.No:
+                QApplication.restoreOverrideCursor()
+                message = "1. Run OSGeo4W Shell as admin\n" \
+                          "2. Type this command: pip install swmmio==0.6.11\n\n" \
+                          "Wait the process to finish and rerun this process.\n\n" \
+                          "For more information, access https://flo-2d.com/contact/"
+                msgBox = QMessageBox()
+                msgBox.setText(message)
+                msgBox.setWindowTitle("FLO-2D")
+                icon = QMessageBox.Information
+                msgBox.setIcon(icon)
+                msgBox.exec_()
+                return
+            else:
+                return
 
         storm_drain_values = storm_drain_rbs.get("Profile")
         if storm_drain_values[0]:
-            mymodel = Model(flo2d_results_dir)
+            mymodel = swmmio.Model(flo2d_results_dir)
             rpt = swmmio.rpt(flo2d_results_dir + r'\swmm.rpt')
 
             plt.clf()
@@ -425,7 +600,7 @@ class StormDrainPlots:
             ax = fig.add_subplot(1, 1, 1)
 
             try:
-                path_selection = find_network_trace(mymodel, storm_drain_values[1], storm_drain_values[2])
+                path_selection = swmmio.find_network_trace(mymodel, storm_drain_values[1], storm_drain_values[2])
                 max_depth = rpt.node_depth_summary.MaxNodeDepth
                 ave_depth = rpt.node_depth_summary.AvgDepth
             except:
@@ -433,11 +608,11 @@ class StormDrainPlots:
                 plt.clf()
                 plt.close()
                 return
-            profile_config = build_profile_plot(ax, mymodel, path_selection)
-            add_hgl_plot(ax, profile_config, depth=max_depth, color='red', label="Maximum Depth")
-            add_hgl_plot(ax, profile_config, depth=ave_depth, label="Average Depth")
-            add_node_labels_plot(ax, mymodel, profile_config)
-            add_link_labels_plot(ax, mymodel, profile_config)
+            profile_config = swmmio.build_profile_plot(ax, mymodel, path_selection)
+            swmmio.add_hgl_plot(ax, profile_config, depth=max_depth, color='red', label="Maximum Depth")
+            swmmio.add_hgl_plot(ax, profile_config, depth=ave_depth, label="Average Depth")
+            swmmio.add_node_labels_plot(ax, mymodel, profile_config)
+            swmmio.add_link_labels_plot(ax, mymodel, profile_config)
             ax.legend(loc='best')
             ax.grid('xy')
             ax.get_xaxis().set_ticklabels([])
