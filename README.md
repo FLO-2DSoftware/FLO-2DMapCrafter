@@ -47,7 +47,7 @@ QGIS Plugin Repository (soon)
 
 Our issue tracker is at [https://github.com/FLO-2DSoftware/FLO-2DMapCrafter/issues](https://github.com/FLO-2DSoftware/FLO-2DMapCrafter/issues). Please report any bugs that you find.
 
-## FLO-2D Rasterizor license
+## FLO-2D MapCrafter license
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
