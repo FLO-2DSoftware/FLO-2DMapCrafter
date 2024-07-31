@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>732</width>
-    <height>511</height>
+    <width>736</width>
+    <height>520</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -131,8 +131,8 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>688</width>
-            <height>318</height>
+            <width>692</width>
+            <height>343</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_99">
@@ -193,36 +193,10 @@
                <layout class="QGridLayout" name="gridLayout_29">
                 <item row="2" column="1">
                  <layout class="QGridLayout" name="gridLayout_38">
-                  <item row="0" column="1">
-                   <widget class="QCheckBox" name="mv_cw_cb">
-                    <property name="toolTip">
-                     <string>VELFP.OUT: Maximum floodplain flow velocity</string>
-                    </property>
-                    <property name="toolTipDuration">
-                     <number>0</number>
-                    </property>
-                    <property name="text">
-                     <string>Maximum Velocity</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="0" column="0">
-                   <widget class="QCheckBox" name="md_cw_cb">
-                    <property name="toolTip">
-                     <string>DEPTH.OUT: Maximum combined channel/floodplain flow depths</string>
-                    </property>
-                    <property name="toolTipDuration">
-                     <number>0</number>
-                    </property>
-                    <property name="text">
-                     <string>Maximum Depth</string>
-                    </property>
-                   </widget>
-                  </item>
                   <item row="2" column="1">
                    <widget class="QCheckBox" name="fv_cw_cb">
                     <property name="toolTip">
-                     <string>FINALVEL.OUT: Flow velocity at the end of the simulation</string>
+                     <string>FINALVEL.OUT: Flow velocity at the end of the simulation (fps or mps)</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -232,36 +206,23 @@
                     </property>
                    </widget>
                   </item>
-                  <item row="2" column="0">
-                   <widget class="QCheckBox" name="fd_cw_cb">
+                  <item row="2" column="2">
+                   <widget class="QCheckBox" name="fvv_cw_cb">
                     <property name="toolTip">
-                     <string>FINALDEP.OUT: Final floodplain flow depths</string>
+                     <string>FINALVEL.OUT &amp; FINALDIR.OUT: Combination of these two files to generate the final velocity vectors (fps or mps)</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
                     </property>
                     <property name="text">
-                     <string>Final Depth</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="1" column="0">
-                   <widget class="QCheckBox" name="mwse_cw_cb">
-                    <property name="toolTip">
-                     <string>MAXWSELEV.OUT: Grid element number, x-coordinate, y-coordinate, and the maximum water surface elevation of either the floodplain or channel</string>
-                    </property>
-                    <property name="toolTipDuration">
-                     <number>0</number>
-                    </property>
-                    <property name="text">
-                     <string>Maximum WSE</string>
+                     <string>Final Velocity Vectors</string>
                     </property>
                    </widget>
                   </item>
                   <item row="0" column="2">
                    <widget class="QCheckBox" name="mvv_cw_cb">
                     <property name="toolTip">
-                     <string>VELFP.OUT &amp; VELDIREC.OUT: Combination of these two files to generate the maximum velocity vectors </string>
+                     <string>VELFP.OUT &amp; VELDIREC.OUT: Combination of these two files to generate the maximum velocity vectors (fps or mps) </string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -271,16 +232,55 @@
                     </property>
                    </widget>
                   </item>
-                  <item row="2" column="2">
-                   <widget class="QCheckBox" name="fvv_cw_cb">
+                  <item row="0" column="1">
+                   <widget class="QCheckBox" name="mv_cw_cb">
                     <property name="toolTip">
-                     <string>FINALVEL.OUT &amp; FINALDIR.OUT: Combination of these two files to generate the final velocity vectors</string>
+                     <string>VELFP.OUT: Maximum floodplain flow velocity (fps or mps)</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
                     </property>
                     <property name="text">
-                     <string>Final Velocity Vectors</string>
+                     <string>Maximum Velocity</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="0">
+                   <widget class="QCheckBox" name="mwse_cw_cb">
+                    <property name="toolTip">
+                     <string>MAXWSELEV.OUT: Grid element number, x-coordinate, y-coordinate, and the maximum water surface elevation of either the floodplain or channel (ft or m)</string>
+                    </property>
+                    <property name="toolTipDuration">
+                     <number>0</number>
+                    </property>
+                    <property name="text">
+                     <string>Maximum WSE</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="0">
+                   <widget class="QCheckBox" name="md_cw_cb">
+                    <property name="toolTip">
+                     <string>DEPTH.OUT: Maximum combined channel/floodplain flow depths (ft or m)</string>
+                    </property>
+                    <property name="toolTipDuration">
+                     <number>0</number>
+                    </property>
+                    <property name="text">
+                     <string>Maximum Depth</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="2" column="0">
+                   <widget class="QCheckBox" name="fd_cw_cb">
+                    <property name="toolTip">
+                     <string>FINALDEP.OUT: Final floodplain flow depths (ft or m)</string>
+                    </property>
+                    <property name="toolTipDuration">
+                     <number>0</number>
+                    </property>
+                    <property name="text">
+                     <string>Final Depth</string>
                     </property>
                    </widget>
                   </item>
@@ -315,7 +315,7 @@
                      <bool>true</bool>
                     </property>
                     <property name="toolTip">
-                     <string>TOPO.DAT: Grid element, x- and y-coordinates, and their elevations</string>
+                     <string>TOPO.DAT: Grid element, x- and y-coordinates, and their elevations (ft or m)</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -347,7 +347,7 @@
                   <item row="0" column="1">
                    <widget class="QCheckBox" name="t2ft_cw_cb">
                     <property name="toolTip">
-                     <string>TIMETWOFT.OUT: Grid element number, the x- and y-coordinates and the initial time to two feet of depth</string>
+                     <string>TIMETWOFT.OUT: Grid element number, the x- and y-coordinates and the initial time to two feet of depth (hr)</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -360,7 +360,7 @@
                   <item row="0" column="0">
                    <widget class="QCheckBox" name="t1ft_cw_cb">
                     <property name="toolTip">
-                     <string>TIMEONEFT.OUT: Grid element number, the x- and y-coordinates and the initial time to one foot of depth</string>
+                     <string>TIMEONEFT.OUT: Grid element number, the x- and y-coordinates and the initial time to one foot of depth (hr)</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -373,7 +373,7 @@
                   <item row="0" column="2">
                    <widget class="QCheckBox" name="tmax_cw_cb">
                     <property name="toolTip">
-                     <string>TIMETOPEAK.OUT: Grid element number, the x- and y-coordinates and the time of occurrence of the maximum depth</string>
+                     <string>TIMETOPEAK.OUT: Grid element number, the x- and y-coordinates and the time of occurrence of the maximum depth (hr)</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -402,7 +402,7 @@
                   <item row="0" column="0">
                    <widget class="QCheckBox" name="se_cw_cb">
                     <property name="toolTip">
-                     <string>SPECENERGY.OUT: Maximum specific energy (ft or m) for a floodplain grid element</string>
+                     <string>SPECENERGY.OUT: Maximum specific energy for a floodplain grid element (ft or m)</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -415,7 +415,7 @@
                   <item row="0" column="1">
                    <widget class="QCheckBox" name="sp_cw_cb">
                     <property name="toolTip">
-                     <string>STATICPRESS.OUT: Spatially variable static force per linear foot for each floodplain element</string>
+                     <string>STATICPRESS.OUT: Spatially variable static force per linear foot for each floodplain element (lb/ft or N/m)</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -428,7 +428,7 @@
                   <item row="0" column="2">
                    <widget class="QCheckBox" name="if_cw_cb">
                     <property name="toolTip">
-                     <string>IMPACT.OUT: Impact force per linear foot of structure on the floodplain</string>
+                     <string>IMPACT.OUT: Impact force per linear foot of structure on the floodplain (lbf/ft or N/m)</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -457,7 +457,7 @@
                   <item row="0" column="0">
                    <widget class="QCheckBox" name="dv_cw_cb">
                     <property name="toolTip">
-                     <string>VEL_X_DEPTH.OUT: Maximum of velocity times depth for each floodplain element</string>
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;VEL_X_DEPTH.OUT: Maximum of velocity times depth for each floodplain element (ft&lt;span style=&quot; vertical-align:super;&quot;&gt;2&lt;/span&gt;/s or m&lt;span style=&quot; vertical-align:super;&quot;&gt;2&lt;/span&gt;/s)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -514,7 +514,16 @@
                   <item row="0" column="0">
                    <widget class="QCheckBox" name="ld_cw_cb">
                     <property name="toolTip">
-                     <string>LEVEEDEFIC.OUT: Levee freeboard deficit</string>
+                     <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'MS Shell Dlg 2'; font-size:8pt; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;LEVEEDEFIC.OUT: Levee freeboard deficit&lt;/p&gt;
+&lt;p style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;0 = freeboard &amp;gt; 3 ft (0.9 m)&lt;/p&gt;
+&lt;p style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;1 = 2 ft (0.6 m) &amp;lt; freeboard &amp;lt; 3 ft (0.9 m)&lt;/p&gt;
+&lt;p style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;2 = 1 ft (0.3 m) &amp;lt; freeboard &amp;lt; 2 ft (0.6 m)&lt;/p&gt;
+&lt;p style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;3 = freeboard &amp;lt; 1 ft (0.3 m)&lt;/p&gt;
+&lt;p style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;4 = levee is overtopped by flow&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -550,7 +559,7 @@
                   <item row="1" column="0">
                    <widget class="QCheckBox" name="fcd_cw_cb">
                     <property name="toolTip">
-                     <string>DEPCHFINAL.OUT: Final channel flow depths</string>
+                     <string>DEPCHFINAL.OUT: Final channel flow depths (ft or m)</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -563,7 +572,7 @@
                   <item row="0" column="1">
                    <widget class="QCheckBox" name="cv_cw_cb">
                     <property name="toolTip">
-                     <string>VELOC.OUT: Maximum channel flow velocity</string>
+                     <string>VELOC.OUT: Maximum channel flow velocity (fps or mps)</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -576,7 +585,7 @@
                   <item row="0" column="0">
                    <widget class="QCheckBox" name="cd_cw_cb">
                     <property name="toolTip">
-                     <string>DEPCH.OUT: Maximum channel flow depths</string>
+                     <string>DEPCH.OUT: Maximum channel flow depths (ft or m)</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -589,7 +598,7 @@
                   <item row="1" column="1">
                    <widget class="QCheckBox" name="fcv_cw_cb">
                     <property name="toolTip">
-                     <string>VELCHFINAL.OUT: Final channel flow velocities</string>
+                     <string>VELCHFINAL.OUT: Final channel flow velocities (fps or mps)</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -630,8 +639,8 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>688</width>
-            <height>318</height>
+            <width>692</width>
+            <height>343</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_100">
@@ -670,7 +679,7 @@
                      <bool>true</bool>
                     </property>
                     <property name="toolTip">
-                     <string>VEL_X_DEPTH.OUT: Maximum of velocity times depth for each floodplain element</string>
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;VEL_X_DEPTH.OUT: Maximum of velocity times depth for each floodplain element (ft&lt;span style=&quot; vertical-align:super;&quot;&gt;2&lt;/span&gt;/s or m&lt;span style=&quot; vertical-align:super;&quot;&gt;2&lt;/span&gt;/s)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -705,7 +714,7 @@
                      <bool>true</bool>
                     </property>
                     <property name="toolTip">
-                     <string>LEVEEDEFIC.OUT: Levee freeboard deficit</string>
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;LEVEEDEFIC.OUT: Levee freeboard deficit&lt;/p&gt;&lt;p&gt;0 = freeboard &amp;gt; 3 ft (0.9 m)&lt;/p&gt;&lt;p&gt;1 = 2 ft (0.6 m) &amp;lt; freeboard &amp;lt; 3 ft (0.9 m)&lt;/p&gt;&lt;p&gt;2 = 1 ft (0.3 m) &amp;lt; freeboard &amp;lt; 2 ft (0.6 m)&lt;/p&gt;&lt;p&gt;3 = freeboard &amp;lt; 1 ft (0.3 m)&lt;/p&gt;&lt;p&gt;4 = levee is overtopped by flow&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -828,7 +837,7 @@
                      <bool>true</bool>
                     </property>
                     <property name="toolTip">
-                     <string>TIMEONEFT.OUT: Grid element number, the x- and y-coordinates and the initial time to one foot of depth</string>
+                     <string>TIMEONEFT.OUT: Grid element number, the x- and y-coordinates and the initial time to one foot of depth (hr)</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -844,7 +853,7 @@
                      <bool>true</bool>
                     </property>
                     <property name="toolTip">
-                     <string>TIMETWOFT.OUT: Grid element number, the x- and y-coordinates and the initial time to two feet of depth</string>
+                     <string>TIMETWOFT.OUT: Grid element number, the x- and y-coordinates and the initial time to two feet of depth (hr)</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -860,7 +869,7 @@
                      <bool>true</bool>
                     </property>
                     <property name="toolTip">
-                     <string>TIMETOPEAK.OUT: Grid element number, the x- and y-coordinates and the time of occurrence of the maximum depth</string>
+                     <string>TIMETOPEAK.OUT: Grid element number, the x- and y-coordinates and the time of occurrence of the maximum depth (hr)</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -895,7 +904,7 @@
                      <bool>true</bool>
                     </property>
                     <property name="toolTip">
-                     <string>STATICPRESS.OUT: Spatially variable static force per linear foot for each floodplain element</string>
+                     <string>STATICPRESS.OUT: Spatially variable static force per linear foot for each floodplain element (lb/ft or N/m)</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -911,7 +920,7 @@
                      <bool>true</bool>
                     </property>
                     <property name="toolTip">
-                     <string>SPECENERGY.OUT: Maximum specific energy (ft or m) for a floodplain grid element</string>
+                     <string>SPECENERGY.OUT: Maximum specific energy for a floodplain grid element (ft or m)</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -924,7 +933,7 @@
                   <item row="0" column="2">
                    <widget class="QCheckBox" name="if_sd_cb">
                     <property name="toolTip">
-                     <string>IMPACT.OUT: Impact force per linear foot of structure on the floodplain</string>
+                     <string>IMPACT.OUT: Impact force per linear foot of structure on the floodplain (lbf/ft or N/m)</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -962,7 +971,7 @@
                      <bool>true</bool>
                     </property>
                     <property name="toolTip">
-                     <string>TOPO.DAT: Grid element, x- and y-coordinates, and their elevations</string>
+                     <string>TOPO.DAT: Grid element, x- and y-coordinates, and their elevations (ft or m)</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -1003,7 +1012,7 @@
                      <bool>true</bool>
                     </property>
                     <property name="toolTip">
-                     <string>VELFP.OUT: Maximum floodplain flow velocity</string>
+                     <string>VELFP.OUT: Maximum floodplain flow velocity (fps or mps)</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -1019,7 +1028,7 @@
                      <bool>true</bool>
                     </property>
                     <property name="toolTip">
-                     <string>FINALDEP.OUT: Final floodplain flow depths</string>
+                     <string>FINALDEP.OUT: Final floodplain flow depths (ft or m)</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -1035,7 +1044,7 @@
                      <bool>true</bool>
                     </property>
                     <property name="toolTip">
-                     <string>FINALVEL.OUT: Flow velocity at the end of the simulation</string>
+                     <string>FINALVEL.OUT: Flow velocity at the end of the simulation (fps or mps)</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -1051,7 +1060,7 @@
                      <bool>true</bool>
                     </property>
                     <property name="toolTip">
-                     <string>DEPTH.OUT: Maximum combined channel/floodplain flow depths</string>
+                     <string>DEPTH.OUT: Maximum combined channel/floodplain flow depths (ft or m)</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -1067,7 +1076,7 @@
                      <bool>true</bool>
                     </property>
                     <property name="toolTip">
-                     <string>MAXWSELEV.OUT: Grid element number, x-coordinate, y-coordinate, and the maximum water surface elevation of either the floodplain or channel</string>
+                     <string>MAXWSELEV.OUT: Grid element number, x-coordinate, y-coordinate, and the maximum water surface elevation of either the floodplain or channel (ft or m)</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -1080,7 +1089,7 @@
                   <item row="0" column="2">
                    <widget class="QCheckBox" name="mvv_sd_cb">
                     <property name="toolTip">
-                     <string>VELFP.OUT &amp; VELDIREC.OUT: Combination of these two files to generate the maximum velocity vectors </string>
+                     <string>VELFP.OUT &amp; VELDIREC.OUT: Combination of these two files to generate the maximum velocity vectors (fps or mps)</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -1093,7 +1102,7 @@
                   <item row="2" column="2">
                    <widget class="QCheckBox" name="fvv_sd_cb">
                     <property name="toolTip">
-                     <string>FINALVEL.OUT &amp; FINALDIR.OUT: Combination of these two files to generate the final velocity vectors</string>
+                     <string>FINALVEL.OUT &amp; FINALDIR.OUT: Combination of these two files to generate the final velocity vectors (fps or mps)</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -1128,7 +1137,7 @@
                      <bool>true</bool>
                     </property>
                     <property name="toolTip">
-                     <string>VELOC.OUT: Maximum channel flow velocity</string>
+                     <string>VELOC.OUT: Maximum channel flow velocity (fps or mps)</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -1151,7 +1160,7 @@
                      <bool>true</bool>
                     </property>
                     <property name="toolTip">
-                     <string>DEPCH.OUT: Maximum channel flow depths</string>
+                     <string>DEPCH.OUT: Maximum channel flow depths (ft or m)</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -1167,7 +1176,7 @@
                      <bool>true</bool>
                     </property>
                     <property name="toolTip">
-                     <string>DEPCHFINAL.OUT: Final channel flow depths</string>
+                     <string>DEPCHFINAL.OUT: Final channel flow depths (ft or m)</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -1183,7 +1192,7 @@
                      <bool>true</bool>
                     </property>
                     <property name="toolTip">
-                     <string>VELCHFINAL.OUT: Final channel flow velocities</string>
+                     <string>VELCHFINAL.OUT: Final channel flow velocities (fps or mps)</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -1262,8 +1271,8 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>688</width>
-            <height>318</height>
+            <width>692</width>
+            <height>343</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_101">
@@ -1283,7 +1292,7 @@
                   <item row="0" column="1">
                    <widget class="QCheckBox" name="t2ft_mf_cb">
                     <property name="toolTip">
-                     <string>TIMETWOFT.OUT: Grid element number, the x- and y-coordinates and the initial time to two feet of depth</string>
+                     <string>TIMETWOFT.OUT: Grid element number, the x- and y-coordinates and the initial time to two feet of depth (hr)</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -1296,7 +1305,7 @@
                   <item row="0" column="0">
                    <widget class="QCheckBox" name="t1ft_mf_cb">
                     <property name="toolTip">
-                     <string>TIMEONEFT.OUT: Grid element number, the x- and y-coordinates and the initial time to one foot of depth</string>
+                     <string>TIMEONEFT.OUT: Grid element number, the x- and y-coordinates and the initial time to one foot of depth (hr)</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -1309,7 +1318,7 @@
                   <item row="0" column="2">
                    <widget class="QCheckBox" name="tmax_mf_cb">
                     <property name="toolTip">
-                     <string>TIMETOPEAK.OUT: Grid element number, the x- and y-coordinates and the time of occurrence of the maximum depth</string>
+                     <string>TIMETOPEAK.OUT: Grid element number, the x- and y-coordinates and the time of occurrence of the maximum depth (hr)</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -1338,7 +1347,7 @@
                   <item row="0" column="1">
                    <widget class="QCheckBox" name="mv_mf_cb">
                     <property name="toolTip">
-                     <string>VELFP.OUT: Maximum floodplain flow velocity</string>
+                     <string>VELFP.OUT: Maximum floodplain flow velocity (fps or mps)</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -1351,7 +1360,7 @@
                   <item row="2" column="2">
                    <widget class="QCheckBox" name="fvv_mf_cb">
                     <property name="toolTip">
-                     <string>FINALVEL.OUT &amp; FINALDIR.OUT: Combination of these two files to generate the final velocity vectors</string>
+                     <string>FINALVEL.OUT &amp; FINALDIR.OUT: Combination of these two files to generate the final velocity vectors (fps or mps)</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -1364,7 +1373,7 @@
                   <item row="0" column="0">
                    <widget class="QCheckBox" name="md_mf_cb">
                     <property name="toolTip">
-                     <string>DEPTH.OUT: Maximum combined channel/floodplain flow depths</string>
+                     <string>DEPTH.OUT: Maximum combined channel/floodplain flow depths (ft or m)</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -1377,7 +1386,7 @@
                   <item row="2" column="1">
                    <widget class="QCheckBox" name="fv_mf_cb">
                     <property name="toolTip">
-                     <string>FINALVEL.OUT: Flow velocity at the end of the simulation</string>
+                     <string>FINALVEL.OUT: Flow velocity at the end of the simulation (fps or mps)</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -1390,7 +1399,7 @@
                   <item row="2" column="0">
                    <widget class="QCheckBox" name="fd_mf_cb">
                     <property name="toolTip">
-                     <string>FINALDEP.OUT: Final floodplain flow depths</string>
+                     <string>FINALDEP.OUT: Final floodplain flow depths (ft or m)</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -1403,7 +1412,7 @@
                   <item row="1" column="0">
                    <widget class="QCheckBox" name="mwse_mf_cb">
                     <property name="toolTip">
-                     <string>MAXWSELEV.OUT: Grid element number, x-coordinate, y-coordinate, and the maximum water surface elevation of either the floodplain or channel</string>
+                     <string>MAXWSELEV.OUT: Grid element number, x-coordinate, y-coordinate, and the maximum water surface elevation of either the floodplain or channel (ft or m)</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -1416,7 +1425,7 @@
                   <item row="0" column="2">
                    <widget class="QCheckBox" name="mvv_mf_cb">
                     <property name="toolTip">
-                     <string>VELFP.OUT &amp; VELDIREC.OUT: Combination of these two files to generate the maximum velocity vectors </string>
+                     <string>VELFP.OUT &amp; VELDIREC.OUT: Combination of these two files to generate the maximum velocity vectors (fps or mps)</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -1445,7 +1454,7 @@
                   <item row="0" column="0">
                    <widget class="QCheckBox" name="ld_mf_cb">
                     <property name="toolTip">
-                     <string>LEVEEDEFIC.OUT: Levee freeboard deficit</string>
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;LEVEEDEFIC.OUT: Levee freeboard deficit&lt;/p&gt;&lt;p&gt;0 = freeboard &amp;gt; 3 ft (0.9 m)&lt;/p&gt;&lt;p&gt;1 = 2 ft (0.6 m) &amp;lt; freeboard &amp;lt; 3 ft (0.9 m)&lt;/p&gt;&lt;p&gt;2 = 1 ft (0.3 m) &amp;lt; freeboard &amp;lt; 2 ft (0.6 m)&lt;/p&gt;&lt;p&gt;3 = freeboard &amp;lt; 1 ft (0.3 m)&lt;/p&gt;&lt;p&gt;4 = levee is overtopped by flow&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -1474,7 +1483,7 @@
                   <item row="0" column="1">
                    <widget class="QCheckBox" name="sp_mf_cb">
                     <property name="toolTip">
-                     <string>STATICPRESS.OUT: Spatially variable static force per linear foot for each floodplain element</string>
+                     <string>STATICPRESS.OUT: Spatially variable static force per linear foot for each floodplain element (lb/ft or N/m)</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -1487,7 +1496,7 @@
                   <item row="0" column="0">
                    <widget class="QCheckBox" name="se_mf_cb">
                     <property name="toolTip">
-                     <string>SPECENERGY.OUT: Maximum specific energy (ft or m) for a floodplain grid element</string>
+                     <string>SPECENERGY.OUT: Maximum specific energy for a floodplain grid element (ft or m)</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -1500,7 +1509,7 @@
                   <item row="0" column="2">
                    <widget class="QCheckBox" name="if_mf_cb">
                     <property name="toolTip">
-                     <string>IMPACT.OUT: Impact force per linear foot of structure on the floodplain</string>
+                     <string>IMPACT.OUT: Impact force per linear foot of structure on the floodplain (lbf/ft or N/m)</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -1529,7 +1538,7 @@
                   <item row="0" column="0">
                    <widget class="QCheckBox" name="cd_mf_cb">
                     <property name="toolTip">
-                     <string>DEPCH.OUT: Maximum channel flow depths</string>
+                     <string>DEPCH.OUT: Maximum channel flow depths (ft or m)</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -1542,7 +1551,7 @@
                   <item row="0" column="1">
                    <widget class="QCheckBox" name="cv_mf_cb">
                     <property name="toolTip">
-                     <string>VELOC.OUT: Maximum channel flow velocity</string>
+                     <string>VELOC.OUT: Maximum channel flow velocity (fps or mps)</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -1562,7 +1571,7 @@
                   <item row="1" column="0">
                    <widget class="QCheckBox" name="fcd_mf_cb">
                     <property name="toolTip">
-                     <string>DEPCHFINAL.OUT: Final channel flow depths</string>
+                     <string>DEPCHFINAL.OUT: Final channel flow depths (ft or m)</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -1575,7 +1584,7 @@
                   <item row="1" column="1">
                    <widget class="QCheckBox" name="fcv_mf_cb">
                     <property name="toolTip">
-                     <string>VELCHFINAL.OUT: Final channel flow velocities</string>
+                     <string>VELCHFINAL.OUT: Final channel flow velocities (fps or mps)</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -1607,7 +1616,7 @@
                      <bool>true</bool>
                     </property>
                     <property name="toolTip">
-                     <string>TOPO.DAT: Grid element, x- and y-coordinates, and their elevations</string>
+                     <string>TOPO.DAT: Grid element, x- and y-coordinates, and their elevations (ft or m)</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -1636,7 +1645,7 @@
                   <item row="0" column="0">
                    <widget class="QCheckBox" name="dv_mf_cb">
                     <property name="toolTip">
-                     <string>VEL_X_DEPTH.OUT: Maximum of velocity times depth for each floodplain element</string>
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;VEL_X_DEPTH.OUT: Maximum of velocity times depth for each floodplain element (ft&lt;span style=&quot; vertical-align:super;&quot;&gt;2&lt;/span&gt;/s or m&lt;span style=&quot; vertical-align:super;&quot;&gt;2&lt;/span&gt;/s)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -1774,8 +1783,8 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>688</width>
-            <height>318</height>
+            <width>692</width>
+            <height>343</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_102">
@@ -1885,7 +1894,7 @@
                   <item row="0" column="0">
                    <widget class="QCheckBox" name="ge_tp_cb">
                     <property name="toolTip">
-                     <string>TOPO.DAT: Grid element, x- and y-coordinates, and their elevations</string>
+                     <string>TOPO.DAT: Grid element, x- and y-coordinates, and their elevations (ft or m)</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -1914,7 +1923,7 @@
                   <item row="0" column="0">
                    <widget class="QCheckBox" name="dv_tp_cb">
                     <property name="toolTip">
-                     <string>VEL_X_DEPTH.OUT: Maximum of velocity times depth for each floodplain element</string>
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;VEL_X_DEPTH.OUT: Maximum of velocity times depth for each floodplain element (ft&lt;span style=&quot; vertical-align:super;&quot;&gt;2&lt;/span&gt;/s or m&lt;span style=&quot; vertical-align:super;&quot;&gt;2&lt;/span&gt;/s)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -1943,7 +1952,7 @@
                   <item row="1" column="0">
                    <widget class="QCheckBox" name="mfv_tp_cb">
                     <property name="toolTip">
-                     <string>VELFP.OUT: Maximum floodplain flow velocity</string>
+                     <string>VELFP.OUT: Maximum floodplain flow velocity (fps or mps)</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -1956,7 +1965,7 @@
                   <item row="4" column="0">
                    <widget class="QCheckBox" name="ffv_tp_cb">
                     <property name="toolTip">
-                     <string>FINALVEL.OUT: Flow velocity at the end of the simulation</string>
+                     <string>FINALVEL.OUT: Flow velocity at the end of the simulation (fps or mps)</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -1969,7 +1978,7 @@
                   <item row="3" column="0">
                    <widget class="QCheckBox" name="ffd_tp_cb">
                     <property name="toolTip">
-                     <string>FINALDEP.OUT: Final floodplain flow depths</string>
+                     <string>FINALDEP.OUT: Final floodplain flow depths (ft or m)</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -1982,7 +1991,7 @@
                   <item row="0" column="0">
                    <widget class="QCheckBox" name="mfd_tp_cb">
                     <property name="toolTip">
-                     <string>DEPTH.OUT: Maximum combined channel/floodplain flow depths</string>
+                     <string>DEPTH.OUT: Maximum combined channel/floodplain flow depths (ft or m)</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -2008,7 +2017,7 @@
                   <item row="0" column="1">
                    <widget class="QCheckBox" name="mfvv_tp_cb">
                     <property name="toolTip">
-                     <string>VELFP.OUT &amp; VELDIREC.OUT: Combination of these two files to generate the maximum velocity vectors </string>
+                     <string>VELFP.OUT &amp; VELDIREC.OUT: Combination of these two files to generate the maximum velocity vectors (fps or mps)</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -2021,7 +2030,7 @@
                   <item row="1" column="1">
                    <widget class="QCheckBox" name="cmd_tp_cb">
                     <property name="toolTip">
-                     <string>DEPTHMAX_2PHASE_COMBINED.OUT: Maximum flow depth of the combined two phase fluid and mudflows depth (added together)</string>
+                     <string>DEPTHMAX_2PHASE_COMBINED.OUT: Maximum flow depth of the combined two phase fluid and mudflows depth (added together) (ft or m)</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -2034,7 +2043,7 @@
                   <item row="3" column="1">
                    <widget class="QCheckBox" name="ffvv_tp_cb">
                     <property name="toolTip">
-                     <string>FINALVEL.OUT &amp; FINALDIR.OUT: Combination of these two files to generate the final velocity vectors</string>
+                     <string>FINALVEL.OUT &amp; FINALDIR.OUT: Combination of these two files to generate the final velocity vectors (fps or mps)</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -2047,7 +2056,7 @@
                   <item row="4" column="1">
                    <widget class="QCheckBox" name="fcd_tp_cb">
                     <property name="toolTip">
-                     <string>FINALDEP_COMBO.OUT: Combined floodplain fluid and mudflow maximum flow depths. Floodplain fluid or mudflow max depth (whichever is greater).</string>
+                     <string>FINALDEP_COMBO.OUT: Combined floodplain fluid and mudflow maximum flow depths. Floodplain fluid or mudflow max depth (whichever is greater) (ft or m)</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -2076,7 +2085,7 @@
                   <item row="0" column="0">
                    <widget class="QCheckBox" name="ld_tp_cb">
                     <property name="toolTip">
-                     <string>LEVEEDEFIC.OUT: Levee freeboard deficit</string>
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;LEVEEDEFIC.OUT: Levee freeboard deficit&lt;/p&gt;&lt;p&gt;0 = freeboard &amp;gt; 3 ft (0.9 m)&lt;/p&gt;&lt;p&gt;1 = 2 ft (0.6 m) &amp;lt; freeboard &amp;lt; 3 ft (0.9 m)&lt;/p&gt;&lt;p&gt;2 = 1 ft (0.3 m) &amp;lt; freeboard &amp;lt; 2 ft (0.6 m)&lt;/p&gt;&lt;p&gt;3 = freeboard &amp;lt; 1 ft (0.3 m)&lt;/p&gt;&lt;p&gt;4 = levee is overtopped by flow&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -2105,7 +2114,7 @@
                   <item row="0" column="1">
                    <widget class="QCheckBox" name="mchv_tp_cb">
                     <property name="toolTip">
-                     <string>VELOC.OUT: Maximum channel flow velocity</string>
+                     <string>VELOC.OUT: Maximum channel flow velocity (fps or mps)</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -2118,7 +2127,7 @@
                   <item row="0" column="0">
                    <widget class="QCheckBox" name="mchd_tp_cb">
                     <property name="toolTip">
-                     <string>DEPCH.OUT: Maximum channel flow depths</string>
+                     <string>DEPCH.OUT: Maximum channel flow depths (ft or m)</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -2138,7 +2147,7 @@
                   <item row="1" column="0">
                    <widget class="QCheckBox" name="fchd_tp_cb">
                     <property name="toolTip">
-                     <string>DEPCHFINAL.OUT: Final channel flow depths</string>
+                     <string>DEPCHFINAL.OUT: Final channel flow depths (ft or m)</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -2151,7 +2160,7 @@
                   <item row="1" column="1">
                    <widget class="QCheckBox" name="fchv_tp_cb">
                     <property name="toolTip">
-                     <string>VELCHFINAL.OUT: Final channel flow velocities</string>
+                     <string>VELCHFINAL.OUT: Final channel flow velocities (fps or mps)</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -2172,7 +2181,7 @@
                 <string>Hydraulics</string>
                </property>
                <property name="collapsed">
-                <bool>true</bool>
+                <bool>false</bool>
                </property>
                <layout class="QGridLayout" name="gridLayout_73">
                 <item row="0" column="0">
@@ -2180,7 +2189,7 @@
                   <item row="0" column="1">
                    <widget class="QCheckBox" name="sp_tp_cb">
                     <property name="toolTip">
-                     <string>STATICPRESS.OUT: Spatially variable static force per linear foot for each floodplain element</string>
+                     <string>STATICPRESS.OUT: Spatially variable static force per linear foot for each floodplain element (lb/ft or N/m)</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -2193,7 +2202,7 @@
                   <item row="0" column="0">
                    <widget class="QCheckBox" name="se_tp_cb">
                     <property name="toolTip">
-                     <string>SPECENERGY.OUT: Maximum specific energy (ft or m) for a floodplain grid element</string>
+                     <string>SPECENERGY.OUT: Maximum specific energy for a floodplain grid element (ft or m)</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -2206,7 +2215,7 @@
                   <item row="0" column="2">
                    <widget class="QCheckBox" name="if_tp_cb">
                     <property name="toolTip">
-                     <string>IMPACT.OUT: Impact force per linear foot of structure on the floodplain</string>
+                     <string>IMPACT.OUT: Impact force per linear foot of structure on the floodplain (lbf/ft or N/m)</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -2235,7 +2244,7 @@
                   <item row="0" column="1">
                    <widget class="QCheckBox" name="t2ft_tp_cb">
                     <property name="toolTip">
-                     <string>TIMETWOFT.OUT: Grid element number, the x- and y-coordinates and the initial time to two feet of depth</string>
+                     <string>TIMETWOFT.OUT: Grid element number, the x- and y-coordinates and the initial time to two feet of depth (hr)</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -2248,7 +2257,7 @@
                   <item row="0" column="0">
                    <widget class="QCheckBox" name="t1ft_tp_cb">
                     <property name="toolTip">
-                     <string>TIMEONEFT.OUT: Grid element number, the x- and y-coordinates and the initial time to one foot of depth</string>
+                     <string>TIMEONEFT.OUT: Grid element number, the x- and y-coordinates and the initial time to one foot of depth (hr)</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -2261,7 +2270,7 @@
                   <item row="0" column="2">
                    <widget class="QCheckBox" name="tmax_tp_cb">
                     <property name="toolTip">
-                     <string>TIMETOPEAK.OUT: Grid element number, the x- and y-coordinates and the time of occurrence of the maximum depth</string>
+                     <string>TIMETOPEAK.OUT: Grid element number, the x- and y-coordinates and the time of occurrence of the maximum depth (hr)</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -2290,7 +2299,7 @@
                   <item row="2" column="1">
                    <widget class="QCheckBox" name="fmv_tp_cb">
                     <property name="toolTip">
-                     <string>FINALVEL_MUD.OUT: Floodplain final mudflow velocity in the reported outflow direction</string>
+                     <string>FINALVEL_MUD.OUT: Floodplain final mudflow velocity in the reported outflow direction (fps or mps)</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -2316,7 +2325,7 @@
                   <item row="1" column="0">
                    <widget class="QCheckBox" name="mmvv_tp_cb">
                     <property name="toolTip">
-                     <string>VELFP_MUD.OUT &amp; VELDIREC_MUD.OUT: Combination of these two files to generate the maximum velocity vectors </string>
+                     <string>VELFP_MUD.OUT &amp; VELDIREC_MUD.OUT: Combination of these two files to generate the maximum velocity vectors (fps or mps)</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -2329,7 +2338,7 @@
                   <item row="0" column="1">
                    <widget class="QCheckBox" name="mmv_tp_cb">
                     <property name="toolTip">
-                     <string>VELFP_MUD.OUT: Floodplain maximum mudflow velocity in the reported outflow direction</string>
+                     <string>VELFP_MUD.OUT: Floodplain maximum mudflow velocity in the reported outflow direction (fps or mps)</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -2342,7 +2351,7 @@
                   <item row="3" column="0">
                    <widget class="QCheckBox" name="fmvv_tp_cb">
                     <property name="toolTip">
-                     <string>FINALVEL_MUD.OUT &amp; FINALDIR_MUD.OUT: Combination of these two files to generate the final velocity vectors</string>
+                     <string>FINALVEL_MUD.OUT &amp; FINALDIR_MUD.OUT: Combination of these two files to generate the final velocity vectors (fps or mps)</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -2355,7 +2364,7 @@
                   <item row="0" column="0">
                    <widget class="QCheckBox" name="mmd_tp_cb">
                     <property name="toolTip">
-                     <string>DEPFPMAX_MUD.OUT: Floodplain maximum mudflow depth</string>
+                     <string>DEPFPMAX_MUD.OUT: Floodplain maximum mudflow depth (ft or m)</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -2368,7 +2377,7 @@
                   <item row="2" column="0">
                    <widget class="QCheckBox" name="fmd_tp_cb">
                     <property name="toolTip">
-                     <string>FINALDEP_MUD.OUT: Final mudflow depths</string>
+                     <string>FINALDEP_MUD.OUT: Final mudflow depths (ft or m)</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -2435,8 +2444,8 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>688</width>
-            <height>318</height>
+            <width>692</width>
+            <height>343</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_103">
@@ -2813,8 +2822,8 @@ LOW DANGER ZONE: Almost any size child (excluding infants) is not seriously thre
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>688</width>
-            <height>318</height>
+            <width>692</width>
+            <height>343</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_111">
@@ -2833,6 +2842,9 @@ LOW DANGER ZONE: Almost any size child (excluding infants) is not seriously thre
                  <layout class="QGridLayout" name="gridLayout_122">
                   <item row="0" column="2">
                    <widget class="QCheckBox" name="link_depth_chbox">
+                    <property name="toolTip">
+                     <string>SWMM.RPT: Link depth (ft or m)</string>
+                    </property>
                     <property name="text">
                      <string>Depth</string>
                     </property>
@@ -2840,6 +2852,9 @@ LOW DANGER ZONE: Almost any size child (excluding infants) is not seriously thre
                   </item>
                   <item row="0" column="0">
                    <widget class="QCheckBox" name="flow_chbox">
+                    <property name="toolTip">
+                     <string>SWMM.RPT: Link flow (cfs or cms)</string>
+                    </property>
                     <property name="text">
                      <string>Flow</string>
                     </property>
@@ -2847,6 +2862,9 @@ LOW DANGER ZONE: Almost any size child (excluding infants) is not seriously thre
                   </item>
                   <item row="1" column="0">
                    <widget class="QCheckBox" name="percent_full_chbox">
+                    <property name="toolTip">
+                     <string>SWMM.RPT: Link percent full (%)</string>
+                    </property>
                     <property name="text">
                      <string>Percent Full</string>
                     </property>
@@ -2854,6 +2872,9 @@ LOW DANGER ZONE: Almost any size child (excluding infants) is not seriously thre
                   </item>
                   <item row="0" column="1">
                    <widget class="QCheckBox" name="velocity_chbox">
+                    <property name="toolTip">
+                     <string>SWMM.RPT: Link velocity (fps or mps)</string>
+                    </property>
                     <property name="text">
                      <string>Velocity</string>
                     </property>
@@ -2893,6 +2914,9 @@ LOW DANGER ZONE: Almost any size child (excluding infants) is not seriously thre
                  <layout class="QGridLayout" name="gridLayout_106">
                   <item row="0" column="2">
                    <widget class="QCheckBox" name="node_depth_chbox">
+                    <property name="toolTip">
+                     <string>SWMM.RPTT: Node depth (ft or m)</string>
+                    </property>
                     <property name="text">
                      <string>Depth</string>
                     </property>
@@ -2900,6 +2924,9 @@ LOW DANGER ZONE: Almost any size child (excluding infants) is not seriously thre
                   </item>
                   <item row="0" column="1">
                    <widget class="QCheckBox" name="flooding_chbox">
+                    <property name="toolTip">
+                     <string>SWMM.RPT: Node flooding (cfs or cms)</string>
+                    </property>
                     <property name="text">
                      <string>Flooding</string>
                     </property>
@@ -2907,6 +2934,9 @@ LOW DANGER ZONE: Almost any size child (excluding infants) is not seriously thre
                   </item>
                   <item row="1" column="0">
                    <widget class="QCheckBox" name="head_chbox">
+                    <property name="toolTip">
+                     <string>SWMM.RPT: Node head (ft or m)</string>
+                    </property>
                     <property name="text">
                      <string>Head</string>
                     </property>
@@ -2914,6 +2944,9 @@ LOW DANGER ZONE: Almost any size child (excluding infants) is not seriously thre
                   </item>
                   <item row="0" column="0">
                    <widget class="QCheckBox" name="inflow_chbox">
+                    <property name="toolTip">
+                     <string>SWMM.RPT: Node Inflow (cfs or cms)</string>
+                    </property>
                     <property name="text">
                      <string>Inflow</string>
                     </property>
@@ -2993,6 +3026,9 @@ LOW DANGER ZONE: Almost any size child (excluding infants) is not seriously thre
                   </item>
                   <item row="1" column="0">
                    <widget class="QCheckBox" name="max_flood_chbox">
+                    <property name="toolTip">
+                     <string>SWMM.RPT: Node maximum flooding rate (cfs or cms)</string>
+                    </property>
                     <property name="text">
                      <string>Maximum Flooding Rate</string>
                     </property>
@@ -3033,6 +3069,9 @@ LOW DANGER ZONE: Almost any size child (excluding infants) is not seriously thre
                   </item>
                   <item row="2" column="0">
                    <widget class="QCheckBox" name="total_flood_chbox">
+                    <property name="toolTip">
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;SWMM.RPT: Node total flooding volume (10&lt;span style=&quot; vertical-align:super;&quot;&gt;6&lt;/span&gt; gal or 10&lt;span style=&quot; vertical-align:super;&quot;&gt;6&lt;/span&gt; L)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    </property>
                     <property name="text">
                      <string>Total Flooding Volume</string>
                     </property>
@@ -3040,6 +3079,9 @@ LOW DANGER ZONE: Almost any size child (excluding infants) is not seriously thre
                   </item>
                   <item row="0" column="0">
                    <widget class="QCheckBox" name="hours_flooded_chbox">
+                    <property name="toolTip">
+                     <string>SWMM.RPT: Node hours flooded (hr)</string>
+                    </property>
                     <property name="text">
                      <string>Hours Flooded</string>
                     </property>
@@ -3073,6 +3115,9 @@ LOW DANGER ZONE: Almost any size child (excluding infants) is not seriously thre
                   </item>
                   <item row="3" column="0">
                    <widget class="QCheckBox" name="max_pond_chbox">
+                    <property name="toolTip">
+                     <string>SWMM.RPT: Node maximum ponded depth (ft or m)</string>
+                    </property>
                     <property name="text">
                      <string>Maximum Pond Depth</string>
                     </property>
@@ -3281,8 +3326,8 @@ LOW DANGER ZONE: Almost any size child (excluding infants) is not seriously thre
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>667</width>
-            <height>345</height>
+            <width>692</width>
+            <height>343</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_104">
@@ -3518,8 +3563,4 @@ LOW DANGER ZONE: Almost any size child (excluding infants) is not seriously thre
  </tabstops>
  <resources/>
  <connections/>
- <buttongroups>
-  <buttongroup name="buttonGroup_2"/>
-  <buttongroup name="buttonGroup"/>
- </buttongroups>
 </ui>
