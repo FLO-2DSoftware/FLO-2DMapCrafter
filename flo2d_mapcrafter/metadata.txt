@@ -16,6 +16,8 @@ repository=https://github.com/FLO-2DSoftware/FLO-2DMapCrafter
 hasProcessingProvider=no
 # Uncomment the following line and add your changelog:
 changelog=
+    <p>0.2.1
+        - Units added to tooltips
     <p>0.2.0
         - Storm Drain plots added
     <p>0.1.0
