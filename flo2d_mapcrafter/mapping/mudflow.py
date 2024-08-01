@@ -39,7 +39,8 @@ class MudflowMaps:
         :param units_switch: 0 english 1 metric
         """
         self.units_switch = units_switch
-        self.vector_scale = vector_scale
+        self.max_vector_scale = vector_scale[0]
+        self.min_vector_scale = vector_scale[1]
 
     def check_mudflow_files(self, output_dir):
         """
@@ -285,7 +286,7 @@ class MudflowMaps:
             name, vector = check_vector_file(name, map_output_dir)
             value_file = flo2d_results_dir + r"\VELFP.OUT"
             direction_file = flo2d_results_dir + r"\VELDIREC.OUT"
-            self.process_vectors(name, vector, value_file, direction_file, crs, bv_group)
+            self.process_vectors(name, vector, value_file, direction_file, crs, bv_group, self.max_vector_scale)
 
         # Final Velocity Vector
         if mudflow_rbs.get(r"FINALDIR.OUT"):
@@ -293,7 +294,7 @@ class MudflowMaps:
             name, vector = check_vector_file(name, map_output_dir)
             value_file = flo2d_results_dir + r"\FINALVEL.OUT"
             direction_file = flo2d_results_dir + r"\FINALDIR.OUT"
-            self.process_vectors(name, vector, value_file, direction_file, crs, bv_group)
+            self.process_vectors(name, vector, value_file, direction_file, crs, bv_group, self.min_vector_scale)
 
         # Impact Force
         if mudflow_rbs.get(r"IMPACT.OUT"):
@@ -324,7 +325,7 @@ class MudflowMaps:
 
         mapping_group.insertLayer(0, raster_processed)
 
-    def process_vectors(self, name, shapefile, value_file, direction_file, crs, mapping_group):
+    def process_vectors(self, name, shapefile, value_file, direction_file, crs, mapping_group, vector_scale):
         """
         Function to create vector maps
         """
@@ -381,7 +382,7 @@ class MudflowMaps:
         # Add the layer to the project
         velocity_vector_lyr = QgsVectorLayer(shapefile, name, 'ogr')
         QgsProject.instance().addMapLayer(velocity_vector_lyr, False)
-        set_velocity_vector_style(velocity_vector_lyr, self.vector_scale)
+        set_velocity_vector_style(velocity_vector_lyr, vector_scale)
 
         mapping_group.insertLayer(0, velocity_vector_lyr)
 

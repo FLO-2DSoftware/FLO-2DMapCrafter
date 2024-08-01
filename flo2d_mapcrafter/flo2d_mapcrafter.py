@@ -331,7 +331,9 @@ class FLO2DMapCrafter:
             sed_switch = elements[4]
             file.close()
 
-        vector_scale = self.dlg.vector_scale_sb.value()
+        max_vector_scale = self.dlg.max_vector_scale_sb.value()
+        min_vector_scale = self.dlg.min_vector_scale_sb.value()
+        vector_scale = [max_vector_scale, min_vector_scale]
 
         # Flood simulation
         if mud_switch == "0" and sed_switch == "0":
@@ -711,7 +713,9 @@ class FLO2DMapCrafter:
         map_output_dir = self.dlg.mapper_out_folder.filePath()
         self.crs = self.dlg.crsselector.crs()
         project_id = self.dlg.project_id.text()
-        vector_scale = self.dlg.vector_scale_sb.value()
+        max_vector_scale = self.dlg.max_vector_scale_sb.value()
+        min_vector_scale = self.dlg.min_vector_scale_sb.value()
+        vector_scale = [max_vector_scale, min_vector_scale]
 
         if map_output_dir == "":
             map_output_dir = QgsProcessingUtils.tempFolder()

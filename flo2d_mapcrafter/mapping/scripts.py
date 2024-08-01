@@ -413,6 +413,8 @@ def set_velocity_vector_style(layer_name, vector_scale):
                                             QgsProperty().fromExpression(expression))
     svg_symbol_layer.setDataDefinedProperty(QgsSymbolLayer.PropertyWidth,
                                             QgsProperty().fromValue(4, True))
+    svg_symbol_layer.setDataDefinedProperty(QgsSymbolLayer.PropertyStrokeWidth,
+                                            QgsProperty().fromValue(0, True))
 
     # Create a symbol using the SVGMarker layer
     symbol = QgsSymbol.defaultSymbol(layer_name.geometryType())  # Assuming your layer is a point layer
