@@ -397,7 +397,7 @@ def remove_layer(layer_name):
             QgsProject.instance().removeMapLayers([layer.id()])
 
 
-def set_velocity_vector_style(layer_name):
+def set_velocity_vector_style(layer_name, vector_scale):
     """
     Function to set the velocity vector style
     """
@@ -407,8 +407,10 @@ def set_velocity_vector_style(layer_name):
 
     svg_symbol_layer.setDataDefinedProperty(QgsSymbolLayer.PropertyAngle,
                                             QgsProperty().fromField("Direction"))
+
+    expression = f'"Velocity" * {vector_scale}'
     svg_symbol_layer.setDataDefinedProperty(QgsSymbolLayer.PropertyHeight,
-                                            QgsProperty().fromField("Velocity"))
+                                            QgsProperty().fromExpression(expression))
     svg_symbol_layer.setDataDefinedProperty(QgsSymbolLayer.PropertyWidth,
                                             QgsProperty().fromValue(4, True))
 

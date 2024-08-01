@@ -331,6 +331,8 @@ class FLO2DMapCrafter:
             sed_switch = elements[4]
             file.close()
 
+        vector_scale = self.dlg.vector_scale_sb.value()
+
         # Flood simulation
         if mud_switch == "0" and sed_switch == "0":
             self.dlg.tab0.setEnabled(False)
@@ -339,7 +341,7 @@ class FLO2DMapCrafter:
             self.dlg.tab3.setEnabled(False)
             self.dlg.tabs.setCurrentIndex(0)
 
-            flood_maps = FloodMaps(self.units_switch)
+            flood_maps = FloodMaps(self.units_switch, vector_scale)
             flood_files_dict = flood_maps.check_flood_files(output_directory)
 
             flood_rbs = {
@@ -379,7 +381,7 @@ class FLO2DMapCrafter:
             self.dlg.tab3.setEnabled(False)
             self.dlg.tabs.setCurrentIndex(1)
 
-            sediment_maps = SedimentMaps(self.units_switch)
+            sediment_maps = SedimentMaps(self.units_switch, vector_scale)
             sediment_files_dict = sediment_maps.check_sediment_files(output_directory)
 
             sediment_rbs = {
@@ -432,7 +434,7 @@ class FLO2DMapCrafter:
             self.dlg.tab3.setEnabled(False)
             self.dlg.tabs.setCurrentIndex(2)
 
-            mudflow_maps = MudflowMaps(self.units_switch)
+            mudflow_maps = MudflowMaps(self.units_switch, vector_scale)
             mudflow_files_dict = mudflow_maps.check_mudflow_files(output_directory)
 
             mudflow_rbs = {
@@ -474,7 +476,7 @@ class FLO2DMapCrafter:
             self.dlg.tab3.setEnabled(True)
             self.dlg.tabs.setCurrentIndex(3)
 
-            twophase_maps = TwophaseMaps(self.units_switch)
+            twophase_maps = TwophaseMaps(self.units_switch, vector_scale)
             twophase_files_dict = twophase_maps.check_twophase_files(output_directory)
 
             twophase_rbs = {
@@ -709,6 +711,7 @@ class FLO2DMapCrafter:
         map_output_dir = self.dlg.mapper_out_folder.filePath()
         self.crs = self.dlg.crsselector.crs()
         project_id = self.dlg.project_id.text()
+        vector_scale = self.dlg.vector_scale_sb.value()
 
         if map_output_dir == "":
             map_output_dir = QgsProcessingUtils.tempFolder()
@@ -764,7 +767,7 @@ class FLO2DMapCrafter:
                 r"IMPACT.OUT": self.dlg.if_cw_cb.isChecked(),
             }
 
-            flood_maps = FloodMaps(self.units_switch)
+            flood_maps = FloodMaps(self.units_switch, vector_scale)
             flood_maps.create_maps(
                 flood_rbs, flo2d_results_dir, map_output_dir, mapping_group, self.crs, project_id
             )
@@ -802,7 +805,7 @@ class FLO2DMapCrafter:
                 r"IMPACT.OUT": self.dlg.if_sd_cb.isChecked(),
             }
 
-            sediment_maps = SedimentMaps(self.units_switch)
+            sediment_maps = SedimentMaps(self.units_switch, vector_scale)
             sediment_maps.create_maps(
                 sediment_rbs, flo2d_results_dir, map_output_dir, mapping_group, self.crs, project_id
             )
@@ -837,7 +840,7 @@ class FLO2DMapCrafter:
                 r"IMPACT.OUT": self.dlg.if_mf_cb.isChecked(),
             }
 
-            mudflow_maps = MudflowMaps(self.units_switch)
+            mudflow_maps = MudflowMaps(self.units_switch, vector_scale)
             mudflow_maps.create_maps(
                 mudflow_rbs, flo2d_results_dir, map_output_dir, mapping_group, self.crs, project_id
             )
@@ -887,7 +890,7 @@ class FLO2DMapCrafter:
                 ],
             }
 
-            twophase_maps = TwophaseMaps(self.units_switch)
+            twophase_maps = TwophaseMaps(self.units_switch, vector_scale)
             twophase_maps.create_maps(
                 twophase_rbs, flo2d_results_dir, map_output_dir, mapping_group, self.crs, project_id
             )

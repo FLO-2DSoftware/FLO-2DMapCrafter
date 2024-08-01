@@ -33,12 +33,13 @@ from flo2d_mapcrafter.mapping.scripts import read_ASCII, set_raster_style, set_v
 
 class TwophaseMaps:
 
-    def __init__(self, units_switch):
+    def __init__(self, units_switch, vector_scale):
         """
         Class constructor
         :param units_switch: 0 english 1 metric
         """
         self.units_switch = units_switch
+        self.vector_scale = vector_scale
 
     def check_twophase_files(self, output_dir):
         """
@@ -474,7 +475,7 @@ class TwophaseMaps:
         # Add the layer to the project
         velocity_vector_lyr = QgsVectorLayer(shapefile, name, 'ogr')
         QgsProject.instance().addMapLayer(velocity_vector_lyr, False)
-        set_velocity_vector_style(velocity_vector_lyr)
+        set_velocity_vector_style(velocity_vector_lyr, self.vector_scale)
 
         mapping_group.insertLayer(0, velocity_vector_lyr)
 
