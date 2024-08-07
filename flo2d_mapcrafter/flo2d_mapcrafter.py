@@ -45,6 +45,7 @@ from qgis._core import (
     QgsReadWriteContext,
     QgsMessageLog, QgsApplication, QgsProcessingUtils, Qgis,
 )
+from qgis._gui import QgsProjectionSelectionDialog, QgsCoordinateReferenceSystemProxyModel
 
 from .mapping.flood import FloodMaps
 from .mapping.hazard import HazardMaps
@@ -101,6 +102,7 @@ class FLO2DMapCrafter:
 
         # Adjust CRS
         self.crs = QgsCoordinateReferenceSystem(QgsProject.instance().crs().authid())
+        self.dlg.crsselector.crsChanged.connect(self.set_crs)
 
         # Select export folder
         self.dlg.flo2d_out_folder.fileChanged.connect(self.check_files)
@@ -273,22 +275,54 @@ class FLO2DMapCrafter:
             self.iface.removePluginMenu(self.tr("&FLO-2D MapCrafter "), action)
             self.iface.removeToolBarIcon(action)
 
+    def set_crs(self):
+        """
+        Function to set the CRS
+        """
+        self.crs = self.dlg.crsselector.crs()
+        self.projected_crs()
+        QgsProject.instance().setCrs(self.crs)
+
+    def projected_crs(self):
+        """
+        Function to allow only projected crs
+        """
+        is_geographic = self.crs.isGeographic()
+        while is_geographic:
+            dialog = QgsProjectionSelectionDialog()
+            if dialog.exec_():
+                self.crs = dialog.crs()
+                is_geographic = self.crs.isGeographic()
+                if is_geographic:
+                    self.iface.messageBar().pushMessage("MapCrafter requires a projected Coordinate Reference System!",
+                                                        level=Qgis.Info, duration=5)
+                else:
+                    self.dlg.crsselector.setCrs(self.crs)
+                    QgsProject.instance().setCrs(self.crs)
+                    return True
+            else:
+                return False
+        return True
+
     # Opening the dialog
     def open(self):
         """Shows the dialog"""
 
         # Adjust the CRS
         self.crs = QgsCoordinateReferenceSystem(QgsProject.instance().crs().authid())
-        self.dlg.crsselector.setCrs(self.crs)
 
-        # Set the grid layer as extent, if it exists
-        layer = QgsProject.instance().mapLayersByName("Grid")
-        if layer:
-            # Add the layer to the QgsMapLayerComboBox
-            self.dlg.layer_extent_cb.setLayer(layer[0])
+        is_projected = self.projected_crs()
+        if is_projected:
+            self.dlg.crsselector.setCrs(self.crs)
 
-        self.dlg.show()
-        self.dlg.activateWindow()
+            # Set the grid layer as extent, if it exists
+            layer = QgsProject.instance().mapLayersByName("Grid")
+            if layer:
+                # Add the layer to the QgsMapLayerComboBox
+                self.dlg.layer_extent_cb.setLayer(layer[0])
+
+            self.dlg.show()
+            self.dlg.activateWindow()
 
     def closeDialog(self):
         """Closes the Dialog"""
