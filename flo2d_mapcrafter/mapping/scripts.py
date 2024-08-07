@@ -104,6 +104,11 @@ def read_ASCII(file_path, output_path, name, crs):
                     if len(cellSize_data) < 2:
                         cellSize_data.append((x, y))
 
+    sum_values = sum(value for _, _, value in values)
+    if sum_values == 0:
+        QgsMessageLog.logMessage(name + ' was empty!')
+        return None
+
     # Calculate the differences in X and Y coordinates
     dx = cellSize_data[1][0] - cellSize_data[0][0]
     dy = cellSize_data[1][1] - cellSize_data[0][1]

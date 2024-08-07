@@ -298,10 +298,12 @@ class FloodMaps:
             file, raster, name, crs
         )
 
-        QgsProject.instance().addMapLayer(raster_processed, False)
-        set_raster_style(raster_processed, style)
+        if raster_processed:
 
-        mapping_group.insertLayer(0, raster_processed)
+            QgsProject.instance().addMapLayer(raster_processed, False)
+            set_raster_style(raster_processed, style)
+
+            mapping_group.insertLayer(0, raster_processed)
 
     def process_vectors(self, name, shapefile, value_file, direction_file, crs, mapping_group, vector_scale):
         """

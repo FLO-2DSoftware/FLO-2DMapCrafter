@@ -1011,9 +1011,10 @@ class FLO2DMapCrafter:
             msg_box.setText("The selected maps were created!")
             msg_box.exec_()
 
-        except:
+        except Exception as e:
             QApplication.restoreOverrideCursor()
-            self.iface.messageBar().pushMessage("Error creating the maps", level=Qgis.Critical, duration=5)
+            self.iface.messageBar().pushMessage("ERROR: Error while creating the maps! See log messages for more information.", level=Qgis.Critical, duration=5)
+            QgsMessageLog.logMessage(str(e))
 
     def see_storm_drain_profile(self):
         """

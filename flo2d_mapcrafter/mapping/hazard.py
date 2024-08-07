@@ -371,20 +371,23 @@ class HazardMaps:
         if os.path.isfile(flood_depth):
             QgsProject.instance().addMapLayer(QgsRasterLayer(flood_depth, name_depth), True)
         else:
-            read_ASCII(depth_file, flood_depth, name_depth, crs)
-            QgsProject.instance().addMapLayer(QgsRasterLayer(flood_depth, name_depth), True)
+            raster_processed = read_ASCII(depth_file, flood_depth, name_depth, crs)
+            if raster_processed:
+                QgsProject.instance().addMapLayer(QgsRasterLayer(flood_depth, name_depth), True)
 
         if os.path.isfile(flow_speed):
             QgsProject.instance().addMapLayer(QgsRasterLayer(flow_speed, name_speed), True)
         else:
-            read_ASCII(vel_file, flow_speed, name_speed, crs)
-            QgsProject.instance().addMapLayer(QgsRasterLayer(flow_speed, name_speed), True)
+            raster_processed = read_ASCII(vel_file, flow_speed, name_speed, crs)
+            if raster_processed:
+                QgsProject.instance().addMapLayer(QgsRasterLayer(flow_speed, name_speed), True)
 
         if os.path.isfile(h_x_v):
             QgsProject.instance().addMapLayer(QgsRasterLayer(h_x_v, name_hxv), True)
         else:
-            read_ASCII(vel_x_depth_file, h_x_v, name_hxv, crs)
-            QgsProject.instance().addMapLayer(QgsRasterLayer(h_x_v, name_hxv), True)
+            raster_processed = read_ASCII(vel_x_depth_file, h_x_v, name_hxv, crs)
+            if raster_processed:
+                QgsProject.instance().addMapLayer(QgsRasterLayer(h_x_v, name_hxv), True)
 
         # if os.path.isfile(hydro_risk):
         #     try:
