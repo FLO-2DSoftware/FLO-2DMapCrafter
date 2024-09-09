@@ -37,7 +37,7 @@ from qgis._core import (
     QgsRuleBasedRenderer, QgsGraduatedSymbolRenderer, QgsClassificationEqualInterval, QgsStyle,
     QgsClassificationQuantile, QgsCategorizedSymbolRenderer, QgsRendererCategory, QgsPointXY, QgsExpression,
     QgsExpressionContext, QgsExpressionContextUtils, QgsProperty, QgsPropertyCollection, QgsSymbolLayer,
-    QgsSimpleMarkerSymbolLayer, QgsGradientColorRamp, QgsGradientStop,
+    QgsSimpleMarkerSymbolLayer, QgsGradientColorRamp, QgsGradientStop, Qgis,
 )
 from osgeo import gdal
 
@@ -243,13 +243,12 @@ def set_raster_style(layer, style):
     }
 
     provider = layer.dataProvider()
-    extent = layer.extent()
     myRasterShader = QgsRasterShader()
 
     script_directory = os.path.dirname(os.path.realpath(__file__))
     style_directory = script_directory[:-8] + r"\raster_styles"
 
-    stats = provider.bandStatistics(1, QgsRasterBandStats.All, extent, 0)
+    stats = provider.bandStatistics(1)
     min = stats.minimumValue
 
     max = stats.maximumValue
