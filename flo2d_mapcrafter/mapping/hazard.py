@@ -410,8 +410,6 @@ class HazardMaps:
         r5_e = f'"{name_hxv}@1" <= {4.0 * uc} AND "{name_depth}@1" < {4.0 * uc} AND "{name_speed}@1" < {4 * uc}'
         r6_e = f'"{name_hxv}@1" > {4.0 * uc} OR "{name_depth}@1" >= {4.0 * uc} OR "{name_speed}@1" >= {4 * uc}'
 
-        QgsMessageLog.logMessage(f"IF({r0_e},0,if({r1_e},1,if({r2_e},2,if({r3_e},3,if({r4_e},4,if({r5_e},5,if({r6_e},6,0)))))))")
-
         # Australian Rainfall and Runoff Classification
         arr_class = processing.run(
             "qgis:rastercalculator",
