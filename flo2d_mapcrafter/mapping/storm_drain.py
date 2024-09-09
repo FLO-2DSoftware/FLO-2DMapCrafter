@@ -490,8 +490,6 @@ class StormDrainPlots:
                         QgsProject.instance().addMapLayer(layer, False)
                         storm_drain_group.insertLayer(0, layer)
 
-                        # return [output_shapefile, f'MaxQFlooding_{storm_drain_values[1]}']
-
                 # TotalFloodVol
                 if plot == 'Total Flooding':
                     filtered_nodes = nodes.loc[nodes.TotalFloodVol > float(storm_drain_values[1])]
