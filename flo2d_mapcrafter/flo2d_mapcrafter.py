@@ -130,6 +130,7 @@ class FLO2DMapCrafter:
         self.dlg.tab4.setEnabled(False)
         self.dlg.tab5.setEnabled(False)
         self.dlg.tab.setEnabled(False)
+        self.dlg.tabs.currentChanged.connect(self.clear_chboxes)
 
         self.dlg.cg_cw_btn.clicked.connect(self.collapse_all_groups)
         self.dlg.eg_cw_btn.clicked.connect(self.expand_all_groups)
@@ -1845,3 +1846,15 @@ class FLO2DMapCrafter:
             for grp in storm_drain_grps:
                 if grp.isEnabled():
                     grp.setCollapsed(False)
+
+    def clear_chboxes(self):
+        """
+        Function that clears the checkboxes when the tab is changed
+        """
+        self.dlg.check_cw_cb.setChecked(False)
+        self.dlg.check_mf_cb.setChecked(False)
+        self.dlg.check_tp_cb.setChecked(False)
+        self.dlg.check_sd_cb.setChecked(False)
+        self.dlg.check_hm_cb.setChecked(False)
+        self.dlg.check_storm_drain_chbox.setChecked(False)
+
