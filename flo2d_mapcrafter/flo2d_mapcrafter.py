@@ -159,7 +159,7 @@ class FLO2DMapCrafter:
 
         # Storm Drain subplots
         # self.dlg.plot_graphics_btn.clicked.connect(self.plot_storm_drain_graphics)
-        self.dlg.plot_profile_btn.clicked.connect(self.see_storm_drain_profile)
+        # self.dlg.plot_profile_btn.clicked.connect(self.see_storm_drain_profile)
         self.dlg.see_nodes_results_btn.clicked.connect(self.see_nodes_results)
 
         # DEBUG Map layouts
@@ -712,8 +712,8 @@ class FLO2DMapCrafter:
 
             nodes_list = list(mymodel.nodes.dataframe.index)
 
-            self.dlg.start_cbo.addItems(sorted(nodes_list))
-            self.dlg.end_cbo.addItems(sorted(nodes_list))
+            # self.dlg.start_cbo.addItems(sorted(nodes_list))
+            # self.dlg.end_cbo.addItems(sorted(nodes_list))
 
             self.dlg.hours_lbl.setText("hrs")
             if self.units_switch == "0":
@@ -1012,11 +1012,11 @@ class FLO2DMapCrafter:
                     self.dlg.max_pond_chbox.isChecked(),
                     self.dlg.max_pond_dsb.value()
                 ],
-                "Profile": [
-                    self.dlg.plot_profile_chbox.isChecked(),
-                    self.dlg.start_cbo.currentText(),
-                    self.dlg.end_cbo.currentText()
-                ],
+                # "Profile": [
+                #     self.dlg.plot_profile_chbox.isChecked(),
+                #     self.dlg.start_cbo.currentText(),
+                #     self.dlg.end_cbo.currentText()
+                # ],
             }
 
             at_least_one_checked = any(
@@ -1064,14 +1064,14 @@ class FLO2DMapCrafter:
             sd_output_dir = map_output_dir + rf"\StormDrain"
         if not os.path.exists(sd_output_dir):
             os.makedirs(sd_output_dir)
-        storm_drain_rbs = {
-            "Profile": [
-                True,
-                self.dlg.start_cbo.currentText(),
-                self.dlg.end_cbo.currentText()
-            ],
-        }
-        storm_drain_plots.storm_drain_profile(storm_drain_rbs, flo2d_results_dir, sd_output_dir)
+        # storm_drain_rbs = {
+        #     "Profile": [
+        #         True,
+        #         self.dlg.start_cbo.currentText(),
+        #         self.dlg.end_cbo.currentText()
+        #     ],
+        # }
+        # storm_drain_plots.storm_drain_profile(storm_drain_rbs, flo2d_results_dir, sd_output_dir)
 
     def see_nodes_results(self):
         """
@@ -1540,6 +1540,10 @@ class FLO2DMapCrafter:
             self.dlg.velocity_chbox,
             self.dlg.link_depth_chbox,
             self.dlg.percent_full_chbox,
+            self.dlg.hours_flooded_chbox,
+            self.dlg.max_flood_chbox,
+            self.dlg.total_flood_chbox,
+            self.dlg.max_pond_chbox,
         ]
 
         if self.dlg.check_storm_drain_chbox.isChecked():
@@ -1728,7 +1732,7 @@ class FLO2DMapCrafter:
         storm_drain_grps = [
             self.dlg.nodes_cgb,
             self.dlg.links_cgb,
-            self.dlg.profile_plot_cgb,
+            # self.dlg.profile_plot_cgb,
             self.dlg.graphics_plot_cgb,
         ]
 
@@ -1813,7 +1817,7 @@ class FLO2DMapCrafter:
         storm_drain_grps = [
             self.dlg.nodes_cgb,
             self.dlg.links_cgb,
-            self.dlg.profile_plot_cgb,
+            # self.dlg.profile_plot_cgb,
             self.dlg.graphics_plot_cgb,
         ]
 

@@ -687,50 +687,49 @@ class StormDrainPlots:
             else:
                 return
 
-        storm_drain_values = storm_drain_rbs.get("Profile")
-        if storm_drain_values[0]:
-            mymodel = swmmio.Model(flo2d_results_dir)
-            rpt = swmmio.rpt(flo2d_results_dir + r'\swmm.rpt')
-
-            plt.clf()
-            plt.close()
-            fig = plt.figure(figsize=(11, 9))
-            ax = fig.add_subplot(1, 1, 1)
-
-            try:
-                path_selection = swmmio.find_network_trace(mymodel, storm_drain_values[1], storm_drain_values[2])
-                max_depth = rpt.node_depth_summary.MaxNodeDepth
-                ave_depth = rpt.node_depth_summary.AvgDepth
-            except:
-                self.iface.messageBar().pushMessage("No path found!", level=Qgis.Warning, duration=5)
-                plt.clf()
-                plt.close()
-                return
-            profile_config = swmmio.build_profile_plot(ax, mymodel, path_selection)
-            swmmio.add_hgl_plot(ax, profile_config, depth=max_depth, color='red', label="Maximum Depth")
-            swmmio.add_hgl_plot(ax, profile_config, depth=ave_depth, label="Average Depth")
-            swmmio.add_node_labels_plot(ax, mymodel, profile_config)
-            swmmio.add_link_labels_plot(ax, mymodel, profile_config)
-            ax.legend(loc='best')
-            ax.grid('xy')
-            ax.get_xaxis().set_ticklabels([])
-
-            if self.units_switch == "0":
-                unit = "ft"
-            else:
-                unit = "m"
-
-            ax.set_xlabel(f"Length ({unit})")
-            ax.set_ylabel(f"Elevation ({unit})")
-
-            fig.tight_layout()
-            if plot:
-                sd_profile_dir = sd_output_dir + fr"\Profile"
-                if not os.path.exists(sd_profile_dir):
-                    os.makedirs(sd_profile_dir)
-                fig.savefig(sd_profile_dir + rf"\{storm_drain_values[1]} - {storm_drain_values[2]}.png")
-            plt.show()
-            # plt.close()
+        # storm_drain_values = storm_drain_rbs.get("Profile")
+        # if storm_drain_values[0]:
+        #     mymodel = swmmio.Model(flo2d_results_dir)
+        #     rpt = swmmio.rpt(flo2d_results_dir + r'\swmm.rpt')
+        #
+        #     plt.clf()
+        #     plt.close()
+        #     fig = plt.figure(figsize=(11, 9))
+        #     ax = fig.add_subplot(1, 1, 1)
+        #
+        #     try:
+        #         path_selection = swmmio.find_network_trace(mymodel, storm_drain_values[1], storm_drain_values[2])
+        #         max_depth = rpt.node_depth_summary.MaxNodeDepth
+        #         ave_depth = rpt.node_depth_summary.AvgDepth
+        #     except:
+        #         self.iface.messageBar().pushMessage("No path found!", level=Qgis.Warning, duration=5)
+        #         plt.clf()
+        #         plt.close()
+        #         return
+        #     profile_config = swmmio.build_profile_plot(ax, mymodel, path_selection)
+        #     swmmio.add_hgl_plot(ax, profile_config, depth=max_depth, color='red', label="Maximum Depth")
+        #     swmmio.add_hgl_plot(ax, profile_config, depth=ave_depth, label="Average Depth")
+        #     swmmio.add_node_labels_plot(ax, mymodel, profile_config)
+        #     swmmio.add_link_labels_plot(ax, mymodel, profile_config)
+        #     ax.legend(loc='best')
+        #     ax.grid('xy')
+        #     ax.get_xaxis().set_ticklabels([])
+        #
+        #     if self.units_switch == "0":
+        #         unit = "ft"
+        #     else:
+        #         unit = "m"
+        #
+        #     ax.set_xlabel(f"Length ({unit})")
+        #     ax.set_ylabel(f"Elevation ({unit})")
+        #
+        #     fig.tight_layout()
+        #     if plot:
+        #         sd_profile_dir = sd_output_dir + fr"\Profile"
+        #         if not os.path.exists(sd_profile_dir):
+        #             os.makedirs(sd_profile_dir)
+        #         fig.savefig(sd_profile_dir + rf"\{storm_drain_values[1]} - {storm_drain_values[2]}.png")
+        #     plt.show()
 
     def get_nname_grid(self, flo2d_results_dir):
         """
