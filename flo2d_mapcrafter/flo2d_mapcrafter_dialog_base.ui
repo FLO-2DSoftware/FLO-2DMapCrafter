@@ -210,7 +210,7 @@
       <enum>QTabWidget::Rounded</enum>
      </property>
      <property name="currentIndex">
-      <number>1</number>
+      <number>0</number>
      </property>
      <property name="elideMode">
       <enum>Qt::ElideNone</enum>
@@ -750,8 +750,8 @@ p, li { white-space: pre-wrap; }
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>692</width>
-            <height>317</height>
+            <width>401</width>
+            <height>616</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_100">
@@ -1382,8 +1382,8 @@ p, li { white-space: pre-wrap; }
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>692</width>
-            <height>317</height>
+            <width>401</width>
+            <height>616</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_101">
@@ -1894,8 +1894,8 @@ p, li { white-space: pre-wrap; }
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>692</width>
-            <height>317</height>
+            <width>551</width>
+            <height>771</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_102">
@@ -2555,8 +2555,8 @@ p, li { white-space: pre-wrap; }
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>692</width>
-            <height>317</height>
+            <width>410</width>
+            <height>485</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_103">
@@ -3260,79 +3260,6 @@ LOW DANGER ZONE: Almost any size child (excluding infants) is not seriously thre
                </layout>
               </widget>
              </item>
-             <item row="3" column="0">
-              <widget class="QgsCollapsibleGroupBox" name="profile_plot_cgb">
-               <property name="title">
-                <string>Profile Plot</string>
-               </property>
-               <property name="collapsed">
-                <bool>true</bool>
-               </property>
-               <layout class="QGridLayout" name="gridLayout_118">
-                <item row="0" column="0">
-                 <layout class="QGridLayout" name="gridLayout_113">
-                  <item row="0" column="0">
-                   <widget class="QCheckBox" name="plot_profile_chbox">
-                    <property name="text">
-                     <string>Plot Profile</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="0" column="3" colspan="2">
-                   <widget class="QComboBox" name="start_cbo">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="0" column="2">
-                   <widget class="QLabel" name="label_15">
-                    <property name="text">
-                     <string>Start Node</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="0" column="6" colspan="2">
-                   <widget class="QComboBox" name="end_cbo">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="0" column="5">
-                   <widget class="QLabel" name="label_18">
-                    <property name="text">
-                     <string>End Node</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="0" column="1">
-                   <spacer name="horizontalSpacer">
-                    <property name="orientation">
-                     <enum>Qt::Horizontal</enum>
-                    </property>
-                    <property name="sizeType">
-                     <enum>QSizePolicy::Fixed</enum>
-                    </property>
-                    <property name="sizeHint" stdset="0">
-                     <size>
-                      <width>55</width>
-                      <height>20</height>
-                     </size>
-                    </property>
-                   </spacer>
-                  </item>
-                 </layout>
-                </item>
-               </layout>
-              </widget>
-             </item>
             </layout>
            </item>
            <item row="8" column="0">
@@ -3365,26 +3292,6 @@ LOW DANGER ZONE: Almost any size child (excluding infants) is not seriously thre
            </item>
            <item row="7" column="0">
             <layout class="QGridLayout" name="gridLayout_124">
-             <item row="0" column="3">
-              <widget class="QPushButton" name="plot_profile_btn">
-               <property name="enabled">
-                <bool>true</bool>
-               </property>
-               <property name="text">
-                <string>See Profile</string>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="1">
-              <widget class="QPushButton" name="see_nodes_results_btn">
-               <property name="enabled">
-                <bool>false</bool>
-               </property>
-               <property name="text">
-                <string>See Results</string>
-               </property>
-              </widget>
-             </item>
              <item row="0" column="0">
               <spacer name="horizontalSpacer_3">
                <property name="orientation">
@@ -3397,6 +3304,16 @@ LOW DANGER ZONE: Almost any size child (excluding infants) is not seriously thre
                 </size>
                </property>
               </spacer>
+             </item>
+             <item row="0" column="1">
+              <widget class="QPushButton" name="see_nodes_results_btn">
+               <property name="enabled">
+                <bool>false</bool>
+               </property>
+               <property name="text">
+                <string>See Results</string>
+               </property>
+              </widget>
              </item>
             </layout>
            </item>
@@ -3437,8 +3354,8 @@ LOW DANGER ZONE: Almost any size child (excluding infants) is not seriously thre
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>692</width>
-            <height>317</height>
+            <width>281</width>
+            <height>280</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_104">
