@@ -23,7 +23,7 @@
 """
 import os
 
-from PyQt5.QtCore import QVariant
+from PyQt5.QtCore import QVariant, QMetaType
 from qgis._core import QgsProject, QgsMessageLog, QgsVectorLayer, QgsField, QgsFeature, QgsGeometry, QgsPointXY, \
     QgsVectorFileWriter, QgsProcessingFeedback
 
@@ -333,7 +333,11 @@ class FloodMaps:
 
         # Add fields to the layer
         vl.startEditing()
-        pr.addAttributes([QgsField('ID', QVariant.Int), QgsField('Velocity', QVariant.Double), QgsField('Direction', QVariant.Int)])
+        pr.addAttributes([
+            QgsField('ID', QMetaType.Type.Int),
+            QgsField('Velocity',  QMetaType.Type.Double),
+            QgsField('Direction', QMetaType.Type.Int)
+        ])
         vl.updateFields()
         vl.commitChanges()
 
