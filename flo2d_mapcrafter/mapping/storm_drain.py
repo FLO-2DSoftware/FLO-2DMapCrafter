@@ -23,12 +23,12 @@
 """
 import os
 
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QMetaType
 from PyQt5.QtWidgets import QProgressDialog, QApplication, QMessageBox
 from matplotlib import pyplot as plt
 
-import geopandas as gpd
-from qgis._core import Qgis, QgsVectorLayer, QgsProject
+from qgis._core import Qgis, QgsVectorLayer, QgsProject, QgsMessageLog, QgsField, QgsFeature, QgsPointXY, QgsGeometry, \
+    QgsVectorFileWriter, QgsCoordinateReferenceSystem
 from shapely.geometry import Point
 
 
@@ -342,7 +342,7 @@ class StormDrainPlots:
             "Maximum Pond"
         ]
 
-        sd_output_dir = sd_output_dir + r"\Graphics"
+        sd_output_dir = os.path.join(sd_output_dir, "Graphics")
         if not os.path.exists(sd_output_dir):
             os.makedirs(sd_output_dir)
 
@@ -369,13 +369,11 @@ class StormDrainPlots:
                 if plot == "Hours Flooded":
                     filtered_nodes = nodes.loc[nodes.HoursFlooded > float(storm_drain_values[1])]
                     if not filtered_nodes.empty:
-                        # Isolate nodes that have flooded for more than the threshold
                         flooded_series = nodes.loc[nodes.HoursFlooded > float(storm_drain_values[1]), 'TotalFloodVol']
                         flood_vol = sum(flooded_series)  # total flood volume (million gallons)
                         flooded_count = len(flooded_series)  # count of flooded nodes
 
-                        # highlight these nodes in a graphic
-                        nodes['draw_color'] = '#787882'  # grey, default node color
+                        nodes['draw_color'] = '#787882'  # default node color
                         nodes.loc[nodes.HoursFlooded > float(storm_drain_values[1]), 'draw_color'] = '#FF0000'
                         nodes.loc[nodes.HoursFlooded > float(storm_drain_values[1]), 'draw_size'] = 10
 
@@ -383,33 +381,57 @@ class StormDrainPlots:
                         links['draw_color'] = '#787882'
                         links['draw_size'] = 2
 
-                        # Create the shapefile
-                        geometry = [Point(xy) for xy in zip(filtered_nodes['X'], filtered_nodes['Y'])]
+                        # Ensure CRS is properly set
+                        crs = QgsCoordinateReferenceSystem(authid)
 
-                        # Create a GeoDataFrame
-                        crs = {'init': authid}
-                        nodes_to_shapefile = filtered_nodes.astype(str)
-                        gdf = gpd.GeoDataFrame(nodes_to_shapefile, crs=crs, geometry=geometry)
+                        # Create a memory layer for the nodes with proper CRS
+                        vl = QgsVectorLayer("Point?crs=" + crs.authid(), f'HoursFlooded_{storm_drain_values[1]}',
+                                            "memory")
+                        pr = vl.dataProvider()
 
-                        # Save as shapefile
-                        output_shapefile = sd_output_dir + rf'\HoursFlooded_{storm_drain_values[1]}.shp'
-                        gdf.to_file(output_shapefile, driver='ESRI Shapefile')
+                        # Define fields for the shapefile
+                        pr.addAttributes([QgsField("X", QMetaType.Type.Double),
+                                          QgsField("Y", QMetaType.Type.Double),
+                                          QgsField("HoursFlooded", QMetaType.Type.Double, len=10, prec=4),
+                                          QgsField("TotalFloodVol", QMetaType.Type.Double, len=10, prec=4)])
+                        vl.updateFields()
 
-                        # add an informative annotation, and draw:
-                        file = sd_output_dir + rf'\HoursFlooded_{storm_drain_values[1]}.png'
-                        annotation = 'Flooded Volume: {}MG\nTotal Nodes:{}'.format(round(flood_vol), flooded_count)
-                        swmmio.draw_model(model=None, nodes=nodes, conduits=links, parcels=None, title=annotation,
-                                          annotation=None, file_path=file, bbox=None, px_width=2048.0)
+                        # Add features (geometry and attributes) to the layer
+                        for idx, row in filtered_nodes.iterrows():
+                            feature = QgsFeature()
+                            point = QgsPointXY(float(row['X']), float(row['Y']))
+                            feature.setGeometry(QgsGeometry.fromPointXY(point))
+                            feature.setAttributes([row['X'], row['Y'], round(row['HoursFlooded'], 4), round(row['TotalFloodVol'], 4)])
+                            pr.addFeature(feature)
+
+                        vl.updateExtents()
+
+                        # Save the memory layer as a shapefile
+                        output_shapefile = os.path.join(sd_output_dir, rf'HoursFlooded_{storm_drain_values[1]}.shp')
+                        # Save the shapefile
+                        options = QgsVectorFileWriter.SaveVectorOptions()
+                        options.driverName = "ESRI Shapefile"
+                        options.layerName = f'HoursFlooded_{storm_drain_values[1]}'
+                        options.fileEncoding = 'utf-8'
+
+                        coordinateTransformContext = QgsProject.instance().transformContext()
+
+                        QgsVectorFileWriter.writeAsVectorFormatV3(vl, output_shapefile, coordinateTransformContext, options)
 
                         layer = QgsVectorLayer(output_shapefile, f'HoursFlooded_{storm_drain_values[1]}', "ogr")
                         QgsProject.instance().addMapLayer(layer, False)
                         storm_drain_group.insertLayer(0, layer)
 
-                        # return [output_shapefile, f'HoursFlooded_{storm_drain_values[1]}']
+                        # Add an informative annotation, and draw:
+                        file = os.path.join(sd_output_dir, rf'\HoursFlooded_{storm_drain_values[1]}.png')
+                        annotation = 'Flooded Volume: {}MG\nTotal Nodes:{}'.format(round(flood_vol), flooded_count)
+                        swmmio.draw_model(model=None, nodes=nodes, conduits=links, parcels=None, title=annotation,
+                                          annotation=None, file_path=file, bbox=None, px_width=2048.0)
 
                 if plot == "Maximum Flooding":
                     filtered_nodes = nodes.loc[nodes.MaxQFlooding > float(storm_drain_values[1])]
                     if not filtered_nodes.empty:
+
                         # nodes in a graphic
                         nodes['draw_color'] = '#787882'  # grey
                         nodes.loc[nodes.MaxQFlooding > float(storm_drain_values[1]), 'draw_color'] = '#FF0000'
@@ -420,17 +442,43 @@ class StormDrainPlots:
                         links['draw_color'] = '#787882'  # grey
                         links['draw_size'] = 2
 
-                        # Create the shapefile
-                        geometry = [Point(xy) for xy in zip(filtered_nodes['X'], filtered_nodes['Y'])]
+                        # Set up CRS
+                        crs = QgsCoordinateReferenceSystem(authid)
 
-                        # Create a GeoDataFrame
-                        crs = {'init': authid}
-                        nodes_to_shapefile = filtered_nodes.astype(str)
-                        gdf = gpd.GeoDataFrame(nodes_to_shapefile, crs=crs, geometry=geometry)
+                        # Create a memory layer for the nodes with proper CRS
+                        vl = QgsVectorLayer("Point?crs=" + crs.authid(), f'MaxQFlooding_{storm_drain_values[1]}',
+                                            "memory")
+                        pr = vl.dataProvider()
 
-                        # Save as shapefile
-                        output_shapefile = sd_output_dir + rf'\MaxQFlooding_{storm_drain_values[1]}.shp'
-                        gdf.to_file(output_shapefile, driver='ESRI Shapefile')
+                        # Define fields for the shapefile
+                        pr.addAttributes([QgsField("X", QMetaType.Type.Double),
+                                          QgsField("Y", QMetaType.Type.Double),
+                                          QgsField("MaxQFlooding", QMetaType.Type.Double, len=10, prec=4)])
+                        vl.updateFields()
+
+                        # Add features (geometry and attributes) to the layer
+                        for idx, row in filtered_nodes.iterrows():
+                            feature = QgsFeature()
+                            point = QgsPointXY(float(row['X']), float(row['Y']))
+                            feature.setGeometry(QgsGeometry.fromPointXY(point))
+                            feature.setAttributes([row['X'], row['Y'], round(row['MaxQFlooding'], 4)])
+                            pr.addFeature(feature)
+
+                        vl.updateExtents()
+
+                        # Save the memory layer as a shapefile
+                        output_shapefile = os.path.join(sd_output_dir, rf'MaxQFlooding_{storm_drain_values[1]}.shp')
+
+                        # Save the shapefile using QgsVectorFileWriter
+                        options = QgsVectorFileWriter.SaveVectorOptions()
+                        options.driverName = "ESRI Shapefile"
+                        options.layerName = f'MaxQFlooding_{storm_drain_values[1]}'
+                        options.fileEncoding = 'utf-8'
+
+                        coordinateTransformContext = QgsProject.instance().transformContext()
+
+                        QgsVectorFileWriter.writeAsVectorFormatV3(vl, output_shapefile, coordinateTransformContext,
+                                                                  options)
 
                         # add an informative annotation, and draw:
                         file = sd_output_dir + rf'\MaxQFlooding_{storm_drain_values[1]}.png'
@@ -459,17 +507,43 @@ class StormDrainPlots:
                         links['draw_color'] = '#787882'  # grey
                         links['draw_size'] = 2
 
-                        # Create the shapefile
-                        geometry = [Point(xy) for xy in zip(filtered_nodes['X'], filtered_nodes['Y'])]
+                        # Set up CRS
+                        crs = QgsCoordinateReferenceSystem(authid)
 
-                        # Create a GeoDataFrame
-                        crs = {'init': authid}
-                        nodes_to_shapefile = filtered_nodes.astype(str)
-                        gdf = gpd.GeoDataFrame(nodes_to_shapefile, crs=crs, geometry=geometry)
+                        # Create a memory layer for the nodes with proper CRS
+                        vl = QgsVectorLayer("Point?crs=" + crs.authid(), f'TotalFloodVol_{storm_drain_values[1]}',
+                                            "memory")
+                        pr = vl.dataProvider()
 
-                        # Save as shapefile
-                        output_shapefile = sd_output_dir + rf'\TotalFloodVol_{storm_drain_values[1]}.shp'
-                        gdf.to_file(output_shapefile, driver='ESRI Shapefile')
+                        # Define fields for the shapefile
+                        pr.addAttributes([QgsField("X", QMetaType.Type.Double),
+                                          QgsField("Y", QMetaType.Type.Double),
+                                          QgsField("TotalFloodVol", QMetaType.Type.Double, len=10, prec=4)])
+                        vl.updateFields()
+
+                        # Add features (geometry and attributes) to the layer
+                        for idx, row in filtered_nodes.iterrows():
+                            feature = QgsFeature()
+                            point = QgsPointXY(float(row['X']), float(row['Y']))
+                            feature.setGeometry(QgsGeometry.fromPointXY(point))
+                            feature.setAttributes([row['X'], row['Y'], round(row['TotalFloodVol'], 4)])
+                            pr.addFeature(feature)
+
+                        vl.updateExtents()
+
+                        # Save the memory layer as a shapefile
+                        output_shapefile = os.path.join(sd_output_dir, rf'TotalFloodVol_{storm_drain_values[1]}.shp')
+
+                        # Save the shapefile using QgsVectorFileWriter
+                        options = QgsVectorFileWriter.SaveVectorOptions()
+                        options.driverName = "ESRI Shapefile"
+                        options.layerName = f'TotalFloodVol_{storm_drain_values[1]}'
+                        options.fileEncoding = 'utf-8'
+
+                        coordinateTransformContext = QgsProject.instance().transformContext()
+
+                        QgsVectorFileWriter.writeAsVectorFormatV3(vl, output_shapefile, coordinateTransformContext,
+                                                                  options)
 
                         # add an informative annotation, and draw:
                         file = sd_output_dir + rf'\TotalFloodVol_{storm_drain_values[1]}.png'
@@ -496,17 +570,43 @@ class StormDrainPlots:
                         links['draw_color'] = '#787882'  # grey
                         links['draw_size'] = 2
 
-                        # Create the shapefile
-                        geometry = [Point(xy) for xy in zip(filtered_nodes['X'], filtered_nodes['Y'])]
+                        # Set up CRS
+                        crs = QgsCoordinateReferenceSystem(authid)
 
-                        # Create a GeoDataFrame
-                        crs = {'init': authid}
-                        nodes_to_shapefile = filtered_nodes.astype(str)
-                        gdf = gpd.GeoDataFrame(nodes_to_shapefile, crs=crs, geometry=geometry)
+                        # Create a memory layer for the nodes with proper CRS
+                        vl = QgsVectorLayer("Point?crs=" + crs.authid(), f'MaximumPondDepth_{storm_drain_values[1]}',
+                                            "memory")
+                        pr = vl.dataProvider()
 
-                        # Save as shapefile
-                        output_shapefile = sd_output_dir + rf'\MaximumPondDepth_{storm_drain_values[1]}.shp'
-                        gdf.to_file(output_shapefile, driver='ESRI Shapefile')
+                        # Define fields for the shapefile
+                        pr.addAttributes([QgsField("X", QMetaType.Type.Double),
+                                          QgsField("Y", QMetaType.Type.Double),
+                                          QgsField("MaximumPondDepth", QMetaType.Type.Double, len=10, prec=4)])
+                        vl.updateFields()
+
+                        # Add features (geometry and attributes) to the layer
+                        for idx, row in filtered_nodes.iterrows():
+                            feature = QgsFeature()
+                            point = QgsPointXY(float(row['X']), float(row['Y']))
+                            feature.setGeometry(QgsGeometry.fromPointXY(point))
+                            feature.setAttributes([row['X'], row['Y'], round(row['MaximumPondDepth'], 4)])
+                            pr.addFeature(feature)
+
+                        vl.updateExtents()
+
+                        # Save the memory layer as a shapefile
+                        output_shapefile = os.path.join(sd_output_dir, rf'MaximumPondDepth_{storm_drain_values[1]}.shp')
+
+                        # Save the shapefile using QgsVectorFileWriter
+                        options = QgsVectorFileWriter.SaveVectorOptions()
+                        options.driverName = "ESRI Shapefile"
+                        options.layerName = f'MaximumPondDepth_{storm_drain_values[1]}'
+                        options.fileEncoding = 'utf-8'
+
+                        coordinateTransformContext = QgsProject.instance().transformContext()
+
+                        QgsVectorFileWriter.writeAsVectorFormatV3(vl, output_shapefile, coordinateTransformContext,
+                                                                  options)
 
                         # add an informative annotation, and draw:
                         file = sd_output_dir + rf'\MaximumPondDepth_{storm_drain_values[1]}.png'
