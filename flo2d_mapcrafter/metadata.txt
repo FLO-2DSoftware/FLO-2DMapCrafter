@@ -17,6 +17,8 @@ hasProcessingProvider=no
 # Uncomment the following line and add your changelog:
 changelog=
     <p>0.3.0
+        - Improve the code to calculate the grid size
+        - Removed the shapely library
         - Removed the necessity of the geopandas library
         - Fixed deprecation warnings
         - Removed profile plot
