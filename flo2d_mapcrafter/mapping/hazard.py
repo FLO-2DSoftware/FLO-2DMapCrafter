@@ -300,13 +300,16 @@ class HazardMaps:
                             cellSize_data.append((x, y))
 
         # Calculate the differences in X and Y coordinates
-        dx = cellSize_data[1][0] - cellSize_data[0][0]
-        dy = cellSize_data[1][1] - cellSize_data[0][1]
+        dx = abs(cellSize_data[1][0] - cellSize_data[0][0])
+        dy = abs(cellSize_data[1][1] - cellSize_data[0][1])
 
-        if dx != 0:
-            cellSize = int(abs(dx))
-        if dy != 0:
-            cellSize = int(abs(dy))
+        # If the coordinate difference is equal 0, assign a huge number
+        if dx == 0:
+            dx = 9999
+        if dy == 0:
+            dy = 9999
+
+        cellSize = min(dx, dy)
 
         # Get the extent and number of rows and columns
         min_x = min(point[0] for point in values)
@@ -499,15 +502,17 @@ class HazardMaps:
                 if map_type == 4 and (depth > 4 or velocity > 8):
                     values.append((x, y, 3))
 
+        # Calculate the differences in X and Y coordinates
+        dx = abs(cellSize_data[1][0] - cellSize_data[0][0])
+        dy = abs(cellSize_data[1][1] - cellSize_data[0][1])
 
-            # Calculate the differences in X and Y coordinates
-        dx = cellSize_data[1][0] - cellSize_data[0][0]
-        dy = cellSize_data[1][1] - cellSize_data[0][1]
+        # If the coordinate difference is equal 0, assign a huge number
+        if dx == 0:
+            dx = 9999
+        if dy == 0:
+            dy = 9999
 
-        if dx != 0:
-            cellSize = int(abs(dx))
-        if dy != 0:
-            cellSize = int(abs(dy))
+        cellSize = min(dx, dy)
 
         # Get the extent and number of rows and columns
         min_x = min(point[0] for point in values)
