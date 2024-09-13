@@ -29,7 +29,6 @@ from matplotlib import pyplot as plt
 
 from qgis._core import Qgis, QgsVectorLayer, QgsProject, QgsMessageLog, QgsField, QgsFeature, QgsPointXY, QgsGeometry, \
     QgsVectorFileWriter, QgsCoordinateReferenceSystem
-from shapely.geometry import Point
 
 
 class StormDrainPlots:
