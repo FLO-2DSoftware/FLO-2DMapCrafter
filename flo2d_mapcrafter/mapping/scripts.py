@@ -110,13 +110,16 @@ def read_ASCII(file_path, output_path, name, crs):
         return None
 
     # Calculate the differences in X and Y coordinates
-    dx = cellSize_data[1][0] - cellSize_data[0][0]
-    dy = cellSize_data[1][1] - cellSize_data[0][1]
+    dx = abs(cellSize_data[1][0] - cellSize_data[0][0])
+    dy = abs(cellSize_data[1][1] - cellSize_data[0][1])
 
-    if dx != 0:
-        cellSize = int(abs(dx))
-    if dy != 0:
-        cellSize = int(abs(dy))
+    # If the coordinate difference is equal 0, assign a huge number
+    if dx == 0:
+        dx = 9999
+    if dy == 0:
+        dy = 9999
+
+    cellSize = min(dx, dy)
 
     # Get the extent and number of rows and columns
     min_x = min(point[0] for point in values)
