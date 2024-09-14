@@ -422,7 +422,7 @@ class StormDrainPlots:
                         storm_drain_group.insertLayer(0, layer)
 
                         # Add an informative annotation, and draw:
-                        file = os.path.join(sd_output_dir, rf'\HoursFlooded_{storm_drain_values[1]}.png')
+                        file = sd_output_dir + rf'\HoursFlooded_{storm_drain_values[1]}.png'
                         annotation = 'Flooded Volume: {}MG\nTotal Nodes:{}'.format(round(flood_vol), flooded_count)
                         swmmio.draw_model(model=None, nodes=nodes, conduits=links, parcels=None, title=annotation,
                                           annotation=None, file_path=file, bbox=None, px_width=2048.0)
