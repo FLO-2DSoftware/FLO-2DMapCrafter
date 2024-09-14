@@ -79,7 +79,7 @@ class StormDrainPlots:
                     qgis_python_path = (qgis_Path.parent / "python3.exe").as_posix()
 
                     subprocess.check_call(
-                        [qgis_python_path, "-m", "pip", "install", "--user", "swmmio==0.6.11"]
+                        [qgis_python_path, "-m", "pip", "install", "--user", "swmmio==0.7.1"]
                     )
                     import swmmio
                     QApplication.restoreOverrideCursor()
@@ -97,7 +97,7 @@ class StormDrainPlots:
             elif install_options == QMessageBox.No:
                 QApplication.restoreOverrideCursor()
                 message = "1. Run OSGeo4W Shell as admin\n" \
-                          "2. Type this command: pip install swmmio==0.6.11\n\n" \
+                          "2. Type this command: pip install swmmio==0.7.1\n\n" \
                           "Wait the process to finish and rerun this process.\n\n" \
                           "For more information, access https://flo-2d.com/contact/"
                 msgBox = QMessageBox()
@@ -303,7 +303,7 @@ class StormDrainPlots:
                     qgis_python_path = (qgis_Path.parent / "python3.exe").as_posix()
 
                     subprocess.check_call(
-                        [qgis_python_path, "-m", "pip", "install", "--user", "swmmio==0.6.11"]
+                        [qgis_python_path, "-m", "pip", "install", "--user", "swmmio==0.7.1"]
                     )
                     import swmmio
                     QApplication.restoreOverrideCursor()
@@ -321,7 +321,7 @@ class StormDrainPlots:
             elif install_options == QMessageBox.No:
                 QApplication.restoreOverrideCursor()
                 message = "1. Run OSGeo4W Shell as admin\n" \
-                          "2. Type this command: pip install swmmio==0.6.11\n\n" \
+                          "2. Type this command: pip install swmmio==0.7.1\n\n" \
                           "Wait the process to finish and rerun this process.\n\n" \
                           "For more information, access https://flo-2d.com/contact/"
                 msgBox = QMessageBox()
@@ -655,7 +655,7 @@ class StormDrainPlots:
                     qgis_python_path = (qgis_Path.parent / "python3.exe").as_posix()
 
                     subprocess.check_call(
-                        [qgis_python_path, "-m", "pip", "install", "--user", "swmmio==0.6.11"]
+                        [qgis_python_path, "-m", "pip", "install", "--user", "swmmio==0.7.1"]
                     )
                     import swmmio
                     QApplication.restoreOverrideCursor()
@@ -673,7 +673,7 @@ class StormDrainPlots:
             elif install_options == QMessageBox.No:
                 QApplication.restoreOverrideCursor()
                 message = "1. Run OSGeo4W Shell as admin\n" \
-                          "2. Type this command: pip install swmmio==0.6.11\n\n" \
+                          "2. Type this command: pip install swmmio==0.7.1\n\n" \
                           "Wait the process to finish and rerun this process.\n\n" \
                           "For more information, access https://flo-2d.com/contact/"
                 msgBox = QMessageBox()
