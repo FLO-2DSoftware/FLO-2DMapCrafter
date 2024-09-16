@@ -49,7 +49,7 @@ class StormDrainPlots:
             import swmmio
         except ImportError:
             message = "The swmmio library is not found in your python environment. This external library is required to " \
-                      "run some processes related to swmm files. More information on: https://swmmio.readthedocs.io/en/v0.6.11/.\n\n" \
+                      "run some processes related to swmm files. More information on: https://swmmio.readthedocs.io/en/latest/.\n\n" \
                       "Would you like to install it automatically or " \
                       "manually?\n\nSelect automatic if you have admin rights. Otherwise, contact your admin and " \
                       "follow the manual steps."
