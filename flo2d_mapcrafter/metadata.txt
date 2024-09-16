@@ -1,7 +1,7 @@
 [general]
 name=FLO-2D MapCrafter 
 qgisMinimumVersion=3.0
-description=This plugin creates maps from FLO-2D output files.
+description=This plugin creates maps and plots from FLO-2D output files.
 version=0.3.0
 author=FLO-2D Software, Inc.
 email=contact@flo-2d.com
@@ -32,7 +32,7 @@ changelog=
         - First stable version released!
 
 # Tags are comma separated with spaces allowed
-tags=python, mapping, FLO-2D, flow routing
+tags=python, mapping, FLO-2D, flow routing, storm drain plots
 
 homepage=https://github.com/FLO-2DSoftware/FLO-2DMapCrafter/wiki
 category=Plugins
@@ -47,6 +47,7 @@ deprecated=False
 # (or upgraded) can be specified.
 # Check the documentation for more information.
 # plugin_dependencies=
+python_dependencies=swmmio==0.7.1
 
 Category of the plugin: Raster, Vector, Database or Web
 # category=
