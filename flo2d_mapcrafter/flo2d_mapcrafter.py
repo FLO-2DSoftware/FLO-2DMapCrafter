@@ -45,7 +45,7 @@ from qgis._core import (
     QgsReadWriteContext,
     QgsMessageLog, QgsApplication, QgsProcessingUtils, Qgis,
 )
-from qgis._gui import QgsProjectionSelectionDialog, QgsCoordinateReferenceSystemProxyModel
+from qgis._gui import QgsProjectionSelectionDialog
 
 from .mapping.flood import FloodMaps
 from .mapping.hazard import HazardMaps
