@@ -27,7 +27,7 @@ from PyQt5.QtCore import Qt, QMetaType
 from PyQt5.QtWidgets import QProgressDialog, QApplication, QMessageBox
 from matplotlib import pyplot as plt
 
-from qgis._core import Qgis, QgsVectorLayer, QgsProject, QgsMessageLog, QgsField, QgsFeature, QgsPointXY, QgsGeometry, \
+from qgis._core import QgsVectorLayer, QgsProject, QgsField, QgsFeature, QgsPointXY, QgsGeometry, \
     QgsVectorFileWriter, QgsCoordinateReferenceSystem
 
 

@@ -24,9 +24,8 @@
 import os
 
 import numpy as np
-from PyQt5.QtWidgets import QMessageBox
 from osgeo import gdal
-from qgis._core import QgsProject, QgsRasterLayer, QgsUnitTypes, QgsMessageLog
+from qgis._core import QgsProject, QgsRasterLayer
 
 from flo2d_mapcrafter.mapping.check_data import check_project_id, check_mapping_group, check_raster_file
 from flo2d_mapcrafter.mapping.scripts import read_ASCII, remove_layer, set_raster_style

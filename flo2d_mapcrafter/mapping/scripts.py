@@ -29,15 +29,13 @@ from qgis._core import (
     QgsProject,
     QgsRasterLayer,
     QgsVectorLayer,
-    QgsRasterBandStats,
-    QgsColorRampShader,
     QgsRasterShader,
     QgsSingleBandPseudoColorRenderer,
-    QgsMessageLog, QgsSvgMarkerSymbolLayer, QgsMarkerSymbol, QgsSymbol, QgsCentroidFillSymbolLayer, QgsFillSymbol,
-    QgsRuleBasedRenderer, QgsGraduatedSymbolRenderer, QgsClassificationEqualInterval, QgsStyle,
-    QgsClassificationQuantile, QgsCategorizedSymbolRenderer, QgsRendererCategory, QgsPointXY, QgsExpression,
-    QgsExpressionContext, QgsExpressionContextUtils, QgsProperty, QgsPropertyCollection, QgsSymbolLayer,
-    QgsSimpleMarkerSymbolLayer, QgsGradientColorRamp, QgsGradientStop, Qgis,
+    QgsMessageLog, QgsSvgMarkerSymbolLayer, QgsSymbol,
+    QgsGraduatedSymbolRenderer, QgsStyle,
+    QgsClassificationQuantile,
+    QgsProperty, QgsSymbolLayer,
+    QgsGradientColorRamp, QgsGradientStop
 )
 from osgeo import gdal
 
