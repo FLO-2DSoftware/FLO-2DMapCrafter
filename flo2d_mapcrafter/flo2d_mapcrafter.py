@@ -21,12 +21,10 @@
  *                                                                         *
  ***************************************************************************/
 """
-import numpy as np
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QColor
-from PyQt5.QtWidgets import QMessageBox, QApplication, QVBoxLayout
+from PyQt5.QtWidgets import QMessageBox, QApplication
 from PyQt5.QtXml import QDomDocument
-from osgeo import gdal
 from qgis.PyQt import QtWidgets
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication
 from qgis.PyQt.QtGui import QIcon
@@ -37,13 +35,11 @@ from qgis._core import (
     QgsColorRampShader,
     QgsRasterShader,
     QgsSingleBandPseudoColorRenderer,
-    QgsRasterLayer,
     QgsProject,
     QgsVectorLayer,
-    QgsUnitTypes,
     QgsPrintLayout,
     QgsReadWriteContext,
-    QgsMessageLog, QgsApplication, QgsProcessingUtils, Qgis,
+    QgsMessageLog, QgsProcessingUtils, Qgis,
 )
 from qgis._gui import QgsProjectionSelectionDialog
 
@@ -60,9 +56,6 @@ from .flo2d_mapcrafter_dialog import FLO2DMapCrafterDialog
 import os.path
 import processing
 
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
-import matplotlib.pyplot as plt
 
 class FLO2DMapCrafter:
     """QGIS Plugin Implementation."""

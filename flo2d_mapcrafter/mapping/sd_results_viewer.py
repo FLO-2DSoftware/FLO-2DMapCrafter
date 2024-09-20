@@ -25,9 +25,7 @@
 import os
 
 from PyQt5.QtGui import QPixmap
-from PyQt5.QtWidgets import QComboBox
 from qgis.PyQt import uic
-from qgis._core import QgsMessageLog
 
 uiDialog, qtBaseClass = uic.loadUiType(os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "ui", "sd_results_viewer.ui"))
 

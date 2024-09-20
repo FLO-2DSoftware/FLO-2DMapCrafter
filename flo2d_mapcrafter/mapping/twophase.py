@@ -23,7 +23,7 @@
 """
 import os
 
-from PyQt5.QtCore import QVariant, QMetaType
+from PyQt5.QtCore import QMetaType
 from qgis._core import QgsProject, QgsVectorLayer, QgsField, QgsFeature, QgsPointXY, QgsGeometry, QgsVectorFileWriter
 
 from flo2d_mapcrafter.mapping.check_data import check_project_id, check_mapping_group, check_raster_file, \

@@ -23,13 +23,13 @@
 """
 import os
 
-from PyQt5.QtCore import QVariant, QMetaType
-from qgis._core import QgsProject, QgsMessageLog, QgsVectorLayer, QgsField, QgsFeature, QgsGeometry, QgsPointXY, \
-    QgsVectorFileWriter, QgsProcessingFeedback
+from PyQt5.QtCore import QMetaType
+from qgis._core import QgsProject, QgsVectorLayer, QgsField, QgsFeature, QgsGeometry, QgsPointXY, \
+    QgsVectorFileWriter
 
 from flo2d_mapcrafter.mapping.check_data import check_project_id, check_mapping_group, check_raster_file, \
     check_vector_file
-from flo2d_mapcrafter.mapping.scripts import read_ASCII, get_extent, remove_layer, set_raster_style, \
+from flo2d_mapcrafter.mapping.scripts import read_ASCII, set_raster_style, \
     set_velocity_vector_style
 
 
