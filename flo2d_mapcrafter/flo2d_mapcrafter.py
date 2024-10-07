@@ -23,7 +23,7 @@
 """
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QColor
-from PyQt5.QtWidgets import QMessageBox, QApplication
+from PyQt5.QtWidgets import QMessageBox, QApplication, QCheckBox
 from PyQt5.QtXml import QDomDocument
 from qgis.PyQt import QtWidgets
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication
@@ -1844,10 +1844,24 @@ class FLO2DMapCrafter:
         """
         Function that clears the checkboxes when the tab is changed
         """
-        self.dlg.check_cw_cb.setChecked(False)
-        self.dlg.check_mf_cb.setChecked(False)
-        self.dlg.check_tp_cb.setChecked(False)
-        self.dlg.check_sd_cb.setChecked(False)
-        self.dlg.check_hm_cb.setChecked(False)
-        self.dlg.check_storm_drain_chbox.setChecked(False)
+        checkboxes_0 = self.dlg.tab0.findChildren(QCheckBox)
+        for checkbox in checkboxes_0:
+            checkbox.setChecked(False)
+        checkboxes_1 = self.dlg.tab1.findChildren(QCheckBox)
+        for checkbox in checkboxes_1:
+            checkbox.setChecked(False)
+        checkboxes_2 = self.dlg.tab2.findChildren(QCheckBox)
+        for checkbox in checkboxes_2:
+            checkbox.setChecked(False)
+        checkboxes_3 = self.dlg.tab3.findChildren(QCheckBox)
+        for checkbox in checkboxes_3:
+            checkbox.setChecked(False)
+        checkboxes_4 = self.dlg.tab4.findChildren(QCheckBox)
+        for checkbox in checkboxes_4:
+            checkbox.setChecked(False)
+        checkboxes_5 = self.dlg.tab5.findChildren(QCheckBox)
+        for checkbox in checkboxes_5:
+            checkbox.setChecked(False)
+
+
 
