@@ -23,7 +23,7 @@
 """
 import os
 
-from PyQt5.QtCore import QMetaType
+from PyQt5.QtCore import QMetaType, QVariant
 from qgis._core import QgsProject, QgsVectorLayer, QgsVectorFileWriter, QgsGeometry, QgsPointXY, QgsFeature, QgsField
 
 from flo2d_mapcrafter.mapping.check_data import check_project_id, check_mapping_group, check_raster_file, \
@@ -355,11 +355,18 @@ class MudflowMaps:
 
         # Add fields to the layer
         vl.startEditing()
-        pr.addAttributes([
-            QgsField('ID', QMetaType.Type.Int),
-            QgsField('Velocity', QMetaType.Type.Double),
-            QgsField('Direction', QMetaType.Type.Int)
-        ])
+        try:
+            pr.addAttributes([
+                QgsField('ID', QMetaType.Type.Int),
+                QgsField('Velocity',  QMetaType.Type.Double),
+                QgsField('Direction', QMetaType.Type.Int)
+            ])
+        except:
+            pr.addAttributes([
+                QgsField('ID', QVariant.Int),
+                QgsField('Velocity',  QVariant.Double),
+                QgsField('Direction', QVariant.Int)
+            ])
         vl.updateFields()
         vl.commitChanges()
 
