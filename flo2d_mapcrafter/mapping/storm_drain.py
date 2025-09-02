@@ -21,731 +21,643 @@
  *                                                                         *
  ***************************************************************************/
 """
+
 import os
-
-from PyQt5.QtCore import Qt, QMetaType
-from PyQt5.QtWidgets import QProgressDialog, QApplication, QMessageBox
+import math
+from datetime import datetime
+from qgis.PyQt.QtCore import Qt
+from qgis.PyQt.QtWidgets import QProgressDialog, QApplication
+import matplotlib
+matplotlib.use("Agg")
 from matplotlib import pyplot as plt
-
-from qgis._core import QgsVectorLayer, QgsProject, QgsField, QgsFeature, QgsPointXY, QgsGeometry, \
-    QgsVectorFileWriter, QgsCoordinateReferenceSystem
+from qgis.PyQt.QtCore import QVariant
+from qgis._core import (
+    QgsVectorLayer, QgsProject, QgsField, QgsFeature, QgsPointXY, QgsGeometry,
+    QgsVectorFileWriter, QgsCoordinateReferenceSystem, QgsMessageLog, Qgis
+)
+from ..simple_swmm_parser import SimpleSWMMModel
 
 
 class StormDrainPlots:
-
-    def __init__(self, units_switch, iface):
+    def __init__(self, units_switch, iface, swmm_model=None):
         """
-        Class constructor
-        :param units_switch: 0 english 1 metric
+        :param units_switch: "0" = US customary, "1" = SI
+        :param iface: QGIS iface
+        :param swmm_model: optional SimpleSWMMModel to reuse (caching)
         """
         self.iface = iface
-        self.units_switch = units_switch
+        self.units_switch = str(units_switch)
+        self.model = swmm_model
 
-    def create_plots(self, storm_drain_rbs, flo2d_results_dir, sd_output_dir):
+    # --------
+    # Helpers
+    # --------
+    def _make_progress(self, text: str, maximum: int) -> QProgressDialog:
+        dlg = QProgressDialog(text, "Cancel", 0, max(1, int(maximum)), self.iface.mainWindow())
+        dlg.setWindowTitle("QGIS3")
+        dlg.setWindowModality(Qt.WindowModal)
+        dlg.setMinimumDuration(0)
+        dlg.setAutoClose(True)
+        dlg.setAutoReset(True)
+        dlg.setValue(0)
+        return dlg
+
+    def _read_link_ends_from_inp(self, inp_path):
         """
-        Function to create the plots
+        Very tolerant reader that extracts (link_id, from_node, to_node) from
+        common link sections in the SWMM INP. Ignores comments/blank lines.
+        Returns: dict {link_id: (from_node, to_node)}
         """
+        if not os.path.isfile(inp_path):
+            return {}
+
+        sections = {
+            "[CONDUITS]":  (1, 2), 
+            "[PUMPS]":     (1, 2),
+            "[WEIRS]":     (1, 2),
+            "[ORIFICES]":  (1, 2),
+            "[OUTLETS]":   (1, 2),
+        }
+
+        current = None
+        ends = {}
+
         try:
-            import swmmio
-        except ImportError:
-            message = "The swmmio library is not found in your python environment. This external library is required to " \
-                      "run some processes related to swmm files. More information on: https://swmmio.readthedocs.io/en/latest/.\n\n" \
-                      "Would you like to install it automatically or " \
-                      "manually?\n\nSelect automatic if you have admin rights. Otherwise, contact your admin and " \
-                      "follow the manual steps."
-            title = "External library not found!"
-            button1 = "Automatic"
-            button2 = "Manual"
-
-            msgBox = QMessageBox()
-            msgBox.setWindowTitle(title)
-            msgBox.setText(message)
-            msgBox.setStandardButtons(QMessageBox.Yes | QMessageBox.No | QMessageBox.Close)
-            msgBox.setDefaultButton(QMessageBox.Yes)
-            buttonY = msgBox.button(QMessageBox.Yes)
-            buttonY.setText(button1)
-            buttonN = msgBox.button(QMessageBox.No)
-            buttonN.setText(button2)
-            install_options = msgBox.exec_()
-
-            if install_options == QMessageBox.Yes:
-                QApplication.setOverrideCursor(Qt.WaitCursor)
-                try:
-                    import pathlib as pl
-                    import subprocess
-                    import sys
-
-                    qgis_Path = pl.Path(sys.executable)
-                    qgis_python_path = (qgis_Path.parent / "python3.exe").as_posix()
-
-                    subprocess.check_call(
-                        [qgis_python_path, "-m", "pip", "install", "--user", "swmmio==0.7.1"]
-                    )
-                    import swmmio
-                    QApplication.restoreOverrideCursor()
-
-                except ImportError as e:
-                    QApplication.restoreOverrideCursor()
-                    msgBox = QMessageBox()
-                    msgBox.setText("Error while installing h5py. Install it manually. " + str(e))
-                    msgBox.setWindowTitle("FLO-2D")
-                    icon = QMessageBox.Critical
-                    msgBox.setIcon(icon)
-                    msgBox.exec_()
-
-            # Manual Installation
-            elif install_options == QMessageBox.No:
-                QApplication.restoreOverrideCursor()
-                message = "1. Run OSGeo4W Shell as admin\n" \
-                          "2. Type this command: pip install swmmio==0.7.1\n\n" \
-                          "Wait the process to finish and rerun this process.\n\n" \
-                          "For more information, access https://flo-2d.com/contact/"
-                msgBox = QMessageBox()
-                msgBox.setText(message)
-                msgBox.setWindowTitle("FLO-2D")
-                icon = QMessageBox.Information
-                msgBox.setIcon(icon)
-                msgBox.exec_()
-                return
-            else:
-                return
-
-        was_created = False
-
-        nodes_plots = [
-            "Inflow",
-            "Flooding",
-            "Node Depth",
-            "Head"
-        ]
-
-        links_plots = [
-            "Flow",
-            "Velocity",
-            "Link Depth",
-            "Percent Full"
-        ]
-
-        swmm_inp = swmmio.Model(flo2d_results_dir + r"\swmm.inp")
-        swmm_rpt = flo2d_results_dir + r"\swmm.rpt"
-
-        nname_grid = self.get_nname_grid(flo2d_results_dir)
-
-        for plot in (nodes_plots + links_plots):
-            if plot in nodes_plots:
-                storm_drain_values = storm_drain_rbs.get(plot)
-                if storm_drain_values[0]:
-                    was_created = True
-                    plot_type = nodes_plots.index(plot) + 1
-                    sd_node_output_dir = sd_output_dir + r"\Nodes"
-                    if not os.path.exists(sd_node_output_dir):
-                        os.makedirs(sd_node_output_dir)
-                    nodes = swmm_inp.nodes().index
-                    total_nodes = len(nodes)
-
-                    progDialog = QProgressDialog(f"Creating {plot} plots...", None, 0, total_nodes)
-                    progDialog.setModal(True)
-                    progDialog.setValue(0)
-                    progDialog.show()
-                    i = 0
-                    for node in nodes:
-                        try:
-                            nodes_df = swmmio.dataframe_from_rpt(swmm_rpt, "Node Results", node)
-                            # Create a plot
-                            x_string = list(nodes_df.iloc[:, 0])
-                            x_numeric = [(int(str(t).split(':')[0]) * 60 + int(str(t).split(':')[1])) / 60
-                                         for t in x_string if isinstance(t, str) and ':' in t]
-
-                            plt.clf()
-                            if len(x_numeric) == len(list(nodes_df.iloc[:, plot_type])):
-
-                                if plot_type in [1, 2]:
-                                    if self.units_switch == "0":
-                                        unit = "cfs"
-                                    else:
-                                        unit = "cms"
-                                if plot_type in [3, 4]:
-                                    if self.units_switch == "0":
-                                        unit = "ft"
-                                    else:
-                                        unit = "m"
-
-                                plt.plot(x_numeric, list(nodes_df.iloc[:, plot_type]))
-
-                                if nname_grid.get(node):
-                                    plt.title(f'{node} {nname_grid.get(node)} Node')
-                                else:
-                                    plt.title(f'{node} Node')
-                                plt.xlabel('hours')
-                                plt.ylabel(unit)
-
-                                sd_node_dir = sd_node_output_dir + rf"\{plot}"
-                                if not os.path.exists(sd_node_dir):
-                                    os.makedirs(sd_node_dir)
-
-                                # Save the plot to a file
-                                if nname_grid.get(node):
-                                    plt.savefig(sd_node_dir + fr'\{node}_{nname_grid.get(node)}_Node.png')
-                                else:
-                                    plt.savefig(sd_node_dir + fr'\{node}_Node.png')
-
-                            progDialog.setValue(i)
-                            i += 1
-                        except:
-                            pass
-
-            if plot in links_plots:
-                storm_drain_values = storm_drain_rbs.get(plot)
-                if storm_drain_values[0]:
-                    was_created = True
-                    plot_type = links_plots.index(plot) + 1
-                    sd_link_output_dir = sd_output_dir + r"\Links"
-                    if not os.path.exists(sd_link_output_dir):
-                        os.makedirs(sd_link_output_dir)
-                    links = swmm_inp.links().index
-                    total_links = len(links)
-
-                    progDialog = QProgressDialog(f"Creating {plot} plots...", None, 0, total_links)
-                    progDialog.setModal(True)
-                    progDialog.setValue(0)
-                    progDialog.show()
-                    i = 0
-                    for link in links:
-                        try:
-                            links_df = swmmio.dataframe_from_rpt(swmm_rpt, "Link Results", link)
-                            # Create a plot
-                            x_string = list(links_df.iloc[:, 0])
-                            x_numeric = [(int(str(t).split(':')[0]) * 60 + int(str(t).split(':')[1])) / 60
-                                         for t in x_string if isinstance(t, str) and ':' in t]
-
-                            plt.clf()
-                            if len(x_numeric) == len(list(links_df.iloc[:, plot_type])):
-                                if plot_type == 1:
-                                    if self.units_switch == "0":
-                                        unit = "cfs"
-                                    else:
-                                        unit = "cms"
-                                if plot_type == 2:
-                                    if self.units_switch == "0":
-                                        unit = "fts"
-                                    else:
-                                        unit = "mps"
-                                if plot_type == 3:
-                                    if self.units_switch == "0":
-                                        unit = "ft"
-                                    else:
-                                        unit = "m"
-                                if plot_type == 4:
-                                    unit = "%"
-
-                                plt.plot(x_numeric, list(links_df.iloc[:, plot_type]))
-
-                                # Customize the plot (if needed)
-                                if nname_grid.get(link):
-                                    plt.title(f'{link} {nname_grid.get(link)} Link')
-                                else:
-                                    plt.title(f'{link} Link')
-                                plt.xlabel('hours')
-                                plt.ylabel(unit)
-
-                                sd_link_dir = sd_link_output_dir + rf"\{plot}"
-                                if not os.path.exists(sd_link_dir):
-                                    os.makedirs(sd_link_dir)
-
-                                # Save the plot to a file
-                                if nname_grid.get(link):
-                                    plt.savefig(sd_link_dir + fr'\{link}_{nname_grid.get(link)}_Link.png')
-                                else:
-                                    plt.savefig(sd_link_dir + fr'\{link}_Link.png')
-
-                            progDialog.setValue(i)
-                            i += 1
-                        except:
-                            pass
-
-        return was_created
-
-    def plot_graphics(self, storm_drain_rbs, flo2d_results_dir, sd_output_dir, authid, mapping_group):
-        """
-        Function to create the graphics plot
-        """
-        try:
-            import swmmio
-        except ImportError:
-            message = "The swmmio library is not found in your python environment. This external library is required to " \
-                      "run some processes related to swmm files. More information on: https://swmmio.readthedocs.io/en/v0.6.11/.\n\n" \
-                      "Would you like to install it automatically or " \
-                      "manually?\n\nSelect automatic if you have admin rights. Otherwise, contact your admin and " \
-                      "follow the manual steps."
-            title = "External library not found!"
-            button1 = "Automatic"
-            button2 = "Manual"
-
-            msgBox = QMessageBox()
-            msgBox.setWindowTitle(title)
-            msgBox.setText(message)
-            msgBox.setStandardButtons(QMessageBox.Yes | QMessageBox.No | QMessageBox.Close)
-            msgBox.setDefaultButton(QMessageBox.Yes)
-            buttonY = msgBox.button(QMessageBox.Yes)
-            buttonY.setText(button1)
-            buttonN = msgBox.button(QMessageBox.No)
-            buttonN.setText(button2)
-            install_options = msgBox.exec_()
-
-            if install_options == QMessageBox.Yes:
-                QApplication.setOverrideCursor(Qt.WaitCursor)
-                try:
-                    import pathlib as pl
-                    import subprocess
-                    import sys
-
-                    qgis_Path = pl.Path(sys.executable)
-                    qgis_python_path = (qgis_Path.parent / "python3.exe").as_posix()
-
-                    subprocess.check_call(
-                        [qgis_python_path, "-m", "pip", "install", "--user", "swmmio==0.7.1"]
-                    )
-                    import swmmio
-                    QApplication.restoreOverrideCursor()
-
-                except ImportError as e:
-                    QApplication.restoreOverrideCursor()
-                    msgBox = QMessageBox()
-                    msgBox.setText("Error while installing h5py. Install it manually. " + str(e))
-                    msgBox.setWindowTitle("FLO-2D")
-                    icon = QMessageBox.Critical
-                    msgBox.setIcon(icon)
-                    msgBox.exec_()
-
-            # Manual Installation
-            elif install_options == QMessageBox.No:
-                QApplication.restoreOverrideCursor()
-                message = "1. Run OSGeo4W Shell as admin\n" \
-                          "2. Type this command: pip install swmmio==0.7.1\n\n" \
-                          "Wait the process to finish and rerun this process.\n\n" \
-                          "For more information, access https://flo-2d.com/contact/"
-                msgBox = QMessageBox()
-                msgBox.setText(message)
-                msgBox.setWindowTitle("FLO-2D")
-                icon = QMessageBox.Information
-                msgBox.setIcon(icon)
-                msgBox.exec_()
-                return
-            else:
-                return
-
-        graphics_plots = [
-            "Hours Flooded",
-            "Maximum Flooding",
-            "Total Flooding",
-            "Maximum Pond"
-        ]
-
-        sd_output_dir = os.path.join(sd_output_dir, "Graphics")
-        if not os.path.exists(sd_output_dir):
-            os.makedirs(sd_output_dir)
-
-        for plot in graphics_plots:
-            storm_drain_values = storm_drain_rbs.get(plot)
-            if storm_drain_values[0]:
-                storm_drain_group_name = "Storm Drain"
-                if mapping_group.findGroup(storm_drain_group_name):
-                    storm_drain_group = mapping_group.findGroup(storm_drain_group_name)
-                else:
-                    storm_drain_group = mapping_group.insertGroup(0, storm_drain_group_name)
-
-                mymodel = swmmio.Model(flo2d_results_dir)
-
-                nodes = swmmio.Nodes(
-                    model=mymodel,
-                    inp_sections=['junctions', 'storages', 'outfalls'],
-                    rpt_sections=['Node Flooding Summary'],
-                )
-
-                # access data
-                nodes = nodes.dataframe
-
-                if plot == "Hours Flooded":
-                    filtered_nodes = nodes.loc[nodes.HoursFlooded > float(storm_drain_values[1])]
-                    if not filtered_nodes.empty:
-                        flooded_series = nodes.loc[nodes.HoursFlooded > float(storm_drain_values[1]), 'TotalFloodVol']
-                        flood_vol = sum(flooded_series)  # total flood volume (million gallons)
-                        flooded_count = len(flooded_series)  # count of flooded nodes
-
-                        nodes['draw_color'] = '#787882'  # default node color
-                        nodes.loc[nodes.HoursFlooded > float(storm_drain_values[1]), 'draw_color'] = '#FF0000'
-                        nodes.loc[nodes.HoursFlooded > float(storm_drain_values[1]), 'draw_size'] = 10
-
-                        links = mymodel.links.dataframe
-                        links['draw_color'] = '#787882'
-                        links['draw_size'] = 2
-
-                        # Ensure CRS is properly set
-                        crs = QgsCoordinateReferenceSystem(authid)
-
-                        # Create a memory layer for the nodes with proper CRS
-                        vl = QgsVectorLayer("Point?crs=" + crs.authid(), f'HoursFlooded_{storm_drain_values[1]}',
-                                            "memory")
-                        pr = vl.dataProvider()
-
-                        # Define fields for the shapefile
-                        pr.addAttributes([QgsField("X", QMetaType.Type.Double),
-                                          QgsField("Y", QMetaType.Type.Double),
-                                          QgsField("HoursFlooded", QMetaType.Type.Double, len=10, prec=4),
-                                          QgsField("TotalFloodVol", QMetaType.Type.Double, len=10, prec=4)])
-                        vl.updateFields()
-
-                        # Add features (geometry and attributes) to the layer
-                        for idx, row in filtered_nodes.iterrows():
-                            feature = QgsFeature()
-                            point = QgsPointXY(float(row['X']), float(row['Y']))
-                            feature.setGeometry(QgsGeometry.fromPointXY(point))
-                            feature.setAttributes([row['X'], row['Y'], round(row['HoursFlooded'], 4), round(row['TotalFloodVol'], 4)])
-                            pr.addFeature(feature)
-
-                        vl.updateExtents()
-
-                        # Save the memory layer as a shapefile
-                        output_shapefile = os.path.join(sd_output_dir, rf'HoursFlooded_{storm_drain_values[1]}.shp')
-                        # Save the shapefile
-                        options = QgsVectorFileWriter.SaveVectorOptions()
-                        options.driverName = "ESRI Shapefile"
-                        options.layerName = f'HoursFlooded_{storm_drain_values[1]}'
-                        options.fileEncoding = 'utf-8'
-
-                        coordinateTransformContext = QgsProject.instance().transformContext()
-
-                        QgsVectorFileWriter.writeAsVectorFormatV3(vl, output_shapefile, coordinateTransformContext, options)
-
-                        layer = QgsVectorLayer(output_shapefile, f'HoursFlooded_{storm_drain_values[1]}', "ogr")
-                        QgsProject.instance().addMapLayer(layer, False)
-                        storm_drain_group.insertLayer(0, layer)
-
-                        # Add an informative annotation, and draw:
-                        file = sd_output_dir + rf'\HoursFlooded_{storm_drain_values[1]}.png'
-                        annotation = 'Flooded Volume: {}MG\nTotal Nodes:{}'.format(round(flood_vol), flooded_count)
-                        swmmio.draw_model(model=None, nodes=nodes, conduits=links, parcels=None, title=annotation,
-                                          annotation=None, file_path=file, bbox=None, px_width=2048.0)
-
-                if plot == "Maximum Flooding":
-                    filtered_nodes = nodes.loc[nodes.MaxQFlooding > float(storm_drain_values[1])]
-                    if not filtered_nodes.empty:
-
-                        # nodes in a graphic
-                        nodes['draw_color'] = '#787882'  # grey
-                        nodes.loc[nodes.MaxQFlooding > float(storm_drain_values[1]), 'draw_color'] = '#FF0000'
-                        nodes.loc[nodes.MaxQFlooding > float(storm_drain_values[1]), 'draw_size'] = 10
-                        nodes_count = len(nodes.loc[nodes.MaxQFlooding > float(storm_drain_values[1])])
-
-                        links = mymodel.links.dataframe
-                        links['draw_color'] = '#787882'  # grey
-                        links['draw_size'] = 2
-
-                        # Set up CRS
-                        crs = QgsCoordinateReferenceSystem(authid)
-
-                        # Create a memory layer for the nodes with proper CRS
-                        vl = QgsVectorLayer("Point?crs=" + crs.authid(), f'MaxQFlooding_{storm_drain_values[1]}',
-                                            "memory")
-                        pr = vl.dataProvider()
-
-                        # Define fields for the shapefile
-                        pr.addAttributes([QgsField("X", QMetaType.Type.Double),
-                                          QgsField("Y", QMetaType.Type.Double),
-                                          QgsField("MaxQFlooding", QMetaType.Type.Double, len=10, prec=4)])
-                        vl.updateFields()
-
-                        # Add features (geometry and attributes) to the layer
-                        for idx, row in filtered_nodes.iterrows():
-                            feature = QgsFeature()
-                            point = QgsPointXY(float(row['X']), float(row['Y']))
-                            feature.setGeometry(QgsGeometry.fromPointXY(point))
-                            feature.setAttributes([row['X'], row['Y'], round(row['MaxQFlooding'], 4)])
-                            pr.addFeature(feature)
-
-                        vl.updateExtents()
-
-                        # Save the memory layer as a shapefile
-                        output_shapefile = os.path.join(sd_output_dir, rf'MaxQFlooding_{storm_drain_values[1]}.shp')
-
-                        # Save the shapefile using QgsVectorFileWriter
-                        options = QgsVectorFileWriter.SaveVectorOptions()
-                        options.driverName = "ESRI Shapefile"
-                        options.layerName = f'MaxQFlooding_{storm_drain_values[1]}'
-                        options.fileEncoding = 'utf-8'
-
-                        coordinateTransformContext = QgsProject.instance().transformContext()
-
-                        QgsVectorFileWriter.writeAsVectorFormatV3(vl, output_shapefile, coordinateTransformContext,
-                                                                  options)
-
-                        # add an informative annotation, and draw:
-                        file = sd_output_dir + rf'\MaxQFlooding_{storm_drain_values[1]}.png'
-                        annotation = f'Total Nodes: {nodes_count}'
-                        swmmio.draw_model(model=None, nodes=nodes, conduits=links, parcels=None, title=annotation,
-                                          annotation=None, file_path=file, bbox=None, px_width=2048.0)
-
-                        layer = QgsVectorLayer(output_shapefile, f'MaxQFlooding_{storm_drain_values[1]}', "ogr")
-                        QgsProject.instance().addMapLayer(layer, False)
-                        storm_drain_group.insertLayer(0, layer)
-
-                # TotalFloodVol
-                if plot == 'Total Flooding':
-                    filtered_nodes = nodes.loc[nodes.TotalFloodVol > float(storm_drain_values[1])]
-                    if not filtered_nodes.empty:
-                        # nodes in a graphic
-                        nodes['draw_color'] = '#787882'  # grey
-                        nodes.loc[nodes.TotalFloodVol > float(storm_drain_values[1]), 'draw_color'] = '#FF0000'
-                        nodes.loc[nodes.TotalFloodVol > float(storm_drain_values[1]), 'draw_size'] = 10
-
-                        nodes_count = len(nodes.loc[nodes.TotalFloodVol > float(storm_drain_values[1])])
-
-                        links = mymodel.links.dataframe
-                        links['draw_color'] = '#787882'  # grey
-                        links['draw_size'] = 2
-
-                        # Set up CRS
-                        crs = QgsCoordinateReferenceSystem(authid)
-
-                        # Create a memory layer for the nodes with proper CRS
-                        vl = QgsVectorLayer("Point?crs=" + crs.authid(), f'TotalFloodVol_{storm_drain_values[1]}',
-                                            "memory")
-                        pr = vl.dataProvider()
-
-                        # Define fields for the shapefile
-                        pr.addAttributes([QgsField("X", QMetaType.Type.Double),
-                                          QgsField("Y", QMetaType.Type.Double),
-                                          QgsField("TotalFloodVol", QMetaType.Type.Double, len=10, prec=4)])
-                        vl.updateFields()
-
-                        # Add features (geometry and attributes) to the layer
-                        for idx, row in filtered_nodes.iterrows():
-                            feature = QgsFeature()
-                            point = QgsPointXY(float(row['X']), float(row['Y']))
-                            feature.setGeometry(QgsGeometry.fromPointXY(point))
-                            feature.setAttributes([row['X'], row['Y'], round(row['TotalFloodVol'], 4)])
-                            pr.addFeature(feature)
-
-                        vl.updateExtents()
-
-                        # Save the memory layer as a shapefile
-                        output_shapefile = os.path.join(sd_output_dir, rf'TotalFloodVol_{storm_drain_values[1]}.shp')
-
-                        # Save the shapefile using QgsVectorFileWriter
-                        options = QgsVectorFileWriter.SaveVectorOptions()
-                        options.driverName = "ESRI Shapefile"
-                        options.layerName = f'TotalFloodVol_{storm_drain_values[1]}'
-                        options.fileEncoding = 'utf-8'
-
-                        coordinateTransformContext = QgsProject.instance().transformContext()
-
-                        QgsVectorFileWriter.writeAsVectorFormatV3(vl, output_shapefile, coordinateTransformContext,
-                                                                  options)
-
-                        # add an informative annotation, and draw:
-                        file = sd_output_dir + rf'\TotalFloodVol_{storm_drain_values[1]}.png'
-                        annotation = f'Total Nodes: {nodes_count}'
-                        swmmio.draw_model(model=None, nodes=nodes, conduits=links, parcels=None, title=annotation,
-                                          annotation=None, file_path=file, bbox=None, px_width=2048.0)
-
-                        layer = QgsVectorLayer(output_shapefile, f'TotalFloodVol_{storm_drain_values[1]}', "ogr")
-                        QgsProject.instance().addMapLayer(layer, False)
-                        storm_drain_group.insertLayer(0, layer)
-
-                        # return [output_shapefile, f'TotalFloodVol_{storm_drain_values[1]}']
-
-                if plot == "Maximum Pond":
-                    filtered_nodes = nodes.loc[nodes.MaximumPondDepth > float(storm_drain_values[1])]
-                    if not filtered_nodes.empty:
-                        # nodes in a graphic
-                        nodes['draw_color'] = '#787882'  # grey
-                        nodes.loc[nodes.MaximumPondDepth > float(storm_drain_values[1]), 'draw_color'] = '#FF0000'
-                        nodes.loc[nodes.MaximumPondDepth > float(storm_drain_values[1]), 'draw_size'] = 10
-                        nodes_count = len(nodes.loc[nodes.MaximumPondDepth > float(storm_drain_values[1])])
-
-                        links = mymodel.links.dataframe
-                        links['draw_color'] = '#787882'  # grey
-                        links['draw_size'] = 2
-
-                        # Set up CRS
-                        crs = QgsCoordinateReferenceSystem(authid)
-
-                        # Create a memory layer for the nodes with proper CRS
-                        vl = QgsVectorLayer("Point?crs=" + crs.authid(), f'MaximumPondDepth_{storm_drain_values[1]}',
-                                            "memory")
-                        pr = vl.dataProvider()
-
-                        # Define fields for the shapefile
-                        pr.addAttributes([QgsField("X", QMetaType.Type.Double),
-                                          QgsField("Y", QMetaType.Type.Double),
-                                          QgsField("MaximumPondDepth", QMetaType.Type.Double, len=10, prec=4)])
-                        vl.updateFields()
-
-                        # Add features (geometry and attributes) to the layer
-                        for idx, row in filtered_nodes.iterrows():
-                            feature = QgsFeature()
-                            point = QgsPointXY(float(row['X']), float(row['Y']))
-                            feature.setGeometry(QgsGeometry.fromPointXY(point))
-                            feature.setAttributes([row['X'], row['Y'], round(row['MaximumPondDepth'], 4)])
-                            pr.addFeature(feature)
-
-                        vl.updateExtents()
-
-                        # Save the memory layer as a shapefile
-                        output_shapefile = os.path.join(sd_output_dir, rf'MaximumPondDepth_{storm_drain_values[1]}.shp')
-
-                        # Save the shapefile using QgsVectorFileWriter
-                        options = QgsVectorFileWriter.SaveVectorOptions()
-                        options.driverName = "ESRI Shapefile"
-                        options.layerName = f'MaximumPondDepth_{storm_drain_values[1]}'
-                        options.fileEncoding = 'utf-8'
-
-                        coordinateTransformContext = QgsProject.instance().transformContext()
-
-                        QgsVectorFileWriter.writeAsVectorFormatV3(vl, output_shapefile, coordinateTransformContext,
-                                                                  options)
-
-                        # add an informative annotation, and draw:
-                        file = sd_output_dir + rf'\MaximumPondDepth_{storm_drain_values[1]}.png'
-                        annotation = f'Total Nodes: {nodes_count}'
-                        swmmio.draw_model(model=None, nodes=nodes, conduits=links, parcels=None, title=annotation,
-                                          annotation=None, file_path=file, bbox=None, px_width=2048.0)
-
-                        layer = QgsVectorLayer(output_shapefile, f'MaximumPondDepth_{storm_drain_values[1]}', "ogr")
-                        QgsProject.instance().addMapLayer(layer, False)
-                        storm_drain_group.insertLayer(0, layer)
-
-                        # return [output_shapefile, f'MaximumPondDepth_{storm_drain_values[1]}']
-
-    def storm_drain_profile(self, storm_drain_rbs, flo2d_results_dir, sd_output_dir, plot=False):
-        """
-        Function to plot the storm drain profile
-        """
-        try:
-            import swmmio
-        except ImportError:
-            message = "The swmmio library is not found in your python environment. This external library is required to " \
-                      "run some processes related to swmm files. More information on: https://swmmio.readthedocs.io/en/v0.6.11/.\n\n" \
-                      "Would you like to install it automatically or " \
-                      "manually?\n\nSelect automatic if you have admin rights. Otherwise, contact your admin and " \
-                      "follow the manual steps."
-            title = "External library not found!"
-            button1 = "Automatic"
-            button2 = "Manual"
-
-            msgBox = QMessageBox()
-            msgBox.setWindowTitle(title)
-            msgBox.setText(message)
-            msgBox.setStandardButtons(QMessageBox.Yes | QMessageBox.No | QMessageBox.Close)
-            msgBox.setDefaultButton(QMessageBox.Yes)
-            buttonY = msgBox.button(QMessageBox.Yes)
-            buttonY.setText(button1)
-            buttonN = msgBox.button(QMessageBox.No)
-            buttonN.setText(button2)
-            install_options = msgBox.exec_()
-
-            if install_options == QMessageBox.Yes:
-                QApplication.setOverrideCursor(Qt.WaitCursor)
-                try:
-                    import pathlib as pl
-                    import subprocess
-                    import sys
-
-                    qgis_Path = pl.Path(sys.executable)
-                    qgis_python_path = (qgis_Path.parent / "python3.exe").as_posix()
-
-                    subprocess.check_call(
-                        [qgis_python_path, "-m", "pip", "install", "--user", "swmmio==0.7.1"]
-                    )
-                    import swmmio
-                    QApplication.restoreOverrideCursor()
-
-                except ImportError as e:
-                    QApplication.restoreOverrideCursor()
-                    msgBox = QMessageBox()
-                    msgBox.setText("Error while installing h5py. Install it manually. " + str(e))
-                    msgBox.setWindowTitle("FLO-2D")
-                    icon = QMessageBox.Critical
-                    msgBox.setIcon(icon)
-                    msgBox.exec_()
-
-            # Manual Installation
-            elif install_options == QMessageBox.No:
-                QApplication.restoreOverrideCursor()
-                message = "1. Run OSGeo4W Shell as admin\n" \
-                          "2. Type this command: pip install swmmio==0.7.1\n\n" \
-                          "Wait the process to finish and rerun this process.\n\n" \
-                          "For more information, access https://flo-2d.com/contact/"
-                msgBox = QMessageBox()
-                msgBox.setText(message)
-                msgBox.setWindowTitle("FLO-2D")
-                icon = QMessageBox.Information
-                msgBox.setIcon(icon)
-                msgBox.exec_()
-                return
-            else:
-                return
-
-        # storm_drain_values = storm_drain_rbs.get("Profile")
-        # if storm_drain_values[0]:
-        #     mymodel = swmmio.Model(flo2d_results_dir)
-        #     rpt = swmmio.rpt(flo2d_results_dir + r'\swmm.rpt')
-        #
-        #     plt.clf()
-        #     plt.close()
-        #     fig = plt.figure(figsize=(11, 9))
-        #     ax = fig.add_subplot(1, 1, 1)
-        #
-        #     try:
-        #         path_selection = swmmio.find_network_trace(mymodel, storm_drain_values[1], storm_drain_values[2])
-        #         max_depth = rpt.node_depth_summary.MaxNodeDepth
-        #         ave_depth = rpt.node_depth_summary.AvgDepth
-        #     except:
-        #         self.iface.messageBar().pushMessage("No path found!", level=Qgis.Warning, duration=5)
-        #         plt.clf()
-        #         plt.close()
-        #         return
-        #     profile_config = swmmio.build_profile_plot(ax, mymodel, path_selection)
-        #     swmmio.add_hgl_plot(ax, profile_config, depth=max_depth, color='red', label="Maximum Depth")
-        #     swmmio.add_hgl_plot(ax, profile_config, depth=ave_depth, label="Average Depth")
-        #     swmmio.add_node_labels_plot(ax, mymodel, profile_config)
-        #     swmmio.add_link_labels_plot(ax, mymodel, profile_config)
-        #     ax.legend(loc='best')
-        #     ax.grid('xy')
-        #     ax.get_xaxis().set_ticklabels([])
-        #
-        #     if self.units_switch == "0":
-        #         unit = "ft"
-        #     else:
-        #         unit = "m"
-        #
-        #     ax.set_xlabel(f"Length ({unit})")
-        #     ax.set_ylabel(f"Elevation ({unit})")
-        #
-        #     fig.tight_layout()
-        #     if plot:
-        #         sd_profile_dir = sd_output_dir + fr"\Profile"
-        #         if not os.path.exists(sd_profile_dir):
-        #             os.makedirs(sd_profile_dir)
-        #         fig.savefig(sd_profile_dir + rf"\{storm_drain_values[1]} - {storm_drain_values[2]}.png")
-        #     plt.show()
+            with open(inp_path, "r", encoding="utf-8", errors="ignore") as f:
+                for raw in f:
+                    line = raw.strip()
+                    if not line or line.startswith(";"):
+                        continue
+                    if line.startswith("[") and line.endswith("]"):
+                        current = line.upper()
+                        continue
+                    if current in sections:
+                        parts = line.split()
+                        if len(parts) < 3 or parts[0].startswith(";"):
+                            continue
+                        link_id = parts[0]
+                        fi, ti = sections[current]
+                        if len(parts) > max(fi, ti):
+                            ends[link_id] = (parts[fi], parts[ti])
+        except Exception:
+
+            pass
+
+        return ends
 
     def get_nname_grid(self, flo2d_results_dir):
         """
-        Function to get a dictionary {"node name":"grid"}
+        Optional helper used only to append grid labels to filenames.
+        Safe fallback returns {} if no recognizable file is found.
         """
-        swmmflo = flo2d_results_dir + r"\SWMMFLO.DAT"
-        swmmoutf = flo2d_results_dir + r"\SWMMOUTF.DAT"
+        try:
+            return {}
+        except Exception:
+            return {}
 
-        nname_grid = {}
+    def _decimate(self, x, y, max_points=1500):
+        n = len(x)
+        if n <= max_points:
+            return x, y
+        step = max(1, n // max_points)
+        return x[::step], y[::step]
 
-        with open(swmmflo, 'r') as file:
-            for line in file:
-                line = line.split()
-                nname_grid[line[2]] = line[1]
-        with open(swmmoutf, 'r') as file:
-            for line in file:
-                line = line.split()
-                nname_grid[line[0]] = line[1]
+    def _series_has_activity(self, seq):
+        # True if any non-NaN, non-zero exists
+        for v in seq:
+            if v == v and v != 0.0:
+                return True
+        return False
 
-        return nname_grid
+    # Build node metrics from time-series when RPT summary is missing
+    def _compute_node_metrics_from_ts(self, model):
+        """
+        Returns per-node metrics:{ nid: {hours_flooded, max_rate, total_volume, max_depth} }
+        total_volume: MG (US) or ML (SI), using flooding Q integrated over time.
+        """
+        is_us = (self.units_switch == "0")
+        metrics = {}
+        node_ts = getattr(model, "node_ts", {}) or {}
+
+        for nid, ts in node_ts.items():
+            t = ts.get("t_hours") or []
+            flooding = ts.get("flooding") or []
+            depth = ts.get("depth") or []
+
+            if not t or not flooding:
+                continue
+
+            total_v = 0.0  # ft^3 or m^3
+            hours_flooded = 0.0
+            max_rate = 0.0
+            max_depth = 0.0
+
+            for q in flooding:
+                if q == q and q > max_rate:
+                    max_rate = q
+            for d in depth or []:
+                if d == d and d > max_depth:
+                    max_depth = d
+
+            for i in range(1, len(t)):
+                dt_h = t[i] - t[i - 1]
+                if dt_h <= 0:
+                    continue
+                dt_s = dt_h * 3600.0
+                q0 = flooding[i - 1]; q1 = flooding[i]
+                q0 = 0.0 if q0 != q0 else q0
+                q1 = 0.0 if q1 != q1 else q1
+                q_avg = 0.5 * (q0 + q1)
+                total_v += q_avg * dt_s
+                if q0 > 0.0 or q1 > 0.0:
+                    hours_flooded += dt_h
+
+            if is_us:
+                # ft^3 -> gallons -> million gallons
+                total_vol = total_v * 7.48051945 / 1_000_000.0
+            else:
+                # m^3 -> ML (10^6 L)
+                total_vol = total_v / 1_000.0
+
+            metrics[nid] = {
+                "hours_flooded": hours_flooded,
+                "max_rate": max_rate,
+                "total_volume": total_vol,
+                "max_depth": max_depth,
+            }
+        return metrics
+        
+    def _ensure_matplotlib(self):
+        try:
+            matplotlib.get_backend()
+        except Exception:
+            pass
+        matplotlib.use("Agg")
+
+    def _draw_overview_png(self, model, selected_ids, out_png_path, title=None, subtitle=None):
+        """
+        Draw an 'overview':
+          - light background
+          - grey pipe network as linework
+          - red points for selected nodes
+          - optional title (center-top), subtitle (UL), timestamp (UR)
+        Uses link endpoints from model.link_results when present,
+        otherwise falls back to parsing the INP.
+        """
+        self._ensure_matplotlib()
+        #import matplotlib.pyplot as plt
+        #from datetime import datetime
+
+        node_xy = getattr(model, "node_xy", {}) or {}
+        link_results = getattr(model, "link_results", {}) or {}
+
+        # Build list of (from_node, to_node)
+        edges = []
+
+        # 1) Try RPT-derived endpoints
+        try:
+            for lid, attrs in link_results.items():
+                a = attrs.get("from_node")
+                b = attrs.get("to_node")
+                if a and b:
+                    edges.append((a, b))
+        except Exception:
+            pass
+
+        # 2) Fallback: parse INP for endpoints if none found
+        if not edges:
+            try:
+                ends = self._read_link_ends_from_inp(model.inp_path)
+                for _, (a, b) in ends.items():
+                    if a and b:
+                        edges.append((a, b))
+            except Exception:
+                edges = []
+
+        # Figure + axes with light background
+        fig = plt.figure(figsize=(9, 9), facecolor="#f7f5ef")
+        ax = fig.add_subplot(111)
+        ax.set_facecolor("#f7f5ef")
+        ax.axis("off")
+
+        # Draw pipe network as thin grey segments
+        if edges:
+            for a, b in edges:
+                pa = node_xy.get(a)
+                pb = node_xy.get(b)
+                if not pa or not pb:
+                    continue
+                try:
+                    x1, y1 = float(pa[0]), float(pa[1])
+                    x2, y2 = float(pb[0]), float(pb[1])
+                except Exception:
+                    continue
+                ax.plot([x1, x2], [y1, y2], color="#9e9e9e", linewidth=0.6, zorder=1)
+
+        # Selected nodes (threshold-passing)
+        xs_sel, ys_sel = [], []
+        for nid in (selected_ids or []):
+            xy = node_xy.get(nid)
+            if xy:
+                try:
+                    xs_sel.append(float(xy[0])); ys_sel.append(float(xy[1]))
+                except Exception:
+                    continue
+        if xs_sel:
+            ax.scatter(xs_sel, ys_sel, s=18, color="#d62728", zorder=2)
+
+        # Titles / stamps
+        if title:
+            ax.set_title(title, pad=8)
+        if subtitle:
+            fig.text(0.01, 0.98, subtitle, ha='left', va='top', fontsize=12)
+        fig.text(0.99, 0.98, datetime.now().strftime('%b-%d-%Y %H:%M:%S'),
+                 ha='right', va='top', fontsize=9)
+
+        ax.set_aspect('equal', adjustable='datalim')
+        fig.tight_layout(pad=0.2)
+        fig.savefig(out_png_path, dpi=150)
+        plt.close(fig)
+
+    # -------------------------------
+    # PNG time-series plots
+    # -------------------------------
+    def create_plots(self, storm_drain_rbs, flo2d_results_dir, sd_output_dir):
+        """
+        Create time-series PNG plots for selected node/link metrics using SimpleSWMMModel.
+        Returns True if at least one plot was created.
+        """
+
+        # Resolve input files
+        inp = os.path.join(flo2d_results_dir, "swmm.inp")
+        rpt = os.path.join(flo2d_results_dir, "swmm.rpt")
+        if not os.path.isfile(inp): inp = os.path.join(flo2d_results_dir, "SWMM.INP")
+        if not os.path.isfile(rpt): rpt = os.path.join(flo2d_results_dir, "SWMM.RPT")
+
+        # Parse
+        model = self.model or SimpleSWMMModel(inp, rpt)
+        self.model = model  # cache for later use in this session
+
+        # Use only IDs that actually have time-series
+        nodes = sorted((model.node_ts or {}).keys())
+        links = sorted((model.link_ts or {}).keys())
+
+        # Optional labels (grid IDs etc.)
+        try:
+            nname_grid = self.get_nname_grid(flo2d_results_dir)
+        except Exception:
+            nname_grid = {}
+
+        # Diagnostics
+        node_ts_count = sum(1 for ts in (model.node_ts or {}).values() if ts.get("t_hours"))
+        link_ts_count = sum(1 for ts in (model.link_ts or {}).values() if ts.get("t_hours"))
+        '''QgsMessageLog.logMessage(
+            f"SWMM time-series: nodes={node_ts_count}, links={link_ts_count}",
+            'FLO-2D', Qgis.Info
+        )'''
+
+        was_created = False
+        SAVE_DPI = 80
+
+        # ---------------- Nodes ----------------
+        node_specs = [
+            ("Inflow",     "inflow"),    # cfs/cms
+            ("Flooding",   "flooding"),  # cfs/cms
+            ("Node Depth", "depth"),     # ft/m
+            ("Head",       "head"),      # ft/m
+        ]
+        node_root = os.path.join(sd_output_dir, "Nodes")
+        os.makedirs(node_root, exist_ok=True)
+
+        for plot_name, key in node_specs:
+            sel = storm_drain_rbs.get(plot_name)
+            if not sel or not sel[0]:
+                continue
+
+            out_dir = os.path.join(node_root, plot_name)
+            wrote_any = False
+
+            unit = ("cfs" if str(self.units_switch) == "0" else "cms") if key in ("inflow", "flooding") \
+                   else ("ft"  if str(self.units_switch) == "0" else "m")
+
+            fig, ax = plt.subplots(figsize=(7, 4))
+            (line,) = ax.plot([], [])
+            ax.set_xlabel("hours"); ax.set_ylabel(unit)
+
+            dlg = self._make_progress(f"Creating {plot_name} plots...", len(nodes))
+            i = 0  # progress counter
+
+            for i, node in enumerate(nodes, 1):
+                ts = model.node_ts.get(node)
+                if not ts:
+                    continue
+                x = ts.get("t_hours") or []
+                y = ts.get(key) or []
+                if not x or not y or len(x) != len(y):
+                    continue
+
+                xd, yd = self._decimate(x, y)
+                line.set_data(xd, yd)
+                ax.relim(); ax.autoscale_view()
+
+                label = nname_grid.get(node)
+                ax.set_title(f"{node} {label} Node" if label else f"{node} Node")
+
+                if not wrote_any:
+                    os.makedirs(out_dir, exist_ok=True)
+                    wrote_any = True
+
+                fn = f"{node}_{label}_Node.png" if label else f"{node}_Node.png"
+                out_png = os.path.join(out_dir, fn)
+                fig.savefig(out_png, dpi=SAVE_DPI)
+                was_created = True
+
+                # progress update
+                if (i % 10 == 0) or (i == len(nodes)):
+                    dlg.setValue(i)
+                    QApplication.processEvents()
+                if dlg.wasCanceled():
+                    break
+
+            # finalize progress dialog AFTER the loop
+            dlg.setValue(min(i, len(nodes)))
+            dlg.close()
+
+            plt.close(fig)
+            '''if wrote_any:
+                QgsMessageLog.logMessage(
+                    f"Node plots '{plot_name}': wrote images in {out_dir}",
+                    'FLO-2D', Qgis.Info
+                )'''
+
+        # ---------------- Links ----------------
+        link_specs = [
+            ("Flow",         "flow"),         # cfs/cms
+            ("Velocity",     "velocity"),     # ft/s or m/s
+            ("Link Depth",   "depth"),        # ft/m
+            ("Percent Full", "percent_full"), # %
+        ]
+        link_root = os.path.join(sd_output_dir, "Links")
+        os.makedirs(link_root, exist_ok=True)
+
+        for plot_name, key in link_specs:
+            sel = storm_drain_rbs.get(plot_name)
+            if not sel or not sel[0]:
+                continue
+
+            if key == "flow":
+                unit = "cfs" if str(self.units_switch) == "0" else "cms"
+            elif key == "velocity":
+                unit = "ft/s" if str(self.units_switch) == "0" else "m/s"
+            elif key == "depth":
+                unit = "ft" if str(self.units_switch) == "0" else "m"
+            else:
+                unit = "%"
+
+            out_dir = os.path.join(link_root, plot_name)
+            wrote_any = False
+
+            fig, ax = plt.subplots(figsize=(7, 4))
+            (line,) = ax.plot([], [])
+            ax.set_xlabel("hours"); ax.set_ylabel(unit)
+
+            dlg = self._make_progress(f"Creating {plot_name} plots...", len(links))
+            i = 0  # progress counter
+
+            for i, link in enumerate(links, 1):
+                ts = model.link_ts.get(link)
+                if not ts:
+                    continue
+                x = ts.get("t_hours") or []
+                y = ts.get(key) or []
+                if not x or not y or len(x) != len(y):
+                    continue
+
+                xd, yd = self._decimate(x, y)
+                line.set_data(xd, yd)
+                ax.relim(); ax.autoscale_view()
+                ax.set_title(f"{link} Link")
+
+                if not wrote_any:
+                    os.makedirs(out_dir, exist_ok=True)
+                    wrote_any = True
+
+                fn = f"{link}_Link.png"
+                out_png = os.path.join(out_dir, fn)
+                fig.savefig(out_png, dpi=SAVE_DPI)
+                was_created = True
+
+                # progress update
+                if (i % 10 == 0) or (i == len(links)):
+                    dlg.setValue(i)
+                    QApplication.processEvents()
+                if dlg.wasCanceled():
+                    break
+
+            # finalize progress dialog AFTER the loop
+            dlg.setValue(min(i, len(links)))
+            dlg.close()
+
+            plt.close(fig)
+            '''if wrote_any:
+                QgsMessageLog.logMessage(
+                    f"Link plots '{plot_name}': wrote images in {out_dir}",
+                    'FLO-2D', Qgis.Info
+                )'''
+
+        return was_created
+
+    # -------------------------------
+    # Graphics layers (points) from metrics
+    # -------------------------------
+    def plot_graphics(self, storm_drain_rbs, flo2d_results_dir, sd_output_dir, authid, mapping_group):
+        """
+        Create thresholded point layers + overview PNGs for Storm Drain 'Graphics'
+        (Hours Flooded, Max Flooding Rate, Total Flooding Volume, Maximum Pond).
+        """
+        # --- Ensure model from the same folder (case-insensitive) ---
+        inp = os.path.join(flo2d_results_dir, "swmm.inp")
+        rpt = os.path.join(flo2d_results_dir, "swmm.rpt")
+        if not os.path.isfile(inp): inp = os.path.join(flo2d_results_dir, "SWMM.INP")
+        if not os.path.isfile(rpt): rpt = os.path.join(flo2d_results_dir, "SWMM.RPT")
+
+        model = self.model or SimpleSWMMModel(inp, rpt)
+        self.model = model
+
+        # --- Metrics: prefer time-series-derived; fallback to parsed summaries ---
+        ts_metrics = self._compute_node_metrics_from_ts(model)
+        base_metrics = ts_metrics if ts_metrics else (model.node_results or {})
+
+        graphics_dir = os.path.join(sd_output_dir, "Graphics")
+        os.makedirs(graphics_dir, exist_ok=True)
+
+        storm_drain_group_name = "Storm Drain"
+        storm_drain_group = (mapping_group.findGroup(storm_drain_group_name)
+                             or mapping_group.insertGroup(0, storm_drain_group_name))
+
+        key_map = {
+            "Hours Flooded":   ("hours_flooded", "HoursFlooded"),
+            "Maximum Flooding":("max_rate",      "MaxRate"),
+            "Total Flooding":  ("total_volume",  "TotalVol"),
+            "Maximum Pond":    ("max_depth",     "MaxDepth"),
+        }
+
+        crs = QgsCoordinateReferenceSystem(authid)
+        TOPN_FALLBACK = 100  # export top-N if nothing passes threshold
+
+        total_with_metrics = len(base_metrics)
+
+        for plot, (key, field_name) in key_map.items():
+            vals = storm_drain_rbs.get(plot)
+            if not vals or not vals[0]:
+                continue
+            try:
+                threshold = float(vals[1])
+            except Exception:
+                threshold = None
+
+            '''QgsMessageLog.logMessage(
+                f"[Graphics] {plot}: selected=True, threshold={threshold}, candidates={total_with_metrics}",
+                'FLO-2D', Qgis.Info
+            )'''
+
+            # filter nodes by metric
+            if threshold is None:
+                filtered = list(base_metrics.items())
+            else:
+                filtered = [(nid, res) for nid, res in base_metrics.items()
+                            if float(res.get(key, 0.0)) > threshold]
+
+            '''QgsMessageLog.logMessage(f"[Graphics] {plot}: passing={len(filtered)}",
+                                     'FLO-2D', Qgis.Info)'''
+
+            # fallback to top-N by metric if nothing passes
+            if not filtered and TOPN_FALLBACK:
+                sortable = []
+                for nid, res in base_metrics.items():
+                    try:
+                        sortable.append((nid, float(res.get(key, 0.0))))
+                    except Exception:
+                        pass
+                sortable.sort(key=lambda t: t[1], reverse=True)
+                filtered = [(nid, base_metrics[nid]) for nid, _ in sortable[:TOPN_FALLBACK]]
+                if filtered:
+                    QgsMessageLog.logMessage(
+                        f"[Graphics] {plot}: no nodes > {threshold}; exporting top {len(filtered)} by {field_name}.",
+                        'FLO-2D', Qgis.Warning
+                    )
+
+            if not filtered:
+                continue
+
+            # memory layer with two fields: ID + metric
+            layer_name = f"{field_name}_{threshold if threshold is not None else 'All'}"
+            vl = QgsVectorLayer(f"Point?crs={crs.authid()}", layer_name, "memory")
+            pr = vl.dataProvider()
+
+            # deprecation-safe field creation
+            try:
+                from qgis.PyQt.QtCore import QMetaType
+                pr.addAttributes([
+                    QgsField("ID", QMetaType.Type.QString),
+                    QgsField(field_name, QMetaType.Type.Double),
+                ])
+            except Exception:
+                from qgis.PyQt.QtCore import QVariant
+                pr.addAttributes([
+                    QgsField("ID", QVariant.String),
+                    QgsField(field_name, QVariant.Double),
+                ])
+            vl.updateFields()
+
+            # progress dialog while building features
+            dlg = self._make_progress(f"Graphics: {plot}", len(filtered))
+            count = 0
+
+            feats = []
+            for nid, res in filtered:
+                xy = model.node_xy.get(nid)
+                if not xy:
+                    continue
+                try:
+                    val = float(res.get(key, 0.0))
+                except Exception:
+                    val = float('nan')
+
+                f = QgsFeature()
+                f.setGeometry(QgsGeometry.fromPointXY(QgsPointXY(float(xy[0]), float(xy[1]))))
+                f.setAttributes([nid, val])
+                feats.append(f)
+
+                count += 1
+                if (count % 20 == 0) or (count == len(filtered)):
+                    dlg.setValue(count); QApplication.processEvents()
+                if dlg.wasCanceled():
+                    feats = []
+                    break
+
+            dlg.setValue(min(count, len(filtered))); dlg.close()
+            if not feats:
+                continue
+
+            pr.addFeatures(feats)
+            vl.updateExtents()
+
+            # write shapefile (V3 if available; fallback to V2)
+            shp_path = os.path.join(graphics_dir, f"{layer_name}.shp")
+            opts = QgsVectorFileWriter.SaveVectorOptions()
+            opts.driverName = "ESRI Shapefile"
+            opts.fileEncoding = "utf-8"
+            if hasattr(QgsVectorFileWriter, "writeAsVectorFormatV3"):
+                QgsVectorFileWriter.writeAsVectorFormatV3(
+                    vl, shp_path, QgsProject.instance().transformContext(), opts
+                )
+            else:
+                QgsVectorFileWriter.writeAsVectorFormatV2(
+                    vl, shp_path, QgsProject.instance().transformContext(), opts
+                )
+
+            QgsProject.instance().addMapLayer(vl, False)
+            storm_drain_group.addLayer(vl)
+            '''QgsMessageLog.logMessage(
+                f"[Graphics] {plot}: wrote {len(feats)} features to {shp_path}",
+                'FLO-2D', Qgis.Info
+            )'''
+
+            # Overview PNG
+            try:
+                passing_ids = [nid for nid, _ in filtered]
+                png_path = os.path.join(graphics_dir, f"{field_name}_{threshold if threshold is not None else 'All'}.png")
+                title = f"{plot} > {threshold if threshold is not None else 'All'} | Selected: {len(passing_ids)} / {len(base_metrics)}"
+                subtitle = f"Total Nodes: {len(passing_ids)}"
+                if field_name == "TotalVol":
+                    is_us = str(self.units_switch) == "0"
+                    unit = "MG" if is_us else "ML"
+                    total = 0.0
+                    for _, r in filtered:
+                        try:
+                            total += float(r.get(key, 0.0))
+                        except Exception:
+                            pass
+                    subtitle = f"Flooded Volume: {total:.0f}{unit}\nTotal Nodes:{len(passing_ids)}"
+
+                self._draw_overview_png(model, passing_ids, png_path, title, subtitle)
+                '''QgsMessageLog.logMessage(
+                    f"[Graphics] {plot}: wrote overview {png_path}",
+                    'FLO-2D', Qgis.Info
+                )'''
+            except Exception as e:
+                QgsMessageLog.logMessage(
+                    f"[Graphics] {plot}: overview PNG failed: {e}",
+                    'FLO-2D', Qgis.Warning
+                )
+
+
+    def storm_drain_profile(self, storm_drain_rbs, flo2d_results_dir, sd_output_dir, plot=False):
+        """
+        Placeholder: only runs if 'Profile' is checked (not currently shown in UI).
+        """
+        prof = storm_drain_rbs.get("Profile")
+        if not plot or not prof or not prof[0]:
+            return False
+        return False

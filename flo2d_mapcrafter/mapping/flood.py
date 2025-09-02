@@ -25,12 +25,14 @@ import os
 
 from PyQt5.QtCore import QMetaType, QVariant
 from qgis._core import QgsProject, QgsVectorLayer, QgsField, QgsFeature, QgsGeometry, QgsPointXY, \
-    QgsVectorFileWriter
+    QgsVectorFileWriter, QgsRasterLayer
 
 from flo2d_mapcrafter.mapping.check_data import check_project_id, check_mapping_group, check_raster_file, \
     check_vector_file
 from flo2d_mapcrafter.mapping.scripts import read_ASCII, set_raster_style, \
     set_velocity_vector_style
+
+import processing
 
 
 class FloodMaps:
@@ -187,6 +189,103 @@ class FloodMaps:
             name, raster = check_raster_file(name, map_output_dir)
             file = flo2d_results_dir + r"\VEL_X_DEPTH.OUT"
             self.process_maps(name, raster, file, crs, dv_group, 7)
+        
+        # Vel_Squared x Depth  => (VEL_X_DEPTH) * (VELFP)
+        if flood_rbs.get("VEL_SQ_X_DEPTH"):
+            # Output name & file path
+            name = check_project_id("VELOCITY_SQUARED_X_DEPTH", project_id)
+            name, out_raster = check_raster_file(name, map_output_dir)
+
+            # Input ASCII files from results folder
+            vxd_ascii = os.path.join(flo2d_results_dir, "VEL_X_DEPTH.OUT")
+            v_ascii   = os.path.join(flo2d_results_dir, "VELFP.OUT")
+
+            # Convert both ASCII grids to temporary GeoTIFFs
+            tmp_name_a = check_project_id("_TMP_VEL_X_DEPTH", project_id)
+            tmp_name_a, tmp_raster_a = check_raster_file(tmp_name_a, map_output_dir)
+            A = read_ASCII(vxd_ascii, tmp_raster_a, tmp_name_a, crs)
+
+            tmp_name_b = check_project_id("_TMP_VELFP", project_id)
+            tmp_name_b, tmp_raster_b = check_raster_file(tmp_name_b, map_output_dir)
+            B = read_ASCII(v_ascii, tmp_raster_b, tmp_name_b, crs)
+
+            if A and B and A.isValid() and B.isValid():
+                from qgis import processing
+                from qgis._core import QgsRasterLayer, Qgis
+                from qgis.PyQt import sip
+                import gc, time
+
+                def _safe_remove_layer(layer):
+                    try:
+                        # If somehow added to the registry, remove it
+                        lyr_id = layer.id() if hasattr(layer, "id") else None
+                        if lyr_id and QgsProject.instance().mapLayer(lyr_id):
+                            QgsProject.instance().removeMapLayer(lyr_id)
+                    except Exception:
+                        pass
+                    try:
+                        # Explicitly delete the C++ object and drop Python ref
+                        sip.delete(layer)
+                    except Exception:
+                        pass
+
+                def _unlink_with_retries(path, attempts=10, delay=0.15):
+                    for i in range(attempts):
+                        try:
+                            if os.path.exists(path):
+                                os.remove(path)
+                            return True
+                        except Exception:
+                            # Give GDAL/provider a moment to release the handle
+                            time.sleep(delay)
+                            gc.collect()
+                    return False
+
+                try:
+                    # --- compute using GDAL Raster Calculator ---
+                    processing.run(
+                        "gdal:rastercalculator",
+                        {
+                            "INPUT_A": tmp_raster_a,
+                            "BAND_A": 1,
+                            "INPUT_B": tmp_raster_b,
+                            "BAND_B": 1,
+                            "INPUT_C": None, "BAND_C": 1,
+                            "INPUT_D": None, "BAND_D": 1,
+                            "INPUT_E": None, "BAND_E": 1,
+                            "INPUT_F": None, "BAND_F": 1,
+                            "FORMULA": "A*B",
+                            "NO_DATA": None,
+                            "RTYPE": 6,   # Float32
+                            "OPTIONS": "",
+                            "EXTRA": "",
+                            "OUTPUT": out_raster,
+                        }
+                    )
+
+                    # --- load/style result ---
+                    result = QgsRasterLayer(out_raster, name)
+                    if result.isValid():
+                        QgsProject.instance().addMapLayer(result, False)
+                        set_raster_style(result, 7)
+                        dv_group.insertLayer(0, result)
+
+                finally:
+                    # --- ensure providers are closed and objects freed before deleting files ---
+                    try:
+                        _safe_remove_layer(A)
+                        _safe_remove_layer(B)
+                    finally:
+                        # Drop Python refs and force GC
+                        A = None
+                        B = None
+                        gc.collect()
+                        time.sleep(0.1)  # tiny pause helps on Windows
+
+                        # Delete temp rasters + common sidecars (retry to beat file locks)
+                        for base in (tmp_raster_a, tmp_raster_b):
+                            for suffix in ("", ".aux.xml", ".ovr", ".tfw", ".wld"):
+                                _unlink_with_retries(base + suffix)
 
         # Time to one ft
         if flood_rbs.get(r"TIMEONEFT.OUT"):
