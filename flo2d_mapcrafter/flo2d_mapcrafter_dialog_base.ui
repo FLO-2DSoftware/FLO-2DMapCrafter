@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>736</width>
-    <height>520</height>
+    <width>825</width>
+    <height>721</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -22,19 +22,6 @@
   <layout class="QGridLayout" name="gridLayout">
    <item row="0" column="0">
     <layout class="QGridLayout" name="gridLayout_43">
-     <item row="2" column="5" colspan="2">
-      <spacer name="horizontalSpacer_2">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>40</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
      <item row="2" column="0">
       <widget class="QLabel" name="label_26">
        <property name="sizePolicy">
@@ -51,13 +38,47 @@
        </property>
       </widget>
      </item>
-     <item row="1" column="0">
-      <widget class="QLabel" name="label_10">
+     <item row="1" column="1" colspan="4">
+      <widget class="QgsProjectionSelectionWidget" name="crsselector">
        <property name="enabled">
         <bool>true</bool>
        </property>
+      </widget>
+     </item>
+     <item row="0" column="0">
+      <widget class="QLabel" name="label_12">
        <property name="text">
-        <string>Coord. Ref. System</string>
+        <string>FLO-2D Export Folder</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="5" colspan="2">
+      <spacer name="horizontalSpacer_2">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item row="1" column="6">
+      <widget class="QLineEdit" name="project_id">
+       <property name="maximumSize">
+        <size>
+         <width>80</width>
+         <height>16777215</height>
+        </size>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1" colspan="6">
+      <widget class="QgsFileWidget" name="flo2d_out_folder">
+       <property name="storageMode">
+        <enum>QgsFileWidget::GetDirectory</enum>
        </property>
       </widget>
      </item>
@@ -89,27 +110,10 @@
        </property>
       </widget>
      </item>
-     <item row="1" column="6">
-      <widget class="QLineEdit" name="project_id">
-       <property name="maximumSize">
-        <size>
-         <width>80</width>
-         <height>16777215</height>
-        </size>
-       </property>
-      </widget>
-     </item>
      <item row="2" column="2">
       <widget class="QLabel" name="label_27">
        <property name="text">
         <string>Final Vector Velocity Scale</string>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="1" colspan="6">
-      <widget class="QgsFileWidget" name="flo2d_out_folder">
-       <property name="storageMode">
-        <enum>QgsFileWidget::GetDirectory</enum>
        </property>
       </widget>
      </item>
@@ -141,6 +145,16 @@
        </property>
       </widget>
      </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="label_10">
+       <property name="enabled">
+        <bool>true</bool>
+       </property>
+       <property name="text">
+        <string>Coord. Ref. System</string>
+       </property>
+      </widget>
+     </item>
      <item row="1" column="5">
       <widget class="QLabel" name="label_4">
        <property name="sizePolicy">
@@ -166,13 +180,6 @@
        </property>
       </widget>
      </item>
-     <item row="0" column="0">
-      <widget class="QLabel" name="label_12">
-       <property name="text">
-        <string>FLO-2D Export Folder</string>
-       </property>
-      </widget>
-     </item>
      <item row="2" column="4">
       <spacer name="horizontalSpacer_4">
        <property name="orientation">
@@ -186,10 +193,80 @@
        </property>
       </spacer>
      </item>
-     <item row="1" column="1" colspan="4">
-      <widget class="QgsProjectionSelectionWidget" name="crsselector">
+    </layout>
+   </item>
+   <item row="6" column="0">
+    <layout class="QGridLayout" name="gridLayout_44">
+     <item row="0" column="1" colspan="3">
+      <widget class="QgsFileWidget" name="mapper_out_folder">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="acceptDrops">
+        <bool>false</bool>
+       </property>
+       <property name="statusTip">
+        <string/>
+       </property>
+       <property name="whatsThis">
+        <string/>
+       </property>
+       <property name="accessibleName">
+        <string/>
+       </property>
+       <property name="accessibleDescription">
+        <string/>
+       </property>
+       <property name="fileWidgetButtonVisible">
+        <bool>true</bool>
+       </property>
+       <property name="useLink">
+        <bool>false</bool>
+       </property>
+       <property name="fullUrl">
+        <bool>false</bool>
+       </property>
+       <property name="dialogTitle">
+        <string>FLO-2D MapCrafter Output Folder</string>
+       </property>
+       <property name="defaultRoot">
+        <string/>
+       </property>
+       <property name="storageMode">
+        <enum>QgsFileWidget::GetDirectory</enum>
+       </property>
+       <property name="options">
+        <set>QFileDialog::ShowDirsOnly</set>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="3">
+      <widget class="QPushButton" name="cancelButton">
        <property name="enabled">
         <bool>true</bool>
+       </property>
+       <property name="text">
+        <string>Cancel</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="0">
+      <widget class="QLabel" name="label_2">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="text">
+        <string>FLO-2D MapCrafter Output Folder</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1" colspan="2">
+      <widget class="QPushButton" name="runButton">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="text">
+        <string>Create maps</string>
        </property>
       </widget>
      </item>
@@ -210,7 +287,7 @@
       <enum>QTabWidget::Rounded</enum>
      </property>
      <property name="currentIndex">
-      <number>6</number>
+      <number>0</number>
      </property>
      <property name="elideMode">
       <enum>Qt::ElideNone</enum>
@@ -224,6 +301,213 @@
      <property name="tabBarAutoHide">
       <bool>false</bool>
      </property>
+     <widget class="QWidget" name="tabSummary">
+      <attribute name="title">
+       <string>Summary</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_2">
+       <item>
+        <widget class="QGroupBox" name="grpProjectMeta">
+         <property name="title">
+          <string>Project metadata</string>
+         </property>
+         <layout class="QHBoxLayout" name="horizontalLayout">
+          <item>
+           <layout class="QFormLayout" name="formLayout">
+            <item row="0" column="0">
+             <widget class="QLabel" name="lblUnits">
+              <property name="text">
+               <string>Units:</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QLineEdit" name="sumUnits">
+              <property name="maximumSize">
+               <size>
+                <width>250</width>
+                <height>24</height>
+               </size>
+              </property>
+              <property name="readOnly">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="lblBuild">
+              <property name="text">
+               <string>Build No:</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QLineEdit" name="sumBuild">
+              <property name="maximumSize">
+               <size>
+                <width>250</width>
+                <height>24</height>
+               </size>
+              </property>
+              <property name="readOnly">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="0">
+             <widget class="QLabel" name="lblCellSize">
+              <property name="text">
+               <string>Grid Size:</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="QLineEdit" name="sumCellSize">
+              <property name="maximumSize">
+               <size>
+                <width>250</width>
+                <height>24</height>
+               </size>
+              </property>
+              <property name="readOnly">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="0">
+             <widget class="QLabel" name="lblNElems">
+              <property name="text">
+               <string>No. of Elements:</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="1">
+             <widget class="QLineEdit" name="sumNElems">
+              <property name="maximumSize">
+               <size>
+                <width>250</width>
+                <height>24</height>
+               </size>
+              </property>
+              <property name="readOnly">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="0">
+             <widget class="QLabel" name="lblSimType">
+              <property name="text">
+               <string>Simulation Type:</string>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="1">
+             <widget class="QLineEdit" name="sumSimType">
+              <property name="maximumSize">
+               <size>
+                <width>250</width>
+                <height>24</height>
+               </size>
+              </property>
+              <property name="readOnly">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item row="5" column="0">
+             <widget class="QLabel" name="lblSimDate">
+              <property name="text">
+               <string>Simulation Date:</string>
+              </property>
+             </widget>
+            </item>
+            <item row="5" column="1">
+             <widget class="QLineEdit" name="sumSimDate">
+              <property name="maximumSize">
+               <size>
+                <width>250</width>
+                <height>24</height>
+               </size>
+              </property>
+              <property name="readOnly">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item row="6" column="0">
+             <widget class="QLabel" name="lblCoordSystem">
+              <property name="text">
+               <string>Coord. Ref. System:</string>
+              </property>
+             </widget>
+            </item>
+            <item row="6" column="1">
+             <widget class="QLineEdit" name="sumEPSG">
+              <property name="maximumSize">
+               <size>
+                <width>250</width>
+                <height>24</height>
+               </size>
+              </property>
+              <property name="readOnly">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="groupBox_3">
+         <property name="title">
+          <string/>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_3">
+          <item>
+           <widget class="QTableWidget" name="sumSimSummaryTable">
+            <property name="editTriggers">
+             <set>QAbstractItemView::NoEditTriggers</set>
+            </property>
+            <property name="alternatingRowColors">
+             <bool>false</bool>
+            </property>
+            <property name="selectionMode">
+             <enum>QAbstractItemView::NoSelection</enum>
+            </property>
+            <property name="selectionBehavior">
+             <enum>QAbstractItemView::SelectRows</enum>
+            </property>
+            <column>
+             <property name="text">
+              <string>Simulation Summary</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>Status</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>Action</string>
+             </property>
+            </column>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="sumExportRptBtn">
+         <property name="text">
+          <string>Export summary</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
      <widget class="QWidget" name="tab1">
       <property name="enabled">
        <bool>true</bool>
@@ -242,8 +526,8 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>684</width>
-            <height>284</height>
+            <width>752</width>
+            <height>646</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_99">
@@ -760,8 +1044,8 @@ p, li { white-space: pre-wrap; }
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>663</width>
-            <height>287</height>
+            <width>752</width>
+            <height>715</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_100">
@@ -1391,9 +1675,9 @@ p, li { white-space: pre-wrap; }
           <property name="geometry">
            <rect>
             <x>0</x>
-            <y>-3</y>
-            <width>663</width>
-            <height>287</height>
+            <y>0</y>
+            <width>752</width>
+            <height>715</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_101">
@@ -1903,9 +2187,9 @@ p, li { white-space: pre-wrap; }
           <property name="geometry">
            <rect>
             <x>0</x>
-            <y>-32</y>
-            <width>663</width>
-            <height>356</height>
+            <y>0</y>
+            <width>752</width>
+            <height>892</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_102">
@@ -2492,7 +2776,7 @@ p, li { white-space: pre-wrap; }
               <string>Hydraulics</string>
              </property>
              <property name="collapsed">
-              <bool>false</bool>
+              <bool>true</bool>
              </property>
              <layout class="QGridLayout" name="gridLayout_73">
               <item row="0" column="0">
@@ -2565,8 +2849,8 @@ p, li { white-space: pre-wrap; }
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>684</width>
-            <height>284</height>
+            <width>752</width>
+            <height>565</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_103">
@@ -2916,9 +3200,9 @@ p, li { white-space: pre-wrap; }
           <property name="geometry">
            <rect>
             <x>0</x>
-            <y>-24</y>
-            <width>663</width>
-            <height>308</height>
+            <y>0</y>
+            <width>773</width>
+            <height>481</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_111">
@@ -3074,7 +3358,7 @@ p, li { white-space: pre-wrap; }
                 <string>Graphics Plot</string>
                </property>
                <property name="collapsed">
-                <bool>false</bool>
+                <bool>true</bool>
                </property>
                <layout class="QGridLayout" name="gridLayout_120">
                 <item row="0" column="0">
@@ -3337,9 +3621,9 @@ p, li { white-space: pre-wrap; }
           <property name="geometry">
            <rect>
             <x>0</x>
-            <y>-20</y>
-            <width>663</width>
-            <height>364</height>
+            <y>0</y>
+            <width>773</width>
+            <height>481</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_104">
@@ -3461,83 +3745,6 @@ p, li { white-space: pre-wrap; }
       </layout>
      </widget>
     </widget>
-   </item>
-   <item row="6" column="0">
-    <layout class="QGridLayout" name="gridLayout_44">
-     <item row="1" column="1" colspan="2">
-      <widget class="QPushButton" name="runButton">
-       <property name="enabled">
-        <bool>false</bool>
-       </property>
-       <property name="text">
-        <string>Create maps</string>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="3">
-      <widget class="QPushButton" name="cancelButton">
-       <property name="enabled">
-        <bool>true</bool>
-       </property>
-       <property name="text">
-        <string>Cancel</string>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="1" colspan="3">
-      <widget class="QgsFileWidget" name="mapper_out_folder">
-       <property name="enabled">
-        <bool>false</bool>
-       </property>
-       <property name="acceptDrops">
-        <bool>false</bool>
-       </property>
-       <property name="statusTip">
-        <string/>
-       </property>
-       <property name="whatsThis">
-        <string/>
-       </property>
-       <property name="accessibleName">
-        <string/>
-       </property>
-       <property name="accessibleDescription">
-        <string/>
-       </property>
-       <property name="fileWidgetButtonVisible">
-        <bool>true</bool>
-       </property>
-       <property name="useLink">
-        <bool>false</bool>
-       </property>
-       <property name="fullUrl">
-        <bool>false</bool>
-       </property>
-       <property name="dialogTitle">
-        <string>FLO-2D MapCrafter Output Folder</string>
-       </property>
-       <property name="defaultRoot">
-        <string/>
-       </property>
-       <property name="storageMode">
-        <enum>QgsFileWidget::GetDirectory</enum>
-       </property>
-       <property name="options">
-        <set>QFileDialog::ShowDirsOnly</set>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="0">
-      <widget class="QLabel" name="label_2">
-       <property name="enabled">
-        <bool>false</bool>
-       </property>
-       <property name="text">
-        <string>FLO-2D MapCrafter Output Folder</string>
-       </property>
-      </widget>
-     </item>
-    </layout>
    </item>
   </layout>
  </widget>
