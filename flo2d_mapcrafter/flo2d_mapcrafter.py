@@ -23,12 +23,12 @@
 """
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QColor
-from PyQt5.QtWidgets import QMessageBox, QApplication, QCheckBox
-from PyQt5.QtXml import QDomDocument
 from qgis.PyQt import QtWidgets
+from PyQt5.QtWidgets import QMessageBox, QApplication, QCheckBox, QTableWidgetItem, QHeaderView
+from PyQt5.QtXml import QDomDocument
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication
 from qgis.PyQt.QtGui import QIcon
-from qgis.PyQt.QtWidgets import QAction
+from qgis.PyQt.QtWidgets import QAction, QHeaderView
 from qgis._core import (
     QgsCoordinateReferenceSystem,
     QgsRasterBandStats,
@@ -52,9 +52,14 @@ from .mapping.storm_drain import StormDrainPlots
 from .mapping.twophase import TwophaseMaps
 from .resources import *
 from .flo2d_mapcrafter_dialog import FLO2DMapCrafterDialog
+import re
+import os
 import os.path
 import processing
 import time
+from datetime import datetime
+from typing import List, Tuple
+from qgis.core import QgsProject
 from .simple_swmm_parser import SimpleSWMMModel
 
 
@@ -73,6 +78,20 @@ class FLO2DMapCrafter:
         self.units_switch = None
         self.iface = iface
         self.dlg = FLO2DMapCrafterDialog()
+        self._prime_sim_summary_table()
+        self.actions = []
+        self.menu = self.tr("&FLO-2D MapCrafter ")
+
+        self._swmm_model = None  # Cache for parsed SWMM model.
+
+        # Project Summary: Wire summary items to update whenever the export folder changes
+        fw = getattr(self.dlg, "flo2d_out_folder", None) or getattr(self.dlg, "flo2dExportFolder", None)
+        if fw:
+            try:
+                fw.fileChanged.connect(lambda *_: self._update_summary_fields())
+            except Exception:
+                pass
+        self._update_summary_fields()
         # initialize plugin directory
         self.plugin_dir = os.path.dirname(__file__)
         # initialize locale
@@ -106,6 +125,9 @@ class FLO2DMapCrafter:
 
         # Cancel Button
         self.dlg.cancelButton.clicked.connect(self.closeDialog)
+
+        # Export project Summary Button
+        self.dlg.sumExportRptBtn.clicked.connect(self._export_summary_to_rpt)
 
         # Check all available maps
         self.dlg.check_cw_cb.stateChanged.connect(self.check_cw)
@@ -155,25 +177,6 @@ class FLO2DMapCrafter:
         # Storm Drain subplots
         self.dlg.see_nodes_results_btn.clicked.connect(self.see_nodes_results)
 
-        # Cache for parsed SWMM model
-        self._swmm_model = None
-    
-    def _load_swmm_model(self, inp_file, rpt_file):
-        """Load and cache SWMM model. Re-parse only if .rpt file changed."""
-        
-        rpt_mtime = os.path.getmtime(rpt_file) if os.path.isfile(rpt_file) else None
-
-        if (
-            self._swmm_model is None or
-            getattr(self._swmm_model, "_rpt_mtime", None) != rpt_mtime
-        ):
-            from .simple_swmm_parser import SimpleSWMMModel
-            self._swmm_model = SimpleSWMMModel(inp_file, rpt_file)
-            self._swmm_model._rpt_mtime = rpt_mtime
-
-        return self._swmm_model
-
-
     def tr(self, message):
         """Get the translation for a string using Qt translation API.
 
@@ -189,16 +192,16 @@ class FLO2DMapCrafter:
         return QCoreApplication.translate("FLO2DMapCrafter", message)
 
     def add_action(
-        self,
-        icon_path,
-        text,
-        callback,
-        enabled_flag=True,
-        add_to_menu=True,
-        add_to_toolbar=True,
-        status_tip=None,
-        whats_this=None,
-        parent=None,
+            self,
+            icon_path,
+            text,
+            callback,
+            enabled_flag=True,
+            add_to_menu=True,
+            add_to_toolbar=True,
+            status_tip=None,
+            whats_this=None,
+            parent=None,
     ):
         """Add a toolbar icon to the toolbar.
 
@@ -258,6 +261,11 @@ class FLO2DMapCrafter:
             self.iface.addPluginToMenu(self.menu, action)
 
         self.actions.append(action)
+
+        if not hasattr(self, "menu") or not self.menu:
+            self.menu = self.tr("&FLO-2D MapCrafter ")
+        if add_to_menu:
+            self.iface.addPluginToMenu(self.menu, action)
 
         return action
 
@@ -341,6 +349,567 @@ class FLO2DMapCrafter:
 
         self.dlg.close()
 
+    # ---------------------------------------------------------------------------------------------------------#
+    #                                            Helpers                                                      #
+    # ---------------------------------------------------------------------------------------------------------#
+
+    # -----------------------------------#
+    # Project Summary: Units Helper     #
+    # -----------------------------------#
+    def _export_folder(self):
+        """Return the path from the FLO-2D Export Folder widget."""
+        w = getattr(self.dlg, "flo2d_out_folder", None) or getattr(self.dlg, "flo2dExportFolder", None)
+        return w.filePath() if w else ""
+
+    def _find_cont_dat(self, base):
+        """Look for CONT.DAT in base or its parent (common folder layouts)."""
+        if not base:
+            return None
+        for folder in (base, os.path.dirname(base)):
+            for name in ("CONT.DAT", "cont.dat"):
+                p = os.path.join(folder, name)
+                if os.path.isfile(p):
+                    return p
+        return None
+
+    def _detect_units_from_cont(self, cont_path: str):
+        """Return 'English (Imperial)' or 'SI (Metric)' from CONT.DAT line 1, token 4."""
+        import os
+        if not cont_path or not os.path.isfile(cont_path):
+            return None
+        try:
+            with open(cont_path, "r", errors="ignore") as f:
+                first_line = f.readline()
+            if not first_line:
+                return None
+
+            # Split on any whitespace; token #4 (index 3) is the units flag.
+            toks = first_line.split()
+            if len(toks) >= 4 and toks[3].isdigit():
+                return "SI (Metric)" if toks[3] == "1" else "English (Imperial)"
+            return None
+        except Exception:
+            return None
+
+    # -----------------------------------#
+    # Project Summary: Build No. Helper #
+    # -----------------------------------#
+
+    def _find_summary_out(self, base):
+        """Return path to SUMMARY.OUT by checking base and its parent."""
+        if not base:
+            return None
+        for folder in (base, os.path.dirname(base)):
+            for name in ("SUMMARY.OUT", "summary.out"):
+                p = os.path.join(folder, name)
+                if os.path.isfile(p):
+                    return p
+        return None
+
+    def _detect_build_from_summary(self, summary_path):
+        """
+        Parse 'Build No.' from SUMMARY.OUT.
+        Finds the line containing 'SUMMARY.OUT FILE' and then reads the *next* line,
+        which should contain 'Build No.' text. Returns the build number string.
+        """
+        if not summary_path or not os.path.isfile(summary_path):
+            return None
+        try:
+            with open(summary_path, "r", errors="ignore") as f:
+                lines = f.readlines()
+        except Exception:
+            return None
+
+        for idx, line in enumerate(lines):
+            if "SUMMARY.OUT FILE" in line.upper():
+                if idx + 1 < len(lines):
+                    next_line = lines[idx + 1]
+                    # Extract build number from that line
+                    m = re.search(r"Build\s*No\.?\s*([0-9][0-9\.\-]+)", next_line, flags=re.IGNORECASE)
+                    if m:
+                        return m.group(1).strip()
+                    # Fallback: return whole line stripped if regex fails
+                    return next_line.strip()
+        return None
+
+    # ------------------------------------#
+    # Project Summary: Grid (Cell) Size  #
+    # ------------------------------------#
+    def _detect_cellsize_from_summary(self, summary_path: str):
+        """
+        Return grid cell size with units (e.g., '30.0 FT' or '10.0 M')
+        by reading the 'GRID ELEMENT SIZE:' line in SUMMARY.OUT.
+        """
+        if not summary_path or not os.path.isfile(summary_path):
+            return None
+        try:
+            with open(summary_path, "r", errors="ignore") as f:
+                for line in f:
+                    if "GRID ELEMENT SIZE" in line.upper():
+                        # Accept variations in spacing/case, capture number + unit token
+                        m = re.search(
+                            r"GRID\s+ELEMENT\s+SIZE\s*:\s*([0-9]+(?:\.[0-9]+)?)\s*([A-Za-z]+)",
+                            line, flags=re.IGNORECASE
+                        )
+                        if m:
+                            val = m.group(1)
+                            unit = m.group(2).upper()  # FT, M, etc.
+                            return f"{val} {unit}"
+                        # Fallback: whole line trimmed if regex fails
+                        return line.strip()
+        except Exception:
+            return None
+        return None
+
+    # ------------------------------------#
+    # Project Summary: No. of Elements   #
+    # ------------------------------------#
+
+    def _detect_elements_from_summary(self, summary_path: str):
+        """
+        Return the total number of grid elements as a string (e.g., '54,306')
+        by parsing the 'TOTAL NUMBER OF GRID ELEMENTS:' line in SUMMARY.OUT.
+        """
+        if not summary_path or not os.path.isfile(summary_path):
+            return None
+        try:
+            pat = re.compile(r"TOTAL\s+NUMBER\s+OF\s+GRID\s+ELEMENTS\s*:\s*([0-9,]+)",
+                             flags=re.IGNORECASE)
+            with open(summary_path, "r", errors="ignore") as f:
+                for line in f:
+                    m = pat.search(line)
+                    if m:
+                        digits = m.group(1).replace(",", "").strip()
+                        if digits.isdigit():
+                            return f"{int(digits):,}"
+                        return m.group(1).strip()
+        except Exception:
+            return None
+        return None
+
+    # ------------------------------------#
+    # Project Summary: Simulation Type   #
+    # ------------------------------------#
+
+    def _detect_simulation_type(self, base_dir: str, cont_path: str, summary_path: str):
+        """
+        Infer simulation type(s) from files & keywords.
+        Returns a string like: 'Flood + Storm Drain + Sediment'
+        """
+        labels = []
+
+        # Quick file existence check in base and parent
+        def find_any(fnames):
+            for folder in (base_dir, os.path.dirname(base_dir) if base_dir else None):
+                if not folder:
+                    continue
+                for nm in fnames:
+                    p = os.path.join(folder, nm)
+                    if os.path.isfile(p):
+                        return True
+            return False
+
+        # Load small snippets of CONT.DAT and SUMMARY.OUT for keyword scanning
+        contU = ""
+        if cont_path and os.path.isfile(cont_path):
+            try:
+                with open(cont_path, "r", errors="ignore") as f:
+                    contU = f.read(20000).upper()  # header is enough
+            except Exception:
+                pass
+
+        sumU = ""
+        if summary_path and os.path.isfile(summary_path):
+            try:
+                with open(summary_path, "r", errors="ignore") as f:
+                    sumU = f.read(50000).upper()
+            except Exception:
+                pass
+
+        # Base module: Flood (always present for grid hydraulics)
+        labels.append("Flood")
+
+        # Storm Drain signals
+        storm_files = ("SWMM.INP", "HYDRAULICS.DAT", "STORM.DAT")
+        storm_kw = ("SWMM", "STORM DRAIN", "STORM_DRAIN", "HYDRAULIC STRUCTURE")
+        if find_any(storm_files) or any(k in contU or k in sumU for k in storm_kw):
+            labels.append("Storm Drain")
+
+        # Mudflow / Debris-flow / Two-phase signals
+        mud_files = ("MUDFLOW.DAT", "TWO_PHASE.DAT", "TAILINGS.DAT", "TAILINGS_STACK_DEPTH.DAT")
+        mud_kw = ("MUD", "MUDFLOW", "DEBRIS", "TWO-PHASE", "TWO PHASE", "TAILINGS")
+        if find_any(mud_files) or any(k in contU or k in sumU for k in mud_kw):
+            labels.append("Mudflow")
+
+        # Sediment signals
+        sed_files = ("SEDIMENT.DAT", "SED.DAT")
+        sed_kw = ("SEDIMENT", "BEDLOAD", "SUSPENDED LOAD")
+        if find_any(sed_files) or any(k in contU or k in sumU for k in sed_kw):
+            labels.append("Sediment")
+
+        # De-duplicate & format
+        seen, final = set(), []
+        for lab in labels:
+            if lab not in seen:
+                final.append(lab);
+                seen.add(lab)
+
+        return " + ".join(final) if final else "Unknown"
+
+    # ----------------------------------------#
+    # Project Summary: Simulation Date       #
+    # ----------------------------------------#
+
+    def _detect_simulation_date_from_summary(self, summary_path: str):
+        """
+        Find the line like:
+            THIS OUTPUT FILE WAS TERMINATED ON:   5/15/2025  AT:   8:14:28
+        and return a readable timestamp, e.g. '2025-05-15 08:14:28'.
+        If parsing fails, return the raw 'date [time]' substring.
+        """
+        if not summary_path or not os.path.isfile(summary_path):
+            return None
+
+        pat = re.compile(
+            r"TERMINATED\s+ON:\s*([0-9]{1,2}[/-][0-9]{1,2}[/-][0-9]{2,4})"
+            r"(?:\s+AT:\s*([0-9]{1,2}:[0-9]{2}:[0-9]{2}(?:\s*[APMapm]{2})?))?",
+            re.IGNORECASE
+        )
+        try:
+            with open(summary_path, "r", errors="ignore") as f:
+                for line in f:
+                    if "TERMINATED ON" not in line.upper():
+                        continue
+                    m = pat.search(line)
+                    if not m:
+                        continue
+                    date_str = m.group(1).strip()
+                    time_str = (m.group(2) or "").strip()
+
+                    # Try to normalize to ISO-ish 'YYYY-MM-DD HH:MM:SS'
+                    # Accept MM/DD/YYYY or MM-DD-YYYY (or 2-digit year)
+                    for fmt in ("%m/%d/%Y", "%m/%d/%y", "%m-%d-%Y", "%m-%d-%y"):
+                        try:
+                            d = datetime.strptime(date_str, fmt)
+                            break
+                        except ValueError:
+                            d = None
+                    if d is None:
+                        # fallback: return raw substring
+                        return (date_str + (" " + time_str if time_str else "")).strip()
+
+                    if time_str:
+                        # Try 24h first, then 12h with AM/PM
+                        for tfmt in ("%H:%M:%S", "%I:%M:%S %p", "%I:%M:%S%p"):
+                            try:
+                                t = datetime.strptime(time_str.upper().replace(".", ""), tfmt)
+                                # merge date+time
+                                merged = d.replace(hour=t.hour, minute=t.minute, second=t.second)
+                                return merged.strftime("%Y-%m-%d %H:%M:%S")
+                            except ValueError:
+                                pass
+                        # if time unparseable, return date + raw time
+                        return f"{d.strftime('%Y-%m-%d')} {time_str}"
+                    else:
+                        return d.strftime("%Y-%m-%d")
+        except Exception:
+            return None
+        return None
+
+    # --------------------------------------------#
+    # Project Summary: Coordinate System (EPSG)  #
+    # --------------------------------------------#
+
+    def _detect_epsg_code(self):
+        """
+        Return the project's EPSG code (e.g., 'EPSG:32637').
+        """
+        try:
+            crs = QgsProject.instance().crs()
+            if crs.isValid():
+                return crs.authid()
+        except Exception:
+            pass
+        return None
+
+    # ------------------------------------------------------------------#
+    # Project Summary: Extra Info: Simulation Summary|STATUS|ACTION    #
+    # ------------------------------------------------------------------#
+    def _extract_simulation_summary_table(self, summary_path: str) -> List[Tuple[str, str, str]]:
+        """
+        Parse the three columns under the SIMULATION SUMMARY section of SUMMARY.OUT.
+        Returns a list of (summary, status, action).
+        Robust to variable spacing; stops at blank line or next section.
+        """
+        rows: List[Tuple[str, str, str]] = []
+        if not summary_path:
+            return rows
+
+        try:
+            with open(summary_path, "r", errors="ignore") as f:
+                lines = f.readlines()
+        except Exception:
+            return rows
+
+        # 1) Find the section start: the line that has 'SIMULATION SUMMARY'
+        start = None
+        for i, line in enumerate(lines):
+            if re.search(r"\bSIMULATION SUMMARY\b", line, re.IGNORECASE):
+                start = i
+                break
+        if start is None:
+            return rows
+
+        # 2) Skip blanks to find the header row that contains both STATUS and ACTION
+        i = start + 1
+        while i < len(lines) and not lines[i].strip():
+            i += 1
+
+        # header row (best effort)
+        if i < len(lines) and re.search(r"\bSTATUS\b", lines[i], re.IGNORECASE) and re.search(r"\bACTION\b", lines[i],
+                                                                                              re.IGNORECASE):
+            i += 1  # move to first data row
+
+        # 3) Read data rows until a blank spacer or another header-like line
+        while i < len(lines):
+            raw = lines[i].rstrip("\n")
+            i += 1
+
+            if not raw.strip():
+                break  # end of table block
+
+            # stop if we hit another obvious header/section
+            if re.search(r"\b(UNITS|BUILD|GRID SIZE|NO\.? OF ELEMENTS|SIMULATION TYPE|COORD\.?|FLO-2D|SUMMARY)\b", raw,
+                         re.IGNORECASE):
+                break
+
+            # split into up to 3 columns by 2+ spaces
+            parts = re.split(r"\s{2,}", raw.strip(), maxsplit=2)
+            if len(parts) == 3:
+                s, status, action = parts
+            elif len(parts) == 2:
+                s, status = parts
+                action = ""
+            else:
+                # single token: treat as continuation of previous row's action if present
+                if rows:
+                    prev = list(rows[-1])
+                    prev[2] = (prev[2] + " " + parts[0]).strip()
+                    rows[-1] = tuple(prev)
+                continue
+
+            rows.append((s, status, action))
+        return rows
+
+        # Prime the Simulation Summary table headers before data exists
+
+    def _prime_sim_summary_table(self):
+        tbl = getattr(self.dlg, "sumSimSummaryTable", None)
+        if not tbl:
+            return
+        tbl.setColumnCount(3)
+        tbl.setHorizontalHeaderLabels(["Simulation Summary", "Status", "Action"])
+        h = tbl.horizontalHeader()
+        # Make headers readable before there are any rows
+        h.setSectionResizeMode(0, QHeaderView.Stretch)
+        h.setSectionResizeMode(1, QHeaderView.ResizeToContents)
+        h.setSectionResizeMode(2, QHeaderView.Stretch)
+        tbl.verticalHeader().setVisible(False)
+        tbl.setAlternatingRowColors(False)
+
+    def _update_summary_fields(self):
+        base = self._export_folder()
+
+        # If no export folder chosen yet reset all summary fields to "—"
+        if not base or not os.path.isdir(base):
+            self.dlg.sumUnits.setText("—")
+            self.dlg.sumBuild.setText("—")
+            self.dlg.sumCellSize.setText("—")
+            self.dlg.sumNElems.setText("—")
+            self.dlg.sumSimType.setText("—")
+            self.dlg.sumSimDate.setText("—")
+            self.dlg.sumEPSG.setText("—")
+
+            if hasattr(self.dlg, "sumSimSummaryTable") and self.dlg.sumSimSummaryTable:
+                self._prime_sim_summary_table()
+            return
+
+        cont_path = self._find_cont_dat(base)
+        summary_path = self._find_summary_out(base)
+
+        # Fill values
+        units = self._detect_units_from_cont(cont_path)
+        build = self._detect_build_from_summary(summary_path)
+        cell = self._detect_cellsize_from_summary(summary_path)
+        nelems = self._detect_elements_from_summary(summary_path)
+        simtype = self._detect_simulation_type(base, cont_path, summary_path)
+        simdate = self._detect_simulation_date_from_summary(summary_path)
+        epsg = self._detect_epsg_code()
+
+        self.dlg.sumUnits.setText(units or "—")
+        self.dlg.sumBuild.setText(build or "—")
+        self.dlg.sumCellSize.setText(cell or "—")
+        self.dlg.sumNElems.setText(nelems or "—")
+        self.dlg.sumSimType.setText(simtype or "—")
+        self.dlg.sumSimDate.setText(simdate or "—")
+        self.dlg.sumEPSG.setText(epsg or "—")
+
+        # Simulation Summary (3-column table)
+        sim_table_rows = self._extract_simulation_summary_table(summary_path)
+
+        if hasattr(self.dlg, "sumSimSummaryTable") and self.dlg.sumSimSummaryTable:
+            tbl = self.dlg.sumSimSummaryTable
+            tbl.clear()
+            tbl.setRowCount(len(sim_table_rows))
+            tbl.setColumnCount(3)
+            tbl.setHorizontalHeaderLabels(["Simulation Summary", "Status", "Action"])
+
+            for r, (summary_txt, status_txt, action_txt) in enumerate(sim_table_rows):
+                tbl.setItem(r, 0, QTableWidgetItem(summary_txt))
+                tbl.setItem(r, 1, QTableWidgetItem(status_txt))
+                tbl.setItem(r, 2, QTableWidgetItem(action_txt))
+
+            header = tbl.horizontalHeader()
+            header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
+            header.setSectionResizeMode(1, QHeaderView.ResizeToContents)
+            header.setSectionResizeMode(2, QHeaderView.Stretch)
+
+            tbl.verticalHeader().setVisible(False)
+            tbl.setAlternatingRowColors(True)
+            tbl.setEditTriggers(tbl.NoEditTriggers)
+            tbl.setAlternatingRowColors(False)
+
+    def _export_summary_to_rpt(self):
+        """
+        Export the 'Summary' tab contents to report_proj.rpt.
+        If a file with the same name already exists, ask the user to Overwrite or Cancel.
+        """
+        try:
+            # Ensure UI is up to date
+            self._update_summary_fields()
+
+            # Prefer MapCrafter Output Folder; fallback to export folder
+            out_dir = ""
+            try:
+                out_dir = self.dlg.mapper_out_folder.filePath().strip()
+            except Exception:
+                pass
+            if not out_dir:
+                out_dir = (self._export_folder() or "").strip()
+
+            if not out_dir:
+                self.iface.messageBar().pushMessage(
+                    "Please set an output folder (MapCrafter or FLO-2D Export Folder) before exporting.",
+                    level=Qgis.Warning, duration=5
+                )
+                return
+
+            os.makedirs(out_dir, exist_ok=True)
+            out_path = os.path.join(out_dir, "report_proj.rpt")
+
+            # If file exists, ask user whether to overwrite or cancel
+            if os.path.exists(out_path):
+                mb = QMessageBox(self.dlg)
+                mb.setIcon(QMessageBox.Warning)
+                mb.setWindowTitle("File already exists")
+                mb.setText(
+                    f"A file named 'report_proj.rpt' already exists in:\n\n{out_dir}\n\n"
+                    "Do you want to overwrite it?"
+                )
+                overwrite_btn = mb.addButton("Overwrite", QMessageBox.YesRole)
+                cancel_btn = mb.addButton("Cancel", QMessageBox.RejectRole)
+                mb.setDefaultButton(cancel_btn)
+                mb.exec_()
+
+                if mb.clickedButton() is not overwrite_btn:
+                    # User cancelled the export
+                    self.iface.messageBar().pushMessage("Export cancelled.", level=Qgis.Info, duration=4)
+                    return
+
+            # Gather fields from the Summary tab
+            g = self.dlg
+
+            def txt(w):
+                try:
+                    return (w.text() or "").strip()
+                except Exception:
+                    return ""
+
+            project_id = txt(g.project_id)
+            units = txt(g.sumUnits)
+            build_no = txt(g.sumBuild)
+            cell_size = txt(g.sumCellSize)
+            n_elems = txt(g.sumNElems)
+            sim_type = txt(g.sumSimType)
+            sim_date = txt(g.sumSimDate)
+            epsg_code = txt(g.sumEPSG)
+
+            # Simulation Summary table rows
+            rows = []
+            tbl = getattr(g, "sumSimSummaryTable", None)
+            if tbl:
+                for r in range(tbl.rowCount()):
+                    c0 = tbl.item(r, 0).text().strip() if tbl.item(r, 0) else ""
+                    c1 = tbl.item(r, 1).text().strip() if tbl.item(r, 1) else ""
+                    c2 = tbl.item(r, 2).text().strip() if tbl.item(r, 2) else ""
+                    rows.append((c0, c1, c2))
+
+            hdr = ("Simulation Summary", "Status", "Action")
+            w0 = max(len(hdr[0]), *(len(r[0]) for r in rows)) if rows else len(hdr[0])
+            w1 = max(len(hdr[1]), *(len(r[1]) for r in rows)) if rows else len(hdr[1])
+
+            def line3(a, b, c):
+                return f"{a.ljust(w0)}  |  {b.ljust(w1)}  |  {c}"
+
+            now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            header = [
+                "FLO-2D MapCrafter — Project Summary",
+                f"Generated: {now}",
+                ""
+            ]
+            meta = [
+                "Project metadata:",
+                f"  Units:               {units or '—'}",
+                f"  Build No.:           {build_no or '—'}",
+                f"  Grid Size:           {cell_size or '—'}",
+                f"  No. of Elements:     {n_elems or '—'}",
+                f"  Simulation Type:     {sim_type or '—'}",
+                f"  Simulation Date:     {sim_date or '—'}",
+                f"  Coord. Ref. System:  {epsg_code or '—'}",
+                ""
+            ]
+            table = [line3(*hdr)]
+            table.append("-" * (w0 + 2 + 2 + w1 + 2 + 2 + 40))
+            if rows:
+                for r in rows:
+                    table.append(line3(*r))
+            else:
+                table.append("(no simulation summary rows parsed)")
+
+            content = "\n".join(header + meta + ["Simulation Summary Table:", ""] + table) + "\n"
+
+            # Write file
+            with open(out_path, "w", encoding="utf-8") as f:
+                f.write(content)
+
+            QMessageBox.information(self.dlg, "Summary exported",
+                                    f"Summary written to:\n{out_path}")
+
+        except Exception as e:
+            self.iface.messageBar().pushMessage(
+                f"Export failed: {e}", level=Qgis.Critical, duration=6
+            )
+
+    def _load_swmm_model(self, inp_file, rpt_file):
+        """Load and cache SWMM model. Re-parse only if .rpt file changed."""
+        rpt_mtime = os.path.getmtime(rpt_file) if os.path.isfile(rpt_file) else None
+        model = getattr(self, "_swmm_model", None)
+        if (model is None) or (getattr(model, "_rpt_mtime", None) != rpt_mtime):
+            from .simple_swmm_parser import SimpleSWMMModel
+            self._swmm_model = SimpleSWMMModel(inp_file, rpt_file)
+            self._swmm_model._rpt_mtime = rpt_mtime
+        return self._swmm_model
+
     def check_files(self):
         """Function to check the type of files present on the simulation"""
 
@@ -414,10 +983,10 @@ class FLO2DMapCrafter:
                     flood_rbs[key].setEnabled(True)
                 else:
                     flood_rbs[key].setEnabled(False)
-                    
-            # NOW enable the virtual derived checkbox (needs both inputs)
+
+            # Enable the virtual derived checkbox (needs both inputs)
             vxd_ok = flood_files_dict.get(r"VEL_X_DEPTH.OUT", False)
-            v_ok   = flood_files_dict.get(r"VELFP.OUT", False)
+            v_ok = flood_files_dict.get(r"VELFP.OUT", False)
             self.dlg.v2xd_cw_cb.setEnabled(vxd_ok and v_ok)
 
         # Sediment simulation
@@ -455,7 +1024,7 @@ class FLO2DMapCrafter:
                     self.dlg.mdep_sd_cb,
                     self.dlg.msco_sd_cb,
                     self.dlg.fbd_sd_cb
-                                ],
+                ],
                 r"IMPACT.OUT": self.dlg.if_sd_cb,
             }
 
@@ -537,9 +1106,9 @@ class FLO2DMapCrafter:
                 r"VELDIREC_MUD.OUT": self.dlg.mmvv_tp_cb,
                 r"CVFPMAX.OUT": self.dlg.mfsc_tp_cb,
                 r"CVFPMAX_MUD.OUT": self.dlg.mmsc_tp_cb,
-                #r"FINALCVFP.OUT": self.dlg.ffsc_tp_cb,
+                # r"FINALCVFP.OUT": self.dlg.ffsc_tp_cb,
                 r"FINALCVFP_MUD.OUT": self.dlg.fmsc_tp_cb,
-                #r"MAXWSELEV.OUT": self.dlg.mwse_mf_cb,
+                # r"MAXWSELEV.OUT": self.dlg.mwse_mf_cb,
                 r"FINALDEP.OUT": self.dlg.ffd_tp_cb,
                 r"FINALDEP_MUD.OUT": self.dlg.fmd_tp_cb,
                 r"FINALDIR.OUT": self.dlg.ffvv_tp_cb,
@@ -675,6 +1244,8 @@ class FLO2DMapCrafter:
                 if has_files(nodes_dir) or has_files(links_dir):
                     self.dlg.see_nodes_results_btn.setEnabled(True)
 
+            self._update_summary_fields()
+
     def run_map_creator(self):
         """
         Run method that performs all the real work
@@ -687,6 +1258,10 @@ class FLO2DMapCrafter:
             # input & output directories
             flo2d_results_dir = self.dlg.flo2d_out_folder.filePath()
             map_output_dir = self.dlg.mapper_out_folder.filePath()
+            # Ensure MapCrafter output folder exists
+            if not map_output_dir:
+                map_output_dir = os.path.join(flo2d_results_dir, "MapCrafter")
+            os.makedirs(map_output_dir, exist_ok=True)
             self.crs = self.dlg.crsselector.crs()
             project_id = self.dlg.project_id.text()
             max_vector_scale = self.dlg.max_vector_scale_sb.value()
@@ -745,7 +1320,6 @@ class FLO2DMapCrafter:
                     r"SPECENERGY.OUT": self.dlg.se_cw_cb.isChecked(),
                     r"STATICPRESS.OUT": self.dlg.sp_cw_cb.isChecked(),
                     r"IMPACT.OUT": self.dlg.if_cw_cb.isChecked(),
-                    # NEW: computed product (not a physical file key)
                     "VEL_SQ_X_DEPTH": self.dlg.v2xd_cw_cb.isChecked(),
                 }
 
@@ -866,9 +1440,9 @@ class FLO2DMapCrafter:
                     r"STATICPRESS.OUT": self.dlg.sp_tp_cb.isChecked(),
                     r"IMPACT.OUT": self.dlg.if_tp_cb.isChecked(),
                     r"SEDFP.OUT": [
-                    self.dlg.ms_tp_cb.isChecked(),
-                    self.dlg.md_tp_cb.isChecked(),
-                    self.dlg.fdb_tp_cb.isChecked()
+                        self.dlg.ms_tp_cb.isChecked(),
+                        self.dlg.md_tp_cb.isChecked(),
+                        self.dlg.fdb_tp_cb.isChecked()
                     ],
                 }
 
@@ -903,7 +1477,6 @@ class FLO2DMapCrafter:
                 value if not isinstance(value, list) else any(value) for value in hazard_rbs.values())
 
             if at_least_one_checked:
-
                 hazard_maps = HazardMaps(self.units_switch)
                 hazard_maps.create_maps(
                     hazard_rbs, flo2d_results_dir, map_output_dir, mapping_group, self.crs, project_id
@@ -969,27 +1542,29 @@ class FLO2DMapCrafter:
                     sd_output_dir = map_output_dir + rf"\StormDrain"
                 if not os.path.exists(sd_output_dir):
                     os.makedirs(sd_output_dir)
-                # Resolve swmm files (same logic you use in check_files)
+                # Resolve swmm files
                 inp_file = os.path.join(flo2d_results_dir, "swmm.inp")
                 rpt_file = os.path.join(flo2d_results_dir, "swmm.rpt")
                 if not os.path.isfile(inp_file): inp_file = os.path.join(flo2d_results_dir, "SWMM.INP")
                 if not os.path.isfile(rpt_file): rpt_file = os.path.join(flo2d_results_dir, "SWMM.RPT")
 
                 model = self._load_swmm_model(inp_file, rpt_file)
-                    
+
                 # Give the cached model to StormDrainPlots so it never re-parses
                 storm_drain_plots = StormDrainPlots(self.units_switch, self.iface, swmm_model=model)
-                #import time
                 t0 = time.perf_counter()
                 plots = storm_drain_plots.create_plots(storm_drain_rbs, flo2d_results_dir, sd_output_dir)
                 if plots:
                     self.dlg.see_nodes_results_btn.setEnabled(True)
                 t1 = time.perf_counter()
-                storm_drain_plots.plot_graphics(storm_drain_rbs, flo2d_results_dir, sd_output_dir, self.crs.authid(), mapping_group)
+                storm_drain_plots.plot_graphics(storm_drain_rbs, flo2d_results_dir, sd_output_dir, self.crs.authid(),
+                                                mapping_group)
                 t2 = time.perf_counter()
                 storm_drain_plots.storm_drain_profile(storm_drain_rbs, flo2d_results_dir, sd_output_dir, True)
                 t3 = time.perf_counter()
-                QgsMessageLog.logMessage(f"SD timings: create_plots={t1-t0:.2f}s, plot_graphics={t2-t1:.2f}s, profile={t3-t2:.2f}s", 'FLO-2D', Qgis.Info)
+                QgsMessageLog.logMessage(
+                    f"SD timings: create_plots={t1 - t0:.2f}s, plot_graphics={t2 - t1:.2f}s, profile={t3 - t2:.2f}s",
+                    'FLO-2D', Qgis.Info)
 
             QApplication.restoreOverrideCursor()
             msg_box = QMessageBox()
@@ -1000,7 +1575,9 @@ class FLO2DMapCrafter:
 
         except Exception as e:
             QApplication.restoreOverrideCursor()
-            self.iface.messageBar().pushMessage("ERROR: Error while creating the maps! See log messages for more information.", level=Qgis.Critical, duration=5)
+            self.iface.messageBar().pushMessage(
+                "ERROR: Error while creating the maps! See log messages for more information.", level=Qgis.Critical,
+                duration=5)
             QgsMessageLog.logMessage(str(e))
 
     def see_storm_drain_profile(self):
@@ -1207,7 +1784,6 @@ class FLO2DMapCrafter:
         if style == 2:
             layer.loadNamedStyle(style_directory + r"/mud_extent.qml")
 
-
     def remove_layer(self, layer_name):
         """Function to remove layer name based on name"""
         for layer in QgsProject.instance().mapLayers().values():
@@ -1413,7 +1989,7 @@ class FLO2DMapCrafter:
             self.dlg.mvv_sd_cb,
             self.dlg.fvv_sd_cb,
             self.dlg.if_sd_cb,
-            ]
+        ]
 
         if self.dlg.check_sd_cb.isChecked():
             for cb in sediment_rbs:
@@ -1754,3 +2330,5 @@ class FLO2DMapCrafter:
             # Use QtWidgets.QCheckBox (matches how the UI is created in QGIS)
             for cb in page.findChildren(QtWidgets.QCheckBox):
                 cb.setChecked(False)
+
+
