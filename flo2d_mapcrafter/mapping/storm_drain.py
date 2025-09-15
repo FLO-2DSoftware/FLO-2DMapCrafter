@@ -28,6 +28,7 @@ from datetime import datetime
 from qgis.PyQt.QtCore import Qt
 from qgis.PyQt.QtWidgets import QProgressDialog, QApplication
 import matplotlib
+
 matplotlib.use("Agg")
 from matplotlib import pyplot as plt
 from qgis.PyQt.QtCore import QVariant
@@ -72,11 +73,11 @@ class StormDrainPlots:
             return {}
 
         sections = {
-            "[CONDUITS]":  (1, 2), 
-            "[PUMPS]":     (1, 2),
-            "[WEIRS]":     (1, 2),
-            "[ORIFICES]":  (1, 2),
-            "[OUTLETS]":   (1, 2),
+            "[CONDUITS]": (1, 2),
+            "[PUMPS]": (1, 2),
+            "[WEIRS]": (1, 2),
+            "[ORIFICES]": (1, 2),
+            "[OUTLETS]": (1, 2),
         }
 
         current = None
@@ -164,7 +165,8 @@ class StormDrainPlots:
                 if dt_h <= 0:
                     continue
                 dt_s = dt_h * 3600.0
-                q0 = flooding[i - 1]; q1 = flooding[i]
+                q0 = flooding[i - 1];
+                q1 = flooding[i]
                 q0 = 0.0 if q0 != q0 else q0
                 q1 = 0.0 if q1 != q1 else q1
                 q_avg = 0.5 * (q0 + q1)
@@ -186,7 +188,7 @@ class StormDrainPlots:
                 "max_depth": max_depth,
             }
         return metrics
-        
+
     def _ensure_matplotlib(self):
         try:
             matplotlib.get_backend()
@@ -205,8 +207,8 @@ class StormDrainPlots:
         otherwise falls back to parsing the INP.
         """
         self._ensure_matplotlib()
-        #import matplotlib.pyplot as plt
-        #from datetime import datetime
+        # import matplotlib.pyplot as plt
+        # from datetime import datetime
 
         node_xy = getattr(model, "node_xy", {}) or {}
         link_results = getattr(model, "link_results", {}) or {}
@@ -260,7 +262,8 @@ class StormDrainPlots:
             xy = node_xy.get(nid)
             if xy:
                 try:
-                    xs_sel.append(float(xy[0])); ys_sel.append(float(xy[1]))
+                    xs_sel.append(float(xy[0]));
+                    ys_sel.append(float(xy[1]))
                 except Exception:
                     continue
         if xs_sel:
@@ -321,10 +324,10 @@ class StormDrainPlots:
 
         # ---------------- Nodes ----------------
         node_specs = [
-            ("Inflow",     "inflow"),    # cfs/cms
-            ("Flooding",   "flooding"),  # cfs/cms
-            ("Node Depth", "depth"),     # ft/m
-            ("Head",       "head"),      # ft/m
+            ("Inflow", "inflow"),  # cfs/cms
+            ("Flooding", "flooding"),  # cfs/cms
+            ("Node Depth", "depth"),  # ft/m
+            ("Head", "head"),  # ft/m
         ]
         node_root = os.path.join(sd_output_dir, "Nodes")
         os.makedirs(node_root, exist_ok=True)
@@ -338,11 +341,12 @@ class StormDrainPlots:
             wrote_any = False
 
             unit = ("cfs" if str(self.units_switch) == "0" else "cms") if key in ("inflow", "flooding") \
-                   else ("ft"  if str(self.units_switch) == "0" else "m")
+                else ("ft" if str(self.units_switch) == "0" else "m")
 
             fig, ax = plt.subplots(figsize=(7, 4))
             (line,) = ax.plot([], [])
-            ax.set_xlabel("hours"); ax.set_ylabel(unit)
+            ax.set_xlabel("hours");
+            ax.set_ylabel(unit)
 
             dlg = self._make_progress(f"Creating {plot_name} plots...", len(nodes))
             i = 0  # progress counter
@@ -358,7 +362,8 @@ class StormDrainPlots:
 
                 xd, yd = self._decimate(x, y)
                 line.set_data(xd, yd)
-                ax.relim(); ax.autoscale_view()
+                ax.relim();
+                ax.autoscale_view()
 
                 label = nname_grid.get(node)
                 ax.set_title(f"{node} {label} Node" if label else f"{node} Node")
@@ -392,10 +397,10 @@ class StormDrainPlots:
 
         # ---------------- Links ----------------
         link_specs = [
-            ("Flow",         "flow"),         # cfs/cms
-            ("Velocity",     "velocity"),     # ft/s or m/s
-            ("Link Depth",   "depth"),        # ft/m
-            ("Percent Full", "percent_full"), # %
+            ("Flow", "flow"),  # cfs/cms
+            ("Velocity", "velocity"),  # ft/s or m/s
+            ("Link Depth", "depth"),  # ft/m
+            ("Percent Full", "percent_full"),  # %
         ]
         link_root = os.path.join(sd_output_dir, "Links")
         os.makedirs(link_root, exist_ok=True)
@@ -419,7 +424,8 @@ class StormDrainPlots:
 
             fig, ax = plt.subplots(figsize=(7, 4))
             (line,) = ax.plot([], [])
-            ax.set_xlabel("hours"); ax.set_ylabel(unit)
+            ax.set_xlabel("hours");
+            ax.set_ylabel(unit)
 
             dlg = self._make_progress(f"Creating {plot_name} plots...", len(links))
             i = 0  # progress counter
@@ -435,7 +441,8 @@ class StormDrainPlots:
 
                 xd, yd = self._decimate(x, y)
                 line.set_data(xd, yd)
-                ax.relim(); ax.autoscale_view()
+                ax.relim();
+                ax.autoscale_view()
                 ax.set_title(f"{link} Link")
 
                 if not wrote_any:
@@ -496,10 +503,10 @@ class StormDrainPlots:
                              or mapping_group.insertGroup(0, storm_drain_group_name))
 
         key_map = {
-            "Hours Flooded":   ("hours_flooded", "HoursFlooded"),
-            "Maximum Flooding":("max_rate",      "MaxRate"),
-            "Total Flooding":  ("total_volume",  "TotalVol"),
-            "Maximum Pond":    ("max_depth",     "MaxDepth"),
+            "Hours Flooded": ("hours_flooded", "HoursFlooded"),
+            "Maximum Flooding": ("max_rate", "MaxRate"),
+            "Total Flooding": ("total_volume", "TotalVol"),
+            "Maximum Pond": ("max_depth", "MaxDepth"),
         }
 
         crs = QgsCoordinateReferenceSystem(authid)
@@ -591,12 +598,14 @@ class StormDrainPlots:
 
                 count += 1
                 if (count % 20 == 0) or (count == len(filtered)):
-                    dlg.setValue(count); QApplication.processEvents()
+                    dlg.setValue(count);
+                    QApplication.processEvents()
                 if dlg.wasCanceled():
                     feats = []
                     break
 
-            dlg.setValue(min(count, len(filtered))); dlg.close()
+            dlg.setValue(min(count, len(filtered)));
+            dlg.close()
             if not feats:
                 continue
 
@@ -627,7 +636,8 @@ class StormDrainPlots:
             # Overview PNG
             try:
                 passing_ids = [nid for nid, _ in filtered]
-                png_path = os.path.join(graphics_dir, f"{field_name}_{threshold if threshold is not None else 'All'}.png")
+                png_path = os.path.join(graphics_dir,
+                                        f"{field_name}_{threshold if threshold is not None else 'All'}.png")
                 title = f"{plot} > {threshold if threshold is not None else 'All'} | Selected: {len(passing_ids)} / {len(base_metrics)}"
                 subtitle = f"Total Nodes: {len(passing_ids)}"
                 if field_name == "TotalVol":
@@ -651,7 +661,6 @@ class StormDrainPlots:
                     f"[Graphics] {plot}: overview PNG failed: {e}",
                     'FLO-2D', Qgis.Warning
                 )
-
 
     def storm_drain_profile(self, storm_drain_rbs, flo2d_results_dir, sd_output_dir, plot=False):
         """
