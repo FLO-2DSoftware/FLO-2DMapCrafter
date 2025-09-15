@@ -20,26 +20,45 @@
  *                                                                         *
  ***************************************************************************/
 """
-import os
-
-from PyQt5.QtCore import QMetaType, QVariant
+import os, processing
+from functools import partial
+from qgis.PyQt.QtWidgets import QProgressDialog, QApplication
+from PyQt5.QtCore import QMetaType, QVariant, Qt
 from qgis._core import QgsProject, QgsVectorLayer, QgsField, QgsFeature, QgsPointXY, QgsGeometry, QgsVectorFileWriter
-
 from flo2d_mapcrafter.mapping.check_data import check_project_id, check_mapping_group, check_raster_file, \
     check_vector_file
 from flo2d_mapcrafter.mapping.scripts import read_ASCII, set_raster_style, set_velocity_vector_style
 
-
 class SedimentMaps:
 
-    def __init__(self, units_switch, vector_scale):
+    def __init__(self, iface, units_switch, vector_scale):
         """
         Class constructor
         :param units_switch: 0 english 1 metric
         """
+        self.iface = iface
         self.units_switch = units_switch
         self.max_vector_scale = vector_scale[0]
         self.min_vector_scale = vector_scale[1]
+
+    # Helper 1 for progress bar
+    def _make_progress(self, text: str, maximum: int) -> QProgressDialog:
+        dlg = QProgressDialog(text, "Cancel", 0, max(1, int(maximum)), self.iface.mainWindow())
+        dlg.setWindowTitle("QGIS3")
+        dlg.setWindowModality(Qt.WindowModal)
+        dlg.setMinimumDuration(0)
+        dlg.setAutoClose(True)
+        dlg.setAutoReset(True)
+        dlg.setValue(0)
+        return dlg
+
+    # Helper 2 for progress bar
+    def _tick(self, dlg: QProgressDialog, label: str):
+        if dlg.wasCanceled():
+            raise KeyboardInterrupt
+        dlg.setLabelText(label)
+        dlg.setValue(dlg.value() + 1)
+        QApplication.processEvents()
 
     def check_sediment_files(self, output_dir):
         """
@@ -82,236 +101,276 @@ class SedimentMaps:
         """
         Function to create the maps
         """
+        total_steps = sum(1 for _, v in sediment_rbs.items() if v)
 
-        mapping_group_name = check_project_id("Sediment Maps", project_id)
-        mapping_group = check_mapping_group(mapping_group_name, mapping_group)
+        dlg = self._make_progress("Preparing...", max(1, total_steps))
 
-        vector_style_directory = os.path.dirname(os.path.realpath(__file__))[:-8] + r"\vector_styles"
-        raster_style_directory = os.path.dirname(os.path.realpath(__file__))[:-8] + r"\raster_styles"
+        try:
+            # ----------------------- Groups ----------------------------
 
-        # Site Characteristics
-        sc_group_name = "Site Characteristics"
-        if mapping_group.findGroup(sc_group_name):
-            sc_group = mapping_group.findGroup(sc_group_name)
-        else:
-            sc_group = mapping_group.insertGroup(0, sc_group_name)
+            mapping_group_name = check_project_id("Sediment Maps", project_id)
+            mapping_group = check_mapping_group(mapping_group_name, mapping_group)
 
-        # Basic
-        bv_group_name = "Basic"
-        if mapping_group.findGroup(bv_group_name):
-            bv_group = mapping_group.findGroup(bv_group_name)
-        else:
-            bv_group = mapping_group.insertGroup(0, bv_group_name)
+            vector_style_directory = os.path.dirname(os.path.realpath(__file__))[:-8] + r"\vector_styles"
+            raster_style_directory = os.path.dirname(os.path.realpath(__file__))[:-8] + r"\raster_styles"
 
-        # Derived
-        dv_group_name = "Derived"
-        if mapping_group.findGroup(dv_group_name):
-            dv_group = mapping_group.findGroup(dv_group_name)
-        else:
-            dv_group = mapping_group.insertGroup(0, dv_group_name)
+            # Site Characteristics
+            sc_group_name = "Site Characteristics"
+            if mapping_group.findGroup(sc_group_name):
+                sc_group = mapping_group.findGroup(sc_group_name)
+            else:
+                sc_group = mapping_group.insertGroup(0, sc_group_name)
 
-        # Derived
-        tv_group_name = "Time"
-        if mapping_group.findGroup(tv_group_name):
-            tv_group = mapping_group.findGroup(tv_group_name)
-        else:
-            tv_group = mapping_group.insertGroup(0, tv_group_name)
+            # Basic
+            bv_group_name = "Basic"
+            if mapping_group.findGroup(bv_group_name):
+                bv_group = mapping_group.findGroup(bv_group_name)
+            else:
+                bv_group = mapping_group.insertGroup(0, bv_group_name)
 
-        # Channel
-        cv_group_name = "Channel"
-        if mapping_group.findGroup(cv_group_name):
-            cv_group = mapping_group.findGroup(cv_group_name)
-        else:
-            cv_group = mapping_group.insertGroup(0, cv_group_name)
+            # Derived
+            dv_group_name = "Derived"
+            if mapping_group.findGroup(dv_group_name):
+                dv_group = mapping_group.findGroup(dv_group_name)
+            else:
+                dv_group = mapping_group.insertGroup(0, dv_group_name)
 
-        # Sediment
-        sd_group_name = "Sediment"
-        if mapping_group.findGroup(sd_group_name):
-            sd_group = mapping_group.findGroup(sd_group_name)
-        else:
-            sd_group = mapping_group.insertGroup(0, sd_group_name)
+            # Derived
+            tv_group_name = "Time"
+            if mapping_group.findGroup(tv_group_name):
+                tv_group = mapping_group.findGroup(tv_group_name)
+            else:
+                tv_group = mapping_group.insertGroup(0, tv_group_name)
 
-        # Structures
-        sv_group_name = "Structures"
-        if mapping_group.findGroup(sv_group_name):
-            sv_group = mapping_group.findGroup(sv_group_name)
-        else:
-            sv_group = mapping_group.insertGroup(0, sv_group_name)
+            # Channel
+            cv_group_name = "Channel"
+            if mapping_group.findGroup(cv_group_name):
+                cv_group = mapping_group.findGroup(cv_group_name)
+            else:
+                cv_group = mapping_group.insertGroup(0, cv_group_name)
 
-        # Hydraulics
-        hv_group_name = "Hydraulics"
-        if mapping_group.findGroup(hv_group_name):
-            hv_group = mapping_group.findGroup(hv_group_name)
-        else:
-            hv_group = mapping_group.insertGroup(0, hv_group_name)
+            # Sediment
+            sd_group_name = "Sediment"
+            if mapping_group.findGroup(sd_group_name):
+                sd_group = mapping_group.findGroup(sd_group_name)
+            else:
+                sd_group = mapping_group.insertGroup(0, sd_group_name)
 
-        # Ground elevation
-        if sediment_rbs.get(r"TOPO.DAT"):
-            name = check_project_id("GROUND_ELEVATION", project_id)
-            name, raster = check_raster_file(name, map_output_dir)
-            file = flo2d_results_dir + r"\TOPO.DAT"
-            self.process_maps(name, raster, file, crs, sc_group, 6)
+            # Structures
+            sv_group_name = "Structures"
+            if mapping_group.findGroup(sv_group_name):
+                sv_group = mapping_group.findGroup(sv_group_name)
+            else:
+                sv_group = mapping_group.insertGroup(0, sv_group_name)
 
-        # Maximum Depth
-        if sediment_rbs.get(r"DEPTH.OUT"):
-            name = check_project_id("MAXIMUM_DEPTH", project_id)
-            name, raster = check_raster_file(name, map_output_dir)
-            file = flo2d_results_dir + r"\DEPFP.OUT"
-            self.process_maps(name, raster, file, crs, bv_group, 0)
+            # Hydraulics
+            hv_group_name = "Hydraulics"
+            if mapping_group.findGroup(hv_group_name):
+                hv_group = mapping_group.findGroup(hv_group_name)
+            else:
+                hv_group = mapping_group.insertGroup(0, hv_group_name)
 
-        # Maximum Velocity
-        if sediment_rbs.get(r"VELFP.OUT"):
-            name = check_project_id("MAXIMUM_VELOCITY", project_id)
-            name, raster = check_raster_file(name, map_output_dir)
-            file = flo2d_results_dir + r"\VELFP.OUT"
-            self.process_maps(name, raster, file, crs, bv_group, 1)
+            # Ground elevation
+            if sediment_rbs.get(r"TOPO.DAT"):
+                name = check_project_id("GROUND_ELEVATION", project_id)
+                name, raster = check_raster_file(name, map_output_dir)
+                file = flo2d_results_dir + r"\TOPO.DAT"
+                self.process_maps(name, raster, file, crs, sc_group, 6)
+                self._tick(dlg, "Ground Elevation")
 
-        # Maximum WSE TODO: Check
-        if sediment_rbs.get(r"MAXWSELEV.OUT"):
-            name = check_project_id("MAXIMUM_WSE", project_id)
-            name, raster = check_raster_file(name, map_output_dir)
-            file = flo2d_results_dir + r"\MAXWSELEV.OUT"
-            self.process_maps(name, raster, file, crs, bv_group, 6)
+            # Maximum Depth
+            if sediment_rbs.get(r"DEPTH.OUT"):
+                name = check_project_id("MAXIMUM_DEPTH", project_id)
+                name, raster = check_raster_file(name, map_output_dir)
+                file = flo2d_results_dir + r"\DEPFP.OUT"
+                self.process_maps(name, raster, file, crs, bv_group, 0)
+                self._tick(dlg, "Maximum Depth")
 
-        # Final Depth
-        if sediment_rbs.get(r"FINALDEP.OUT"):
-            name = check_project_id("FINAL_DEPTH", project_id)
-            name, raster = check_raster_file(name, map_output_dir)
-            file = flo2d_results_dir + r"\FINALDEP.OUT"
-            self.process_maps(name, raster, file, crs, bv_group, 0)
+            # Maximum Velocity
+            if sediment_rbs.get(r"VELFP.OUT"):
+                name = check_project_id("MAXIMUM_VELOCITY", project_id)
+                name, raster = check_raster_file(name, map_output_dir)
+                file = flo2d_results_dir + r"\VELFP.OUT"
+                self.process_maps(name, raster, file, crs, bv_group, 1)
+                self._tick(dlg, "Maximum Velocity")
 
-        # Final Velocity
-        if sediment_rbs.get(r"FINALVEL.OUT"):
-            name = check_project_id("FINAL_VELOCITY", project_id)
-            name, raster = check_raster_file(name, map_output_dir)
-            file = flo2d_results_dir + r"\FINALVEL.OUT"
-            self.process_maps(name, raster, file, crs, bv_group, 1)
+            # Maximum WSE TODO: Check
+            if sediment_rbs.get(r"MAXWSELEV.OUT"):
+                name = check_project_id("MAXIMUM_WSE", project_id)
+                name, raster = check_raster_file(name, map_output_dir)
+                file = flo2d_results_dir + r"\MAXWSELEV.OUT"
+                self.process_maps(name, raster, file, crs, bv_group, 6)
+                self._tick(dlg, "Maximum WSE")
 
-        # Depth x Velocity
-        if sediment_rbs.get(r"VEL_X_DEPTH.OUT"):
-            name = check_project_id("DEPTH_X_VELOCITY", project_id)
-            name, raster = check_raster_file(name, map_output_dir)
-            file = flo2d_results_dir + r"\VEL_X_DEPTH.OUT"
-            self.process_maps(name, raster, file, crs, dv_group, 7)
+            # Final Depth
+            if sediment_rbs.get(r"FINALDEP.OUT"):
+                name = check_project_id("FINAL_DEPTH", project_id)
+                name, raster = check_raster_file(name, map_output_dir)
+                file = flo2d_results_dir + r"\FINALDEP.OUT"
+                self.process_maps(name, raster, file, crs, bv_group, 0)
+                self._tick(dlg, "Final Depth")
 
-        # Time to one ft
-        if sediment_rbs.get(r"TIMEONEFT.OUT"):
-            name = check_project_id("TIME_ONE_FT", project_id)
-            name, raster = check_raster_file(name, map_output_dir)
-            file = flo2d_results_dir + r"\TIMEONEFT.OUT"
-            self.process_maps(name, raster, file, crs, tv_group, 3)
+            # Final Velocity
+            if sediment_rbs.get(r"FINALVEL.OUT"):
+                name = check_project_id("FINAL_VELOCITY", project_id)
+                name, raster = check_raster_file(name, map_output_dir)
+                file = flo2d_results_dir + r"\FINALVEL.OUT"
+                self.process_maps(name, raster, file, crs, bv_group, 1)
+                self._tick(dlg, "Final Velocity")
 
-        # Time to two ft
-        if sediment_rbs.get(r"TIMETWOFT.OUT"):
-            name = check_project_id("TIME_TWO_FT", project_id)
-            name, raster = check_raster_file(name, map_output_dir)
-            file = flo2d_results_dir + r"\TIMETWOFT.OUT"
-            self.process_maps(name, raster, file, crs, tv_group, 3)
+            # Depth x Velocity
+            if sediment_rbs.get(r"VEL_X_DEPTH.OUT"):
+                name = check_project_id("DEPTH_X_VELOCITY", project_id)
+                name, raster = check_raster_file(name, map_output_dir)
+                file = flo2d_results_dir + r"\VEL_X_DEPTH.OUT"
+                self.process_maps(name, raster, file, crs, dv_group, 7)
+                self._tick(dlg, "Depth x Velocity")
 
-        # Time to peak
-        if sediment_rbs.get(r"TIMETOPEAK.OUT"):
-            name = check_project_id("TIME_TO_MAX", project_id)
-            name, raster = check_raster_file(name, map_output_dir)
-            file = flo2d_results_dir + r"\TIMETOPEAK.OUT"
-            self.process_maps(name, raster, file, crs, tv_group, 3)
+            # Time to one ft
+            if sediment_rbs.get(r"TIMEONEFT.OUT"):
+                name = check_project_id("TIME_ONE_FT", project_id)
+                name, raster = check_raster_file(name, map_output_dir)
+                file = flo2d_results_dir + r"\TIMEONEFT.OUT"
+                self.process_maps(name, raster, file, crs, tv_group, 3)
+                self._tick(dlg, "Time to One ft")
 
-        # Static pressure
-        if sediment_rbs.get(r"STATICPRESS.OUT"):
-            name = check_project_id("STATIC_PRESSURE", project_id)
-            name, raster = check_raster_file(name, map_output_dir)
-            file = flo2d_results_dir + r"\STATICPRESS.OUT"
-            self.process_maps(name, raster, file, crs, hv_group, 8)
+            # Time to two ft
+            if sediment_rbs.get(r"TIMETWOFT.OUT"):
+                name = check_project_id("TIME_TWO_FT", project_id)
+                name, raster = check_raster_file(name, map_output_dir)
+                file = flo2d_results_dir + r"\TIMETWOFT.OUT"
+                self.process_maps(name, raster, file, crs, tv_group, 3)
+                self._tick(dlg, "Time to Two ft")
 
-        # Specific Energy
-        if sediment_rbs.get(r"SPECENERGY.OUT"):
-            name = check_project_id("SPECIFIC_ENERGY", project_id)
-            name, raster = check_raster_file(name, map_output_dir)
-            file = flo2d_results_dir + r"\SPECENERGY.OUT"
-            self.process_maps(name, raster, file, crs, hv_group, 9)
+            # Time to peak
+            if sediment_rbs.get(r"TIMETOPEAK.OUT"):
+                name = check_project_id("TIME_TO_MAX", project_id)
+                name, raster = check_raster_file(name, map_output_dir)
+                file = flo2d_results_dir + r"\TIMETOPEAK.OUT"
+                self.process_maps(name, raster, file, crs, tv_group, 3)
+                self._tick(dlg, "Time to Peak")
 
-        # Maximum channel depth
-        if sediment_rbs.get(r"DEPCH.OUT"):
-            name = check_project_id("MAXIMUM_CHANNEL_DEPTH", project_id)
-            name, raster = check_raster_file(name, map_output_dir)
-            file = flo2d_results_dir + r"\DEPCH.OUT"
-            self.process_maps(name, raster, file, crs, cv_group, 0)
+            # Static pressure
+            if sediment_rbs.get(r"STATICPRESS.OUT"):
+                name = check_project_id("STATIC_PRESSURE", project_id)
+                name, raster = check_raster_file(name, map_output_dir)
+                file = flo2d_results_dir + r"\STATICPRESS.OUT"
+                self.process_maps(name, raster, file, crs, hv_group, 8)
+                self._tick(dlg, "Static Pressure")
 
-        # Final channel depth
-        if sediment_rbs.get(r"DEPCHFINAL.OUT"):
-            name = check_project_id("FINAL_CHANNEL_DEPTH", project_id)
-            name, raster = check_raster_file(name, map_output_dir)
-            file = flo2d_results_dir + r"\DEPCHFINAL.OUT"
-            self.process_maps(name, raster, file, crs, cv_group, 0)
+            # Specific Energy
+            if sediment_rbs.get(r"SPECENERGY.OUT"):
+                name = check_project_id("SPECIFIC_ENERGY", project_id)
+                name, raster = check_raster_file(name, map_output_dir)
+                file = flo2d_results_dir + r"\SPECENERGY.OUT"
+                self.process_maps(name, raster, file, crs, hv_group, 9)
+                self._tick(dlg, "Specific Energy")
 
-        # Maximum channel velocity
-        if sediment_rbs.get(r"VELOC.OUT"):
-            name = check_project_id("MAXIMUM_CHANNEL_VELOCITY", project_id)
-            name, raster = check_raster_file(name, map_output_dir)
-            file = flo2d_results_dir + r"\VELOC.OUT"
-            self.process_maps(name, raster, file, crs, cv_group, 1)
+            # Maximum channel depth
+            if sediment_rbs.get(r"DEPCH.OUT"):
+                name = check_project_id("MAXIMUM_CHANNEL_DEPTH", project_id)
+                name, raster = check_raster_file(name, map_output_dir)
+                file = flo2d_results_dir + r"\DEPCH.OUT"
+                self.process_maps(name, raster, file, crs, cv_group, 0)
+                self._tick(dlg, "Maximum Energy")
 
-        # Final channel velocity
-        if sediment_rbs.get(r"VELCHFINAL.OUT"):
-            name = check_project_id("FINAL_CHANNEL_VELOCITY", project_id)
-            name, raster = check_raster_file(name, map_output_dir)
-            file = flo2d_results_dir + r"\VELCHFINAL.OUT"
-            self.process_maps(name, raster, file, crs, cv_group, 1)
+            # Final channel depth
+            if sediment_rbs.get(r"DEPCHFINAL.OUT"):
+                name = check_project_id("FINAL_CHANNEL_DEPTH", project_id)
+                name, raster = check_raster_file(name, map_output_dir)
+                file = flo2d_results_dir + r"\DEPCHFINAL.OUT"
+                self.process_maps(name, raster, file, crs, cv_group, 0)
+                self._tick(dlg, "Final Depth Channel")
 
-        # Levee Deficit
-        if sediment_rbs.get(r"LEVEEDEFIC.OUT"):
-            name = check_project_id("LEVEE_DEFICIT", project_id)
-            name, raster = check_raster_file(name, map_output_dir)
-            file = flo2d_results_dir + r"\LEVEEDEFIC.OUT"
-            self.process_maps(name, raster, file, crs, sv_group, 11)
+            # Maximum channel velocity
+            if sediment_rbs.get(r"VELOC.OUT"):
+                name = check_project_id("MAXIMUM_CHANNEL_VELOCITY", project_id)
+                name, raster = check_raster_file(name, map_output_dir)
+                file = flo2d_results_dir + r"\VELOC.OUT"
+                self.process_maps(name, raster, file, crs, cv_group, 1)
+                self._tick(dlg, "Maximum Depth Velocity")
 
-        # Maximum Deposition / Maximum Scour / Final Bed Difference
-        sedfp_maps = sediment_rbs.get(r"SEDFP.OUT")
-        if sedfp_maps[0]:
-            name = check_project_id("MAXIMUM_DEPOSITION", project_id)
-            name, raster = check_raster_file(name, map_output_dir)
-            file = flo2d_results_dir + r"\SEDFP.OUT"
-            self.process_maps(name, raster, file, crs, sd_group, 12)
-        if sedfp_maps[1]:
-            name = check_project_id("MAXIMUM_SCOUR", project_id)
-            name, raster = check_raster_file(name, map_output_dir)
-            file = flo2d_results_dir + r"\SEDFP.OUT"
-            self.process_maps(name, raster, file, crs, sd_group, 13)
-        if sedfp_maps[2]:
-            name = check_project_id("FINAL_BED_DIFFERENCE", project_id)
-            name, raster = check_raster_file(name, map_output_dir)
-            file = flo2d_results_dir + r"\SEDFP.OUT"
-            self.process_maps(name, raster, file, crs, sd_group, 14)
+            # Final channel velocity
+            if sediment_rbs.get(r"VELCHFINAL.OUT"):
+                name = check_project_id("FINAL_CHANNEL_VELOCITY", project_id)
+                name, raster = check_raster_file(name, map_output_dir)
+                file = flo2d_results_dir + r"\VELCHFINAL.OUT"
+                self.process_maps(name, raster, file, crs, cv_group, 1)
+                self._tick(dlg, "Final Channel Velocity")
 
-        # Maximum Velocity Vector
-        if sediment_rbs.get(r"VELDIREC.OUT"):
-            name = check_project_id("MAXIMUM_VELOCITY_VECTORS", project_id)
-            name, vector = check_vector_file(name, map_output_dir)
-            value_file = flo2d_results_dir + r"\VELFP.OUT"
-            direction_file = flo2d_results_dir + r"\VELDIREC.OUT"
-            self.process_vectors(name, vector, value_file, direction_file, crs, bv_group, self.max_vector_scale)
+            # Levee Deficit
+            if sediment_rbs.get(r"LEVEEDEFIC.OUT"):
+                name = check_project_id("LEVEE_DEFICIT", project_id)
+                name, raster = check_raster_file(name, map_output_dir)
+                file = flo2d_results_dir + r"\LEVEEDEFIC.OUT"
+                self.process_maps(name, raster, file, crs, sv_group, 11)
+                self._tick(dlg, "Levee Deficit")
 
-        # Final Velocity Vector
-        if sediment_rbs.get(r"FINALDIR.OUT"):
-            name = check_project_id("FINAL_VELOCITY_VECTORS", project_id)
-            name, vector = check_vector_file(name, map_output_dir)
-            value_file = flo2d_results_dir + r"\FINALVEL.OUT"
-            direction_file = flo2d_results_dir + r"\FINALDIR.OUT"
-            self.process_vectors(name, vector, value_file, direction_file, crs, bv_group, self.min_vector_scale)
+            # Maximum Deposition
+            sedfp_maps = sediment_rbs.get(r"SEDFP.OUT")
+            if sedfp_maps[0]:
+                name = check_project_id("MAXIMUM_DEPOSITION", project_id)
+                name, raster = check_raster_file(name, map_output_dir)
+                file = flo2d_results_dir + r"\SEDFP.OUT"
+                self.process_maps(name, raster, file, crs, sd_group, 12)
+                self._tick(dlg, "Maximum Deposition")
 
-        # Impact Force
-        if sediment_rbs.get(r"IMPACT.OUT"):
-            name = check_project_id("IMPACT_FORCE", project_id)
-            name, raster = check_raster_file(name, map_output_dir)
-            file = flo2d_results_dir + r"\IMPACT.OUT"
-            self.process_maps(name, raster, file, crs, hv_group, 1)
+            # Maximum Scour
+            if sedfp_maps[1]:
+                name = check_project_id("MAXIMUM_SCOUR", project_id)
+                name, raster = check_raster_file(name, map_output_dir)
+                file = flo2d_results_dir + r"\SEDFP.OUT"
+                self.process_maps(name, raster, file, crs, sd_group, 13)
+                self._tick(dlg, "Maximum Scour")
 
-        # Uncheck and Collapse the layers added
-        allLayers = mapping_group.findLayers()
-        for layer in allLayers:
-            if not layer.name().split()[0] == "GROUND_ELEVATION":
-                lyr = QgsProject.instance().layerTreeRoot().findLayer(layer.layerId())
-                lyr.setItemVisibilityChecked(False)
-                lyr.setExpanded(False)
+            # Final Bed Difference
+            if sedfp_maps[2]:
+                name = check_project_id("FINAL_BED_DIFFERENCE", project_id)
+                name, raster = check_raster_file(name, map_output_dir)
+                file = flo2d_results_dir + r"\SEDFP.OUT"
+                self.process_maps(name, raster, file, crs, sd_group, 14)
+                self._tick(dlg, "Final Bed Difference")
+
+            # Maximum Velocity Vector
+            if sediment_rbs.get(r"VELDIREC.OUT"):
+                name = check_project_id("MAXIMUM_VELOCITY_VECTORS", project_id)
+                name, vector = check_vector_file(name, map_output_dir)
+                value_file = flo2d_results_dir + r"\VELFP.OUT"
+                direction_file = flo2d_results_dir + r"\VELDIREC.OUT"
+                self.process_vectors(name, vector, value_file, direction_file, crs, bv_group, self.max_vector_scale)
+                self._tick(dlg, "Maximum Velocity Vector")
+
+            # Final Velocity Vector
+            if sediment_rbs.get(r"FINALDIR.OUT"):
+                name = check_project_id("FINAL_VELOCITY_VECTORS", project_id)
+                name, vector = check_vector_file(name, map_output_dir)
+                value_file = flo2d_results_dir + r"\FINALVEL.OUT"
+                direction_file = flo2d_results_dir + r"\FINALDIR.OUT"
+                self.process_vectors(name, vector, value_file, direction_file, crs, bv_group, self.min_vector_scale)
+                self._tick(dlg, "Final Velocity Vector")
+
+
+            # Impact Force
+            if sediment_rbs.get(r"IMPACT.OUT"):
+                name = check_project_id("IMPACT_FORCE", project_id)
+                name, raster = check_raster_file(name, map_output_dir)
+                file = flo2d_results_dir + r"\IMPACT.OUT"
+                self.process_maps(name, raster, file, crs, hv_group, 1)
+                self._tick(dlg, "Impact Force")
+
+            # Uncheck and Collapse the layers added
+            allLayers = mapping_group.findLayers()
+            for layer in allLayers:
+                if not layer.name().split()[0] == "GROUND_ELEVATION":
+                    lyr = QgsProject.instance().layerTreeRoot().findLayer(layer.layerId())
+                    lyr.setItemVisibilityChecked(False)
+                    lyr.setExpanded(False)
+
+        except KeyboardInterrupt:
+            # user cancelled
+            return
+        finally:
+            dlg.close()
 
     def process_maps(self, name, raster, file, crs, mapping_group, style):
         """
