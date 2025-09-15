@@ -22,24 +22,41 @@
  ***************************************************************************/
 """
 import os
-
+import processing
 import numpy as np
 from osgeo import gdal
 from qgis._core import QgsProject, QgsRasterLayer
-
+from qgis.PyQt.QtWidgets import QProgressDialog, QApplication
+from PyQt5.QtCore import Qt
 from flo2d_mapcrafter.mapping.check_data import check_project_id, check_mapping_group, check_raster_file
 from flo2d_mapcrafter.mapping.scripts import read_ASCII, remove_layer, set_raster_style
 
-import processing
-
 class HazardMaps:
 
-    def __init__(self, units_switch):
+    def __init__(self, iface, units_switch):
         """
         Class constructor
         :param units_switch: 0 english 1 metric
         """
+        self.iface = iface
         self.units_switch = units_switch
+
+    def _make_progress(self, text: str, maximum: int) -> QProgressDialog:
+        dlg = QProgressDialog(text, "Cancel", 0, max(1, int(maximum)), self.iface.mainWindow())
+        dlg.setWindowTitle("QGIS3")
+        dlg.setWindowModality(Qt.WindowModal)
+        dlg.setMinimumDuration(0)
+        dlg.setAutoClose(True)
+        dlg.setAutoReset(True)
+        dlg.setValue(0)
+        return dlg
+
+    def _tick(self, dlg: QProgressDialog, label: str):
+        if dlg.wasCanceled():
+            raise KeyboardInterrupt
+        dlg.setLabelText(label)
+        dlg.setValue(dlg.value() + 1)
+        QApplication.processEvents()
 
     def check_hazard_files(self, output_dir):
         """
@@ -106,143 +123,134 @@ class HazardMaps:
         Function to create the maps
         """
 
-        mapping_group_name = check_project_id("Hazard Maps", project_id)
-        mapping_group = check_mapping_group(mapping_group_name, mapping_group)
-
-        vector_style_directory = os.path.dirname(os.path.realpath(__file__))[:-8] + r"\vector_styles"
-        raster_style_directory = os.path.dirname(os.path.realpath(__file__))[:-8] + r"\raster_styles"
-
-        # ARR
-        ARR_group_name = "Australian Rainfall and Runoff (ARR)"
-        if mapping_group.findGroup(ARR_group_name):
-            ARR_group = mapping_group.findGroup(ARR_group_name)
-        else:
-            ARR_group = mapping_group.insertGroup(0, ARR_group_name)
-
-        # Basic
-        SWISS_group_name = "SWISS"
-        if mapping_group.findGroup(SWISS_group_name):
-            SWISS_group = mapping_group.findGroup(SWISS_group_name)
-        else:
-            SWISS_group = mapping_group.insertGroup(0, SWISS_group_name)
-
-        # Derived
-        USBR_group_name = "US Bureau of Reclamation"
-        if mapping_group.findGroup(USBR_group_name):
-            USBR_group = mapping_group.findGroup(USBR_group_name)
-        else:
-            USBR_group = mapping_group.insertGroup(0, USBR_group_name)
-
-        # ARR
+        # ---- count steps (ARR + Swiss flags + USBR flags) ----
+        total_steps = 0
         if hazard_rbs.get("ARR"):
-            name = check_project_id("ARR_FLOOD_HAZARD", project_id)
-            name, raster = check_raster_file(name, map_output_dir)
-            depth_file = flo2d_results_dir + r"\DEPTH.OUT"
-            vel_file = flo2d_results_dir + r"\VELFP.OUT"
-            vel_x_depth_file = flo2d_results_dir + r"\VEL_X_DEPTH.OUT"
+            total_steps += 1
+        swiss_maps = hazard_rbs.get("Swiss") or []
+        total_steps += sum(1 for v in swiss_maps if v)
+        usbr_maps = hazard_rbs.get("USBR") or []
+        total_steps += sum(1 for v in usbr_maps if v)
 
-            hydro_risk_raster = self.create_arr_map(
-                map_output_dir, raster, depth_file, vel_file, vel_x_depth_file, crs, project_id
-            )
+        dlg = self._make_progress("Preparing…", max(1, total_steps))
+        try:
+            # ----------------- setup / groups -----------------
+            mapping_group_name = check_project_id("Hazard Maps", project_id)
+            mapping_group = check_mapping_group(mapping_group_name, mapping_group)
 
-            QgsProject.instance().addMapLayer(hydro_risk_raster, False)
-            set_raster_style(hydro_risk_raster, 2)
+            vector_style_directory = os.path.dirname(os.path.realpath(__file__))[:-8] + r"\vector_styles"
+            raster_style_directory = os.path.dirname(os.path.realpath(__file__))[:-8] + r"\raster_styles"
 
-            ARR_group.insertLayer(0, hydro_risk_raster)
+            # ARR
+            ARR_group_name = "Australian Rainfall and Runoff (ARR)"
+            ARR_group = mapping_group.findGroup(ARR_group_name) or mapping_group.insertGroup(0, ARR_group_name)
 
-        usbr_maps = hazard_rbs.get("USBR")
-        for index, hazard_type in enumerate(usbr_maps):
-            if hazard_type:
-                depth_file = flo2d_results_dir + r"\DEPTH.OUT"
-                vel_file = flo2d_results_dir + r"\VELFP.OUT"
+            # SWISS
+            SWISS_group_name = "SWISS"
+            SWISS_group = mapping_group.findGroup(SWISS_group_name) or mapping_group.insertGroup(0, SWISS_group_name)
+
+            # USBR
+            USBR_group_name = "US Bureau of Reclamation"
+            USBR_group = mapping_group.findGroup(USBR_group_name) or mapping_group.insertGroup(0, USBR_group_name)
+
+            # ----------------- ARR -----------------
+            if hazard_rbs.get("ARR"):
+                dlg.setLabelText("ARR: computing…"); QApplication.processEvents()
+                name = check_project_id("ARR_FLOOD_HAZARD", project_id)
+                name, raster = check_raster_file(name, map_output_dir)
+                depth_file = os.path.join(flo2d_results_dir, "DEPTH.OUT")
+                vel_file = os.path.join(flo2d_results_dir, "VELFP.OUT")
+                vel_x_depth_file = os.path.join(flo2d_results_dir, "VEL_X_DEPTH.OUT")
+
+                hydro_risk_raster = self.create_arr_map(
+                    map_output_dir, raster, depth_file, vel_file, vel_x_depth_file, crs, project_id
+                )
+
+                QgsProject.instance().addMapLayer(hydro_risk_raster, False)
+                set_raster_style(hydro_risk_raster, 2)
+                ARR_group.insertLayer(0, hydro_risk_raster)
+
+                self._tick(dlg, "ARR: done")
+
+            # ----------------- USBR (Houses/Mobile/Vehicles/Adults/Children) -----------------
+            usbr_maps = hazard_rbs.get("USBR") or []
+            for index, hazard_type in enumerate(usbr_maps):
+                if not hazard_type:
+                    continue
+
+                labels = ["USBR – Houses", "USBR – Mobile", "USBR – Vehicle", "USBR – Adults", "USBR – Children"]
+                dlg.setLabelText(f"{labels[index]}: computing…"); QApplication.processEvents()
+
+                depth_file = os.path.join(flo2d_results_dir, "DEPTH.OUT")
+                vel_file = os.path.join(flo2d_results_dir, "VELFP.OUT")
                 vel_data = np.loadtxt(vel_file, skiprows=0)
                 depth_data = np.loadtxt(depth_file, skiprows=0)
-                # Houses
+
                 if index == 0:
                     name = check_project_id("USBR_HOUSES_HAZARD", project_id)
-                    name, raster = check_raster_file(name, map_output_dir)
-                    hydro_risk_raster = self.create_usbr_map(
-                        name, raster, depth_data, vel_data, index, crs
-                    )
-                    QgsProject.instance().addMapLayer(hydro_risk_raster, False)
-                    set_raster_style(hydro_risk_raster, 8)
-                    USBR_group.insertLayer(0, hydro_risk_raster)
-                # mobile house
-                if index == 1:
+                elif index == 1:
                     name = check_project_id("USBR_MOBILE_HAZARD", project_id)
-                    name, raster = check_raster_file(name, map_output_dir)
-                    hydro_risk_raster = self.create_usbr_map(
-                        name, raster, depth_data, vel_data, index, crs
-                    )
-                    QgsProject.instance().addMapLayer(hydro_risk_raster, False)
-                    set_raster_style(hydro_risk_raster, 8)
-                    USBR_group.insertLayer(0, hydro_risk_raster)
-                # vehicle
-                if index == 2:
+                elif index == 2:
                     name = check_project_id("USBR_VEHICLE_HAZARD", project_id)
-                    name, raster = check_raster_file(name, map_output_dir)
-                    hydro_risk_raster = self.create_usbr_map(
-                        name, raster, depth_data, vel_data, index, crs
-                    )
-                    QgsProject.instance().addMapLayer(hydro_risk_raster, False)
-                    set_raster_style(hydro_risk_raster, 8)
-                    USBR_group.insertLayer(0, hydro_risk_raster)
-                # adults
-                if index == 3:
+                elif index == 3:
                     name = check_project_id("USBR_ADULTS_HAZARD", project_id)
-                    name, raster = check_raster_file(name, map_output_dir)
-                    hydro_risk_raster = self.create_usbr_map(
-                        name, raster, depth_data, vel_data, index, crs
-                    )
-                    QgsProject.instance().addMapLayer(hydro_risk_raster, False)
-                    set_raster_style(hydro_risk_raster, 8)
-                    USBR_group.insertLayer(0, hydro_risk_raster)
-                # children
-                if index == 4:
+                else:
                     name = check_project_id("USBR_CHILDREN_HAZARD", project_id)
-                    name, raster = check_raster_file(name, map_output_dir)
-                    hydro_risk_raster = self.create_usbr_map(
-                        name, raster, depth_data, vel_data, index, crs
-                    )
-                    QgsProject.instance().addMapLayer(hydro_risk_raster, False)
-                    set_raster_style(hydro_risk_raster, 8)
-                    USBR_group.insertLayer(0, hydro_risk_raster)
 
-        swiss_maps = hazard_rbs.get("Swiss")
-        for index, hazard_type in enumerate(swiss_maps):
-            if hazard_type:
-                depth_file = flo2d_results_dir + r"\DEPTH.OUT"
-                vel_file = flo2d_results_dir + r"\VELFP.OUT"
-                vel_x_depth_file = flo2d_results_dir + r"\VEL_X_DEPTH.OUT"
+                name, raster = check_raster_file(name, map_output_dir)
+                hydro_risk_raster = self.create_usbr_map(
+                    name, raster, depth_data, vel_data, index, crs
+                )
+                QgsProject.instance().addMapLayer(hydro_risk_raster, False)
+                set_raster_style(hydro_risk_raster, 8)
+                USBR_group.insertLayer(0, hydro_risk_raster)
+
+                self._tick(dlg, f"{labels[index]}: done")
+
+            # ----------------- SWISS (Flood intensity / Debris intensity) -----------------
+            swiss_maps = hazard_rbs.get("Swiss") or []
+            for index, hazard_type in enumerate(swiss_maps):
+                if not hazard_type:
+                    continue
+
+                labels = ["Swiss Flood Intensity", "Swiss Debris Intensity"]
+                dlg.setLabelText(f"{labels[index]}: computing…"); QApplication.processEvents()
+
+                depth_file = os.path.join(flo2d_results_dir, "DEPTH.OUT")
+                vel_file = os.path.join(flo2d_results_dir, "VELFP.OUT")
+                vel_x_depth_file = os.path.join(flo2d_results_dir, "VEL_X_DEPTH.OUT")
                 vel_x_depth_data = np.loadtxt(vel_x_depth_file, skiprows=0)
                 depth_data = np.loadtxt(depth_file, skiprows=0)
                 vel_data = np.loadtxt(vel_file, skiprows=0)
-                # Flood intensity
+
                 if index == 0:
                     name = check_project_id("SWISS_FLOOD_INTENSITY", project_id)
-                    name, raster = check_raster_file(name, map_output_dir)
-                    hydro_risk_raster = self.create_swiss_map(
-                        name, raster, depth_data, vel_data, vel_x_depth_data, index, crs
-                    )
-                    QgsProject.instance().addMapLayer(hydro_risk_raster, False)
-                    set_raster_style(hydro_risk_raster, 8)
-                    SWISS_group.insertLayer(0, hydro_risk_raster)
-                if index == 1:
+                else:
                     name = check_project_id("SWISS_DEBRIS_INTENSITY", project_id)
-                    name, raster = check_raster_file(name, map_output_dir)
-                    hydro_risk_raster = self.create_swiss_map(
-                        name, raster, depth_data, vel_data, vel_x_depth_data, index, crs
-                    )
-                    QgsProject.instance().addMapLayer(hydro_risk_raster, False)
-                    set_raster_style(hydro_risk_raster, 8)
-                    SWISS_group.insertLayer(0, hydro_risk_raster)
 
-        # Uncheck and Collapse the layers added
-        allLayers = mapping_group.findLayers()
-        for layer in allLayers:
-            lyr = QgsProject.instance().layerTreeRoot().findLayer(layer.layerId())
-            lyr.setItemVisibilityChecked(False)
-            lyr.setExpanded(False)
+                name, raster = check_raster_file(name, map_output_dir)
+                hydro_risk_raster = self.create_swiss_map(
+                    name, raster, depth_data, vel_data, vel_x_depth_data, index, crs
+                )
+                QgsProject.instance().addMapLayer(hydro_risk_raster, False)
+                set_raster_style(hydro_risk_raster, 8)
+                SWISS_group.insertLayer(0, hydro_risk_raster)
+
+                self._tick(dlg, f"{labels[index]}: done")
+
+            # ----------------- collapse new layers -----------------
+            allLayers = mapping_group.findLayers()
+            for layer in allLayers:
+                lyr = QgsProject.instance().layerTreeRoot().findLayer(layer.layerId())
+                lyr.setItemVisibilityChecked(False)
+                lyr.setExpanded(False)
+
+        except KeyboardInterrupt:
+            # user cancelled
+            return
+        finally:
+            dlg.close()
+
 
 
     def create_swiss_map(self, name, hydro_risk, depth_data, vel_data, vel_x_depth_data, map_type, crs):
