@@ -24,11 +24,11 @@
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QColor
 from qgis.PyQt import QtWidgets
-from PyQt5.QtWidgets import QMessageBox, QApplication, QCheckBox, QTableWidgetItem, QHeaderView
+from PyQt5.QtWidgets import QMessageBox, QApplication, QCheckBox, QTableWidgetItem, QHeaderView, QSizePolicy
 from PyQt5.QtXml import QDomDocument
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication
 from qgis.PyQt.QtGui import QIcon
-from qgis.PyQt.QtWidgets import QAction, QHeaderView
+from qgis.PyQt.QtWidgets import QAction
 from qgis._core import (
     QgsCoordinateReferenceSystem,
     QgsRasterBandStats,
@@ -52,14 +52,9 @@ from .mapping.storm_drain import StormDrainPlots
 from .mapping.twophase import TwophaseMaps
 from .resources import *
 from .flo2d_mapcrafter_dialog import FLO2DMapCrafterDialog
-import re
-import os
-import os.path
-import processing
-import time
+import re, os, processing, time
 from datetime import datetime
 from typing import List, Tuple
-from qgis.core import QgsProject
 from .simple_swmm_parser import SimpleSWMMModel
 
 
@@ -83,14 +78,7 @@ class FLO2DMapCrafter:
         self.menu = self.tr("&FLO-2D MapCrafter ")
 
         self._swmm_model = None  # Cache for parsed SWMM model.
-
-        # Project Summary: Wire summary items to update whenever the export folder changes
-        fw = getattr(self.dlg, "flo2d_out_folder", None) or getattr(self.dlg, "flo2dExportFolder", None)
-        if fw:
-            try:
-                fw.fileChanged.connect(lambda *_: self._update_summary_fields())
-            except Exception:
-                pass
+        self._sim_type = None  # Cache for simulation type
         self._update_summary_fields()
         # initialize plugin directory
         self.plugin_dir = os.path.dirname(__file__)
@@ -104,10 +92,6 @@ class FLO2DMapCrafter:
             self.translator = QTranslator()
             self.translator.load(locale_path)
             QCoreApplication.installTranslator(self.translator)
-
-        # Declare instance attributes
-        self.actions = []
-        self.menu = self.tr("&FLO-2D MapCrafter ")
 
         # Check if plugin was started the first time in current QGIS session
         # Must be set in initGui() to survive plugin reloads
@@ -264,8 +248,6 @@ class FLO2DMapCrafter:
 
         if not hasattr(self, "menu") or not self.menu:
             self.menu = self.tr("&FLO-2D MapCrafter ")
-        if add_to_menu:
-            self.iface.addPluginToMenu(self.menu, action)
 
         return action
 
@@ -350,11 +332,26 @@ class FLO2DMapCrafter:
         self.dlg.close()
 
     # ---------------------------------------------------------------------------------------------------------#
-    #                                            Helpers                                                      #
+    #                                             Helpers                                                      #
     # ---------------------------------------------------------------------------------------------------------#
+    def _is_simulation_complete(self, summary_path: str) -> bool:
+        if not summary_path or not os.path.isfile(summary_path):
+            return False
+        pat = re.compile(
+            r"GRID\s+ELEMENT\s+SIZE\s*:?",
+            re.IGNORECASE
+        )
+        try:
+            with open(summary_path, "r", errors="ignore") as f:
+                for line in f:
+                    if pat.search(line):
+                        return True
+        except Exception:
+            return False
+        return False
 
     # -----------------------------------#
-    # Project Summary: Units Helper     #
+    # Project Summary: Units Helper      #
     # -----------------------------------#
     def _export_folder(self):
         """Return the path from the FLO-2D Export Folder widget."""
@@ -362,19 +359,17 @@ class FLO2DMapCrafter:
         return w.filePath() if w else ""
 
     def _find_cont_dat(self, base):
-        """Look for CONT.DAT in base or its parent (common folder layouts)."""
+        # Look for CONT.DAT in base folder.
         if not base:
             return None
-        for folder in (base, os.path.dirname(base)):
-            for name in ("CONT.DAT", "cont.dat"):
-                p = os.path.join(folder, name)
-                if os.path.isfile(p):
-                    return p
+        for name in ("CONT.DAT", "cont.dat"):
+            p = os.path.join(base, name)
+            if os.path.isfile(p):
+                return p
         return None
 
     def _detect_units_from_cont(self, cont_path: str):
         """Return 'English (Imperial)' or 'SI (Metric)' from CONT.DAT line 1, token 4."""
-        import os
         if not cont_path or not os.path.isfile(cont_path):
             return None
         try:
@@ -396,14 +391,12 @@ class FLO2DMapCrafter:
     # -----------------------------------#
 
     def _find_summary_out(self, base):
-        """Return path to SUMMARY.OUT by checking base and its parent."""
         if not base:
             return None
-        for folder in (base, os.path.dirname(base)):
-            for name in ("SUMMARY.OUT", "summary.out"):
-                p = os.path.join(folder, name)
-                if os.path.isfile(p):
-                    return p
+        for name in ("SUMMARY.OUT", "summary.out"):
+            p = os.path.join(base, name)
+            if os.path.isfile(p):
+                return p
         return None
 
     def _detect_build_from_summary(self, summary_path):
@@ -487,77 +480,8 @@ class FLO2DMapCrafter:
             return None
         return None
 
-    # ------------------------------------#
-    # Project Summary: Simulation Type   #
-    # ------------------------------------#
-
-    def _detect_simulation_type(self, base_dir: str, cont_path: str, summary_path: str):
-        """
-        Infer simulation type(s) from files & keywords.
-        Returns a string like: 'Flood + Storm Drain + Sediment'
-        """
-        labels = []
-
-        # Quick file existence check in base and parent
-        def find_any(fnames):
-            for folder in (base_dir, os.path.dirname(base_dir) if base_dir else None):
-                if not folder:
-                    continue
-                for nm in fnames:
-                    p = os.path.join(folder, nm)
-                    if os.path.isfile(p):
-                        return True
-            return False
-
-        # Load small snippets of CONT.DAT and SUMMARY.OUT for keyword scanning
-        contU = ""
-        if cont_path and os.path.isfile(cont_path):
-            try:
-                with open(cont_path, "r", errors="ignore") as f:
-                    contU = f.read(20000).upper()  # header is enough
-            except Exception:
-                pass
-
-        sumU = ""
-        if summary_path and os.path.isfile(summary_path):
-            try:
-                with open(summary_path, "r", errors="ignore") as f:
-                    sumU = f.read(50000).upper()
-            except Exception:
-                pass
-
-        # Base module: Flood (always present for grid hydraulics)
-        labels.append("Flood")
-
-        # Storm Drain signals
-        storm_files = ("SWMM.INP", "HYDRAULICS.DAT", "STORM.DAT")
-        storm_kw = ("SWMM", "STORM DRAIN", "STORM_DRAIN", "HYDRAULIC STRUCTURE")
-        if find_any(storm_files) or any(k in contU or k in sumU for k in storm_kw):
-            labels.append("Storm Drain")
-
-        # Mudflow / Debris-flow / Two-phase signals
-        mud_files = ("MUDFLOW.DAT", "TWO_PHASE.DAT", "TAILINGS.DAT", "TAILINGS_STACK_DEPTH.DAT")
-        mud_kw = ("MUD", "MUDFLOW", "DEBRIS", "TWO-PHASE", "TWO PHASE", "TAILINGS")
-        if find_any(mud_files) or any(k in contU or k in sumU for k in mud_kw):
-            labels.append("Mudflow")
-
-        # Sediment signals
-        sed_files = ("SEDIMENT.DAT", "SED.DAT")
-        sed_kw = ("SEDIMENT", "BEDLOAD", "SUSPENDED LOAD")
-        if find_any(sed_files) or any(k in contU or k in sumU for k in sed_kw):
-            labels.append("Sediment")
-
-        # De-duplicate & format
-        seen, final = set(), []
-        for lab in labels:
-            if lab not in seen:
-                final.append(lab);
-                seen.add(lab)
-
-        return " + ".join(final) if final else "Unknown"
-
     # ----------------------------------------#
-    # Project Summary: Simulation Date       #
+    # Project Summary: Simulation Date        #
     # ----------------------------------------#
 
     def _detect_simulation_date_from_summary(self, summary_path: str):
@@ -632,9 +556,46 @@ class FLO2DMapCrafter:
             pass
         return None
 
-    # ------------------------------------------------------------------#
-    # Project Summary: Extra Info: Simulation Summary|STATUS|ACTION    #
-    # ------------------------------------------------------------------#
+    def _reset_sim_summary_table(self, tbl):
+        """Hard reset the 3-column Summary table to a clean, consistent state."""
+        tbl.setUpdatesEnabled(False)
+        try:
+            tbl.setSortingEnabled(False)
+            tbl.clear()
+            try:
+                tbl.clearSpans()
+            except Exception:
+                pass
+            tbl.setRowCount(0)
+            tbl.setColumnCount(3)
+            tbl.setHorizontalHeaderLabels(["Simulation Summary", "Status", "Action"])
+
+            h = tbl.horizontalHeader()
+            # Use the SAME modes in all states for consistency:
+            h.setSectionResizeMode(0, QHeaderView.Stretch)
+            h.setSectionResizeMode(1, QHeaderView.ResizeToContents)
+            h.setSectionResizeMode(2, QHeaderView.Stretch)
+            h.setMinimumSectionSize(80)  # keeps "Status" from collapsing
+            h.setStretchLastSection(False)
+
+            tbl.verticalHeader().setVisible(False)
+            tbl.setAlternatingRowColors(False)
+            tbl.setWordWrap(True)
+        finally:
+            tbl.setUpdatesEnabled(True)
+
+    def _show_sim_summary_placeholder(self, tbl, message: str):
+        self._reset_sim_summary_table(tbl)
+        tbl.setRowCount(1)
+        item = QTableWidgetItem(message)
+        f = item.font();
+        f.setItalic(True);
+        item.setFont(f)
+        item.setTextAlignment(Qt.AlignCenter)
+        item.setFlags(Qt.ItemIsEnabled)
+        tbl.setItem(0, 0, item)
+        tbl.setSpan(0, 0, 1, 3)  # this span will be cleared next rebuild
+
     def _extract_simulation_summary_table(self, summary_path: str) -> List[Tuple[str, str, str]]:
         """
         Parse the three columns under the SIMULATION SUMMARY section of SUMMARY.OUT.
@@ -665,7 +626,7 @@ class FLO2DMapCrafter:
         while i < len(lines) and not lines[i].strip():
             i += 1
 
-        # header row (best effort)
+        # header row
         if i < len(lines) and re.search(r"\bSTATUS\b", lines[i], re.IGNORECASE) and re.search(r"\bACTION\b", lines[i],
                                                                                               re.IGNORECASE):
             i += 1  # move to first data row
@@ -676,9 +637,8 @@ class FLO2DMapCrafter:
             i += 1
 
             if not raw.strip():
-                break  # end of table block
+                break
 
-            # stop if we hit another obvious header/section
             if re.search(r"\b(UNITS|BUILD|GRID SIZE|NO\.? OF ELEMENTS|SIMULATION TYPE|COORD\.?|FLO-2D|SUMMARY)\b", raw,
                          re.IGNORECASE):
                 break
@@ -701,21 +661,15 @@ class FLO2DMapCrafter:
             rows.append((s, status, action))
         return rows
 
-        # Prime the Simulation Summary table headers before data exists
-
+    # Prime the Simulation Summary table headers before data exists
     def _prime_sim_summary_table(self):
         tbl = getattr(self.dlg, "sumSimSummaryTable", None)
         if not tbl:
             return
-        tbl.setColumnCount(3)
-        tbl.setHorizontalHeaderLabels(["Simulation Summary", "Status", "Action"])
-        h = tbl.horizontalHeader()
-        # Make headers readable before there are any rows
-        h.setSectionResizeMode(0, QHeaderView.Stretch)
-        h.setSectionResizeMode(1, QHeaderView.ResizeToContents)
-        h.setSectionResizeMode(2, QHeaderView.Stretch)
-        tbl.verticalHeader().setVisible(False)
-        tbl.setAlternatingRowColors(False)
+        # keep it a good height even when empty
+        tbl.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.MinimumExpanding)
+        tbl.setMinimumHeight(220)
+        self._reset_sim_summary_table(tbl)
 
     def _update_summary_fields(self):
         base = self._export_folder()
@@ -742,9 +696,10 @@ class FLO2DMapCrafter:
         build = self._detect_build_from_summary(summary_path)
         cell = self._detect_cellsize_from_summary(summary_path)
         nelems = self._detect_elements_from_summary(summary_path)
-        simtype = self._detect_simulation_type(base, cont_path, summary_path)
+        # simtype = self._detect_simulation_type(base, cont_path, summary_path)
         simdate = self._detect_simulation_date_from_summary(summary_path)
         epsg = self._detect_epsg_code()
+        simtype = getattr(self, "_sim_type", None)
 
         self.dlg.sumUnits.setText(units or "—")
         self.dlg.sumBuild.setText(build or "—")
@@ -754,30 +709,40 @@ class FLO2DMapCrafter:
         self.dlg.sumSimDate.setText(simdate or "—")
         self.dlg.sumEPSG.setText(epsg or "—")
 
-        # Simulation Summary (3-column table)
-        sim_table_rows = self._extract_simulation_summary_table(summary_path)
-
+        # --- Simulation Summary (3-column table) ---
         if hasattr(self.dlg, "sumSimSummaryTable") and self.dlg.sumSimSummaryTable:
             tbl = self.dlg.sumSimSummaryTable
-            tbl.clear()
-            tbl.setRowCount(len(sim_table_rows))
-            tbl.setColumnCount(3)
-            tbl.setHorizontalHeaderLabels(["Simulation Summary", "Status", "Action"])
 
+            # 1) SUMMARY.OUT missing, use placeholder
+            if not summary_path:
+                self._show_sim_summary_placeholder(
+                    tbl, "— SUMMARY.OUT not found in the selected folder —"
+                )
+                return
+
+            # 2) Parse rows + completion flag
+            sim_table_rows = self._extract_simulation_summary_table(summary_path)
+            is_complete = self._is_simulation_complete(summary_path)
+
+            # 3) If the run looks incomplete, use placeholder
+            if not is_complete:
+                self._show_sim_summary_placeholder(tbl, "— Simulation Incomplete —")
+                return
+
+            # 4) If there’s no SIMULATION SUMMARY section, use placeholder
+            if not sim_table_rows:
+                self._show_sim_summary_placeholder(
+                    tbl, "— No 'Simulation Summary' information found in SUMMARY.OUT —"
+                )
+                return
+
+            # 5) Otherwise build the real table
+            self._reset_sim_summary_table(tbl)
+            tbl.setRowCount(len(sim_table_rows))
             for r, (summary_txt, status_txt, action_txt) in enumerate(sim_table_rows):
                 tbl.setItem(r, 0, QTableWidgetItem(summary_txt))
                 tbl.setItem(r, 1, QTableWidgetItem(status_txt))
                 tbl.setItem(r, 2, QTableWidgetItem(action_txt))
-
-            header = tbl.horizontalHeader()
-            header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
-            header.setSectionResizeMode(1, QHeaderView.ResizeToContents)
-            header.setSectionResizeMode(2, QHeaderView.Stretch)
-
-            tbl.verticalHeader().setVisible(False)
-            tbl.setAlternatingRowColors(True)
-            tbl.setEditTriggers(tbl.NoEditTriggers)
-            tbl.setAlternatingRowColors(False)
 
     def _export_summary_to_rpt(self):
         """
@@ -905,7 +870,6 @@ class FLO2DMapCrafter:
         rpt_mtime = os.path.getmtime(rpt_file) if os.path.isfile(rpt_file) else None
         model = getattr(self, "_swmm_model", None)
         if (model is None) or (getattr(model, "_rpt_mtime", None) != rpt_mtime):
-            from .simple_swmm_parser import SimpleSWMMModel
             self._swmm_model = SimpleSWMMModel(inp_file, rpt_file)
             self._swmm_model._rpt_mtime = rpt_mtime
         return self._swmm_model
@@ -913,8 +877,36 @@ class FLO2DMapCrafter:
     def check_files(self):
         """Function to check the type of files present on the simulation"""
 
-        # check if simulation was run
         files_in_directory = os.listdir(self.dlg.flo2d_out_folder.filePath())
+        output_directory = self.dlg.flo2d_out_folder.filePath()
+
+        # --- Decide sim type FIRST (from CONT.DAT) ---
+        self._sim_type = None  # reset for new folder
+        cont_path = os.path.join(output_directory, "CONT.DAT")
+        try:
+            if os.path.isfile(cont_path):
+                with open(cont_path, "r") as f:
+                    lines = f.readlines()
+                self.units_switch = lines[0].split()[3]
+                elements = lines[2].split()
+                mud_switch = elements[3]
+                sed_switch = elements[4]
+
+                if mud_switch == "0" and sed_switch == "0":
+                    self._sim_type = "Flood"
+                elif mud_switch == "0" and sed_switch == "1":
+                    self._sim_type = "Sediment"
+                elif mud_switch == "1" and sed_switch == "0":
+                    self._sim_type = "Mudflow"
+                elif mud_switch == "2" and sed_switch == "0":
+                    self._sim_type = "Two-phase"
+                # else: leave as None
+        except Exception:
+            # Leave _sim_type = None on any parsing issue
+            pass
+
+        # --- Refresh the Summary tab with the NEW sim type ---
+        self._update_summary_fields()
 
         # In future version, calculate the Cell size from the DEPTH.OUT file
         if "DEPTH.OUT" in files_in_directory and "CONT.DAT" in files_in_directory:
@@ -928,9 +920,9 @@ class FLO2DMapCrafter:
             msg_box.setWindowTitle("Warning")
             msg_box.setText("No CONT.DAT and *.OUT files were found in this directory!")
             msg_box.exec_()
-            return
+            # return
 
-        output_directory = self.dlg.flo2d_out_folder.filePath()
+        # output_directory = self.dlg.flo2d_out_folder.filePath()
 
         with open(output_directory + r"\CONT.DAT", "r") as file:
             lines = file.readlines()
@@ -944,15 +936,18 @@ class FLO2DMapCrafter:
         min_vector_scale = self.dlg.min_vector_scale_sb.value()
         vector_scale = [max_vector_scale, min_vector_scale]
 
+        self._sim_type = None
+
         # Flood simulation
         if mud_switch == "0" and sed_switch == "0":
+            self._sim_type = "Flood"
             self.dlg.tab0.setEnabled(False)
             self.dlg.tab1.setEnabled(True)
             self.dlg.tab2.setEnabled(False)
             self.dlg.tab3.setEnabled(False)
             self.dlg.tabs.setCurrentIndex(0)
 
-            flood_maps = FloodMaps(self.units_switch, vector_scale)
+            flood_maps = FloodMaps(self.iface, self.units_switch, vector_scale)
             flood_files_dict = flood_maps.check_flood_files(output_directory)
 
             flood_rbs = {
@@ -991,13 +986,14 @@ class FLO2DMapCrafter:
 
         # Sediment simulation
         if mud_switch == "0" and sed_switch == "1":
+            self._sim_type = "Sediment"
             self.dlg.tab1.setEnabled(False)
             self.dlg.tab2.setEnabled(False)
             self.dlg.tab0.setEnabled(True)
             self.dlg.tab3.setEnabled(False)
             self.dlg.tabs.setCurrentIndex(1)
 
-            sediment_maps = SedimentMaps(self.units_switch, vector_scale)
+            sediment_maps = SedimentMaps(self.iface, self.units_switch, vector_scale)
             sediment_files_dict = sediment_maps.check_sediment_files(output_directory)
 
             sediment_rbs = {
@@ -1044,13 +1040,14 @@ class FLO2DMapCrafter:
 
         # Mudflow simulation
         if mud_switch == "1" and sed_switch == "0":
+            self._sim_type = "Mudflow"
             self.dlg.tab0.setEnabled(False)
             self.dlg.tab1.setEnabled(False)
             self.dlg.tab2.setEnabled(True)
             self.dlg.tab3.setEnabled(False)
             self.dlg.tabs.setCurrentIndex(2)
 
-            mudflow_maps = MudflowMaps(self.units_switch, vector_scale)
+            mudflow_maps = MudflowMaps(self.iface, self.units_switch, vector_scale)
             mudflow_files_dict = mudflow_maps.check_mudflow_files(output_directory)
 
             mudflow_rbs = {
@@ -1086,13 +1083,14 @@ class FLO2DMapCrafter:
 
         # Two-phase simulation
         if mud_switch == "2" and sed_switch == "0":
+            self._sim_type = "Two-phase"
             self.dlg.tab0.setEnabled(False)
             self.dlg.tab1.setEnabled(False)
             self.dlg.tab2.setEnabled(False)
             self.dlg.tab3.setEnabled(True)
             self.dlg.tabs.setCurrentIndex(3)
 
-            twophase_maps = TwophaseMaps(self.units_switch, vector_scale)
+            twophase_maps = TwophaseMaps(self.iface, self.units_switch, vector_scale)
             twophase_files_dict = twophase_maps.check_twophase_files(output_directory)
 
             twophase_rbs = {
@@ -1151,7 +1149,7 @@ class FLO2DMapCrafter:
 
         # Hazard Maps
         self.dlg.tab5.setEnabled(True)
-        hazard_maps = HazardMaps(self.units_switch)
+        hazard_maps = HazardMaps(self.iface, self.units_switch)
         hazard_maps_dict = hazard_maps.check_hazard_files(output_directory)
 
         hazard_rbs = {
@@ -1272,6 +1270,7 @@ class FLO2DMapCrafter:
                 map_output_dir = QgsProcessingUtils.tempFolder()
 
             if not self.check_checkboxes():
+                QApplication.restoreOverrideCursor()  # restore cursor
                 return
 
             with open(flo2d_results_dir + r"\CONT.DAT", "r") as file:
@@ -1323,7 +1322,7 @@ class FLO2DMapCrafter:
                     "VEL_SQ_X_DEPTH": self.dlg.v2xd_cw_cb.isChecked(),
                 }
 
-                flood_maps = FloodMaps(self.units_switch, vector_scale)
+                flood_maps = FloodMaps(self.iface, self.units_switch, vector_scale)
                 flood_maps.create_maps(
                     flood_rbs, flo2d_results_dir, map_output_dir, mapping_group, self.crs, project_id
                 )
@@ -1361,7 +1360,7 @@ class FLO2DMapCrafter:
                     r"IMPACT.OUT": self.dlg.if_sd_cb.isChecked(),
                 }
 
-                sediment_maps = SedimentMaps(self.units_switch, vector_scale)
+                sediment_maps = SedimentMaps(self.iface, self.units_switch, vector_scale)
                 sediment_maps.create_maps(
                     sediment_rbs, flo2d_results_dir, map_output_dir, mapping_group, self.crs, project_id
                 )
@@ -1396,7 +1395,7 @@ class FLO2DMapCrafter:
                     r"IMPACT.OUT": self.dlg.if_mf_cb.isChecked(),
                 }
 
-                mudflow_maps = MudflowMaps(self.units_switch, vector_scale)
+                mudflow_maps = MudflowMaps(self.iface, self.units_switch, vector_scale)
                 mudflow_maps.create_maps(
                     mudflow_rbs, flo2d_results_dir, map_output_dir, mapping_group, self.crs, project_id
                 )
@@ -1446,7 +1445,7 @@ class FLO2DMapCrafter:
                     ],
                 }
 
-                twophase_maps = TwophaseMaps(self.units_switch, vector_scale)
+                twophase_maps = TwophaseMaps(self.iface, self.units_switch, vector_scale)
                 twophase_maps.create_maps(
                     twophase_rbs, flo2d_results_dir, map_output_dir, mapping_group, self.crs, project_id
                 )
@@ -1477,7 +1476,7 @@ class FLO2DMapCrafter:
                 value if not isinstance(value, list) else any(value) for value in hazard_rbs.values())
 
             if at_least_one_checked:
-                hazard_maps = HazardMaps(self.units_switch)
+                hazard_maps = HazardMaps(self.iface, self.units_switch)
                 hazard_maps.create_maps(
                     hazard_rbs, flo2d_results_dir, map_output_dir, mapping_group, self.crs, project_id
                 )
@@ -1579,6 +1578,9 @@ class FLO2DMapCrafter:
                 "ERROR: Error while creating the maps! See log messages for more information.", level=Qgis.Critical,
                 duration=5)
             QgsMessageLog.logMessage(str(e))
+
+        finally:
+            QApplication.restoreOverrideCursor()
 
     def see_storm_drain_profile(self):
         """
@@ -1947,7 +1949,6 @@ class FLO2DMapCrafter:
             self.dlg.mvv_cw_cb,
             self.dlg.fvv_cw_cb,
             self.dlg.if_cw_cb,
-            # NEW:
             self.dlg.v2xd_cw_cb,
         ]
 
