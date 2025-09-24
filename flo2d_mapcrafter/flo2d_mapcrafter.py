@@ -71,6 +71,7 @@ class FLO2DMapCrafter:
         """
         # Save reference to the QGIS interface
         self.units_switch = None
+        self.toler_value = None
         self.iface = iface
         self.dlg = FLO2DMapCrafterDialog()
         self._prime_sim_summary_table()
@@ -905,6 +906,12 @@ class FLO2DMapCrafter:
             # Leave _sim_type = None on any parsing issue
             pass
 
+        toler_path = os.path.join(output_directory, "TOLER.DAT")
+        if os.path.isfile(toler_path):
+            with open(toler_path, "r") as f:
+                lines = f.readlines()
+            self.toler_value = float(lines[0].split()[0])
+
         # --- Refresh the Summary tab with the NEW sim type ---
         self._update_summary_fields()
 
@@ -945,9 +952,9 @@ class FLO2DMapCrafter:
             self.dlg.tab1.setEnabled(True)
             self.dlg.tab2.setEnabled(False)
             self.dlg.tab3.setEnabled(False)
-            self.dlg.tabs.setCurrentIndex(0)
+            self.dlg.tabs.setCurrentIndex(1)
 
-            flood_maps = FloodMaps(self.iface, self.units_switch, vector_scale)
+            flood_maps = FloodMaps(self.iface, self.units_switch, vector_scale, self.toler_value)
             flood_files_dict = flood_maps.check_flood_files(output_directory)
 
             flood_rbs = {
@@ -991,9 +998,9 @@ class FLO2DMapCrafter:
             self.dlg.tab2.setEnabled(False)
             self.dlg.tab0.setEnabled(True)
             self.dlg.tab3.setEnabled(False)
-            self.dlg.tabs.setCurrentIndex(1)
+            self.dlg.tabs.setCurrentIndex(2)
 
-            sediment_maps = SedimentMaps(self.iface, self.units_switch, vector_scale)
+            sediment_maps = SedimentMaps(self.iface, self.units_switch, vector_scale, self.toler_value)
             sediment_files_dict = sediment_maps.check_sediment_files(output_directory)
 
             sediment_rbs = {
@@ -1045,9 +1052,9 @@ class FLO2DMapCrafter:
             self.dlg.tab1.setEnabled(False)
             self.dlg.tab2.setEnabled(True)
             self.dlg.tab3.setEnabled(False)
-            self.dlg.tabs.setCurrentIndex(2)
+            self.dlg.tabs.setCurrentIndex(3)
 
-            mudflow_maps = MudflowMaps(self.iface, self.units_switch, vector_scale)
+            mudflow_maps = MudflowMaps(self.iface, self.units_switch, vector_scale, self.toler_value)
             mudflow_files_dict = mudflow_maps.check_mudflow_files(output_directory)
 
             mudflow_rbs = {
@@ -1088,9 +1095,9 @@ class FLO2DMapCrafter:
             self.dlg.tab1.setEnabled(False)
             self.dlg.tab2.setEnabled(False)
             self.dlg.tab3.setEnabled(True)
-            self.dlg.tabs.setCurrentIndex(3)
+            self.dlg.tabs.setCurrentIndex(4)
 
-            twophase_maps = TwophaseMaps(self.iface, self.units_switch, vector_scale)
+            twophase_maps = TwophaseMaps(self.iface, self.units_switch, vector_scale, self.toler_value)
             twophase_files_dict = twophase_maps.check_twophase_files(output_directory)
 
             twophase_rbs = {
@@ -1131,6 +1138,7 @@ class FLO2DMapCrafter:
                     self.dlg.md_tp_cb,
                     self.dlg.fdb_tp_cb
                 ],
+                r"FP_BED_CHANGE_MUD.OUT": self.dlg.fdbmcd_tp_cb,
             }
 
             for key, value in twophase_files_dict.items():
@@ -1249,338 +1257,339 @@ class FLO2DMapCrafter:
         Run method that performs all the real work
         """
 
-        try:
+        # try:
 
-            QApplication.setOverrideCursor(Qt.WaitCursor)
+        QApplication.setOverrideCursor(Qt.WaitCursor)
 
-            # input & output directories
-            flo2d_results_dir = self.dlg.flo2d_out_folder.filePath()
-            map_output_dir = self.dlg.mapper_out_folder.filePath()
-            # Ensure MapCrafter output folder exists
-            if not map_output_dir:
-                map_output_dir = os.path.join(flo2d_results_dir, "MapCrafter")
-            os.makedirs(map_output_dir, exist_ok=True)
-            self.crs = self.dlg.crsselector.crs()
-            project_id = self.dlg.project_id.text()
-            max_vector_scale = self.dlg.max_vector_scale_sb.value()
-            min_vector_scale = self.dlg.min_vector_scale_sb.value()
-            vector_scale = [max_vector_scale, min_vector_scale]
+        # input & output directories
+        flo2d_results_dir = self.dlg.flo2d_out_folder.filePath()
+        map_output_dir = self.dlg.mapper_out_folder.filePath()
+        # Ensure MapCrafter output folder exists
+        if not map_output_dir:
+            map_output_dir = os.path.join(flo2d_results_dir, "MapCrafter")
+        os.makedirs(map_output_dir, exist_ok=True)
+        self.crs = self.dlg.crsselector.crs()
+        project_id = self.dlg.project_id.text()
+        max_vector_scale = self.dlg.max_vector_scale_sb.value()
+        min_vector_scale = self.dlg.min_vector_scale_sb.value()
+        vector_scale = [max_vector_scale, min_vector_scale]
 
-            if map_output_dir == "":
-                map_output_dir = QgsProcessingUtils.tempFolder()
+        if map_output_dir == "":
+            map_output_dir = QgsProcessingUtils.tempFolder()
 
-            if not self.check_checkboxes():
-                QApplication.restoreOverrideCursor()  # restore cursor
-                return
+        if not self.check_checkboxes():
+            QApplication.restoreOverrideCursor()  # restore cursor
+            return
 
-            with open(flo2d_results_dir + r"\CONT.DAT", "r") as file:
-                lines = file.readlines()
-                self.units_switch = lines[0].split()[3]
-                elements = lines[2].split()
-                mud_switch = elements[3]
-                sed_switch = elements[4]
-                file.close()
+        with open(flo2d_results_dir + r"\CONT.DAT", "r") as file:
+            lines = file.readlines()
+            self.units_switch = lines[0].split()[3]
+            elements = lines[2].split()
+            mud_switch = elements[3]
+            sed_switch = elements[4]
+            file.close()
 
-            """
-            GROUPS CREATION
-            """
+        """
+        GROUPS CREATION
+        """
 
-            root = QgsProject.instance().layerTreeRoot()
+        root = QgsProject.instance().layerTreeRoot()
 
-            mapping_group_name = "FLO-2D MapCrafter"
-            if root.findGroup(mapping_group_name):
-                mapping_group = root.findGroup(mapping_group_name)
-            else:
-                mapping_group = root.insertGroup(0, mapping_group_name)
+        mapping_group_name = "FLO-2D MapCrafter"
+        if root.findGroup(mapping_group_name):
+            mapping_group = root.findGroup(mapping_group_name)
+        else:
+            mapping_group = root.insertGroup(0, mapping_group_name)
 
-            """        
-            FLOOD MAPS        
-            """
+        """        
+        FLOOD MAPS        
+        """
 
-            if mud_switch == "0" and sed_switch == "0":
-                flood_rbs = {
-                    r"TOPO.DAT": self.dlg.ge_cw_cb.isChecked(),
-                    r"DEPTH.OUT": self.dlg.md_cw_cb.isChecked(),
-                    r"VELFP.OUT": self.dlg.mv_cw_cb.isChecked(),
-                    r"VELDIREC.OUT": self.dlg.mvv_cw_cb.isChecked(),
-                    r"MAXWSELEV.OUT": self.dlg.mwse_cw_cb.isChecked(),
-                    r"FINALDEP.OUT": self.dlg.fd_cw_cb.isChecked(),
-                    r"FINALVEL.OUT": self.dlg.fv_cw_cb.isChecked(),
-                    r"FINALDIR.OUT": self.dlg.fvv_cw_cb.isChecked(),
-                    r"VEL_X_DEPTH.OUT": self.dlg.dv_cw_cb.isChecked(),
-                    r"TIMEONEFT.OUT": self.dlg.t1ft_cw_cb.isChecked(),
-                    r"TIMETWOFT.OUT": self.dlg.t2ft_cw_cb.isChecked(),
-                    r"TIMETOPEAK.OUT": self.dlg.tmax_cw_cb.isChecked(),
-                    r"DEPCH.OUT": self.dlg.cd_cw_cb.isChecked(),
-                    r"VELOC.OUT": self.dlg.cv_cw_cb.isChecked(),
-                    r"VELCHFINAL.OUT": self.dlg.fcv_cw_cb.isChecked(),
-                    r"DEPCHFINAL.OUT": self.dlg.fcd_cw_cb.isChecked(),
-                    r"LEVEEDEFIC.OUT": self.dlg.ld_cw_cb.isChecked(),
-                    r"SPECENERGY.OUT": self.dlg.se_cw_cb.isChecked(),
-                    r"STATICPRESS.OUT": self.dlg.sp_cw_cb.isChecked(),
-                    r"IMPACT.OUT": self.dlg.if_cw_cb.isChecked(),
-                    "VEL_SQ_X_DEPTH": self.dlg.v2xd_cw_cb.isChecked(),
-                }
-
-                flood_maps = FloodMaps(self.iface, self.units_switch, vector_scale)
-                flood_maps.create_maps(
-                    flood_rbs, flo2d_results_dir, map_output_dir, mapping_group, self.crs, project_id
-                )
-
-            """
-            SEDIMENT MAPS
-            """
-
-            if mud_switch == "0" and sed_switch == "1":
-                sediment_rbs = {
-                    r"TOPO.DAT": self.dlg.ge_sd_cb.isChecked(),
-                    r"DEPTH.OUT": self.dlg.md_sd_cb.isChecked(),
-                    r"VELFP.OUT": self.dlg.mv_sd_cb.isChecked(),
-                    r"VELDIREC.OUT": self.dlg.mvv_sd_cb.isChecked(),
-                    r"MAXWSELEV.OUT": self.dlg.mwse_sd_cb.isChecked(),
-                    r"FINALDEP.OUT": self.dlg.fd_sd_cb.isChecked(),
-                    r"FINALVEL.OUT": self.dlg.fv_sd_cb.isChecked(),
-                    r"FINALDIR.OUT": self.dlg.fvv_sd_cb.isChecked(),
-                    r"VEL_X_DEPTH.OUT": self.dlg.dv_sd_cb.isChecked(),
-                    r"TIMEONEFT.OUT": self.dlg.t1ft_sd_cb.isChecked(),
-                    r"TIMETWOFT.OUT": self.dlg.t2ft_sd_cb.isChecked(),
-                    r"TIMETOPEAK.OUT": self.dlg.tmax_sd_cb.isChecked(),
-                    r"DEPCH.OUT": self.dlg.cd_sd_cb.isChecked(),
-                    r"VELOC.OUT": self.dlg.cv_sd_cb.isChecked(),
-                    r"VELCHFINAL.OUT": self.dlg.fcv_sd_cb.isChecked(),
-                    r"DEPCHFINAL.OUT": self.dlg.fcd_sd_cb.isChecked(),
-                    r"LEVEEDEFIC.OUT": self.dlg.ld_sd_cb.isChecked(),
-                    r"SPECENERGY.OUT": self.dlg.se_sd_cb.isChecked(),
-                    r"STATICPRESS.OUT": self.dlg.sp_sd_cb.isChecked(),
-                    r"SEDFP.OUT": [
-                        self.dlg.mdep_sd_cb.isChecked(),
-                        self.dlg.msco_sd_cb.isChecked(),
-                        self.dlg.fbd_sd_cb.isChecked()
-                    ],
-                    r"IMPACT.OUT": self.dlg.if_sd_cb.isChecked(),
-                }
-
-                sediment_maps = SedimentMaps(self.iface, self.units_switch, vector_scale)
-                sediment_maps.create_maps(
-                    sediment_rbs, flo2d_results_dir, map_output_dir, mapping_group, self.crs, project_id
-                )
-
-            """"
-            MUDFLOW MAPS
-            """
-
-            if mud_switch == "1" and sed_switch == "0":
-                mudflow_rbs = {
-                    r"TOPO.DAT": self.dlg.ge_mf_cb.isChecked(),
-                    r"DEPTH.OUT": self.dlg.md_mf_cb.isChecked(),
-                    r"VELFP.OUT": self.dlg.mv_mf_cb.isChecked(),
-                    r"VELDIREC.OUT": self.dlg.mvv_mf_cb.isChecked(),
-                    r"MAXWSELEV.OUT": self.dlg.mwse_mf_cb.isChecked(),
-                    r"FINALDEP.OUT": self.dlg.fd_mf_cb.isChecked(),
-                    r"FINALVEL.OUT": self.dlg.fv_mf_cb.isChecked(),
-                    r"FINALDIR.OUT": self.dlg.fvv_mf_cb.isChecked(),
-                    r"VEL_X_DEPTH.OUT": self.dlg.dv_mf_cb.isChecked(),
-                    r"TIMEONEFT.OUT": self.dlg.t1ft_mf_cb.isChecked(),
-                    r"TIMETWOFT.OUT": self.dlg.t2ft_mf_cb.isChecked(),
-                    r"TIMETOPEAK.OUT": self.dlg.tmax_mf_cb.isChecked(),
-                    r"DEPCH.OUT": self.dlg.cd_mf_cb.isChecked(),
-                    r"VELOC.OUT": self.dlg.cv_mf_cb.isChecked(),
-                    r"VELCHFINAL.OUT": self.dlg.fcv_mf_cb.isChecked(),
-                    r"DEPCHFINAL.OUT": self.dlg.fcd_mf_cb.isChecked(),
-                    r"LEVEEDEFIC.OUT": self.dlg.ld_mf_cb.isChecked(),
-                    r"SPECENERGY.OUT": self.dlg.se_mf_cb.isChecked(),
-                    r"STATICPRESS.OUT": self.dlg.sp_mf_cb.isChecked(),
-                    r"CVFPMAX.OUT": self.dlg.ms_mf_cb.isChecked(),
-                    r"FINALCVFP.OUT": self.dlg.fs_mf_cb.isChecked(),
-                    r"IMPACT.OUT": self.dlg.if_mf_cb.isChecked(),
-                }
-
-                mudflow_maps = MudflowMaps(self.iface, self.units_switch, vector_scale)
-                mudflow_maps.create_maps(
-                    mudflow_rbs, flo2d_results_dir, map_output_dir, mapping_group, self.crs, project_id
-                )
-
-            """"
-            TWO-PHASE MAPS
-            """
-
-            if mud_switch == "2" and sed_switch == "0":
-                twophase_rbs = {
-                    r"TOPO.DAT": self.dlg.ge_tp_cb.isChecked(),
-                    r"DEPTH.OUT": self.dlg.mfd_tp_cb.isChecked(),
-                    r"DEPFPMAX_MUD.OUT": self.dlg.mmd_tp_cb.isChecked(),
-                    r"DEPTHMAX_2PHASE_COMBINED.OUT": self.dlg.cmd_tp_cb.isChecked(),
-                    r"VELFP.OUT": self.dlg.mfv_tp_cb.isChecked(),
-                    r"VELFP_MUD.OUT": self.dlg.mmv_tp_cb.isChecked(),
-                    r"VELDIREC.OUT": self.dlg.mfvv_tp_cb.isChecked(),
-                    r"VELDIREC_MUD.OUT": self.dlg.mmvv_tp_cb.isChecked(),
-                    r"CVFPMAX.OUT": self.dlg.mfsc_tp_cb.isChecked(),
-                    r"CVFPMAX_MUD.OUT": self.dlg.mmsc_tp_cb.isChecked(),
-                    # r"FINALCVFP.OUT": self.dlg.ffsc_tp_cb,
-                    r"FINALCVFP_MUD.OUT": self.dlg.fmsc_tp_cb.isChecked(),
-                    # r"MAXWSELEV.OUT": self.dlg.mwse_mf_cb,
-                    r"FINALDEP.OUT": self.dlg.ffd_tp_cb.isChecked(),
-                    r"FINALDEP_MUD.OUT": self.dlg.fmd_tp_cb.isChecked(),
-                    r"FINALDIR.OUT": self.dlg.ffvv_tp_cb.isChecked(),
-                    r"FINALDIR_MUD.OUT": self.dlg.fmvv_tp_cb.isChecked(),
-                    r"FINALDEP_COMBO.OUT": self.dlg.fcd_tp_cb.isChecked(),
-                    r"FINALVEL.OUT": self.dlg.ffv_tp_cb.isChecked(),
-                    r"FINALVEL_MUD.OUT": self.dlg.fmv_tp_cb.isChecked(),
-                    r"VEL_X_DEPTH.OUT": self.dlg.dv_tp_cb.isChecked(),
-                    r"TIMEONEFT.OUT": self.dlg.t1ft_tp_cb.isChecked(),
-                    r"TIMETWOFT.OUT": self.dlg.t2ft_tp_cb.isChecked(),
-                    r"TIMETOPEAK.OUT": self.dlg.tmax_tp_cb.isChecked(),
-                    r"DEPCH.OUT": self.dlg.mchd_tp_cb.isChecked(),
-                    r"VELOC.OUT": self.dlg.mchv_tp_cb.isChecked(),
-                    r"VELCHFINAL.OUT": self.dlg.fchv_tp_cb.isChecked(),
-                    r"DEPCHFINAL.OUT": self.dlg.fchd_tp_cb.isChecked(),
-                    r"LEVEEDEFIC.OUT": self.dlg.ld_tp_cb.isChecked(),
-                    r"SPECENERGY.OUT": self.dlg.se_tp_cb.isChecked(),
-                    r"STATICPRESS.OUT": self.dlg.sp_tp_cb.isChecked(),
-                    r"IMPACT.OUT": self.dlg.if_tp_cb.isChecked(),
-                    r"SEDFP.OUT": [
-                        self.dlg.ms_tp_cb.isChecked(),
-                        self.dlg.md_tp_cb.isChecked(),
-                        self.dlg.fdb_tp_cb.isChecked()
-                    ],
-                }
-
-                twophase_maps = TwophaseMaps(self.iface, self.units_switch, vector_scale)
-                twophase_maps.create_maps(
-                    twophase_rbs, flo2d_results_dir, map_output_dir, mapping_group, self.crs, project_id
-                )
-
-            """
-            HYDRODYNAMIC RISK MAPS
-            """
-
-            hazard_rbs = {
-                "ARR": self.dlg.fh_australian_cb.isChecked(),
-                "Austrian": self.dlg.fh_austrian_cb.isChecked(),
-                "Swiss": [
-                    self.dlg.fi_swiss_cb.isChecked(),
-                    self.dlg.di_swiss_cb.isChecked()
-                ],
-                "UK": self.dlg.fh_uk_cb.isChecked(),
-                "USBR": [
-                    self.dlg.usbrh_hm_cb.isChecked(),
-                    self.dlg.usbrm_hm_cb.isChecked(),
-                    self.dlg.usbrv_hm_cb.isChecked(),
-                    self.dlg.usbra_hm_cb.isChecked(),
-                    self.dlg.usbrc_hm_cb.isChecked(),
-                ],
-                "FEMA": self.dlg.fema_hm_cb.isChecked()
+        if mud_switch == "0" and sed_switch == "0":
+            flood_rbs = {
+                r"TOPO.DAT": self.dlg.ge_cw_cb.isChecked(),
+                r"DEPTH.OUT": self.dlg.md_cw_cb.isChecked(),
+                r"VELFP.OUT": self.dlg.mv_cw_cb.isChecked(),
+                r"VELDIREC.OUT": self.dlg.mvv_cw_cb.isChecked(),
+                r"MAXWSELEV.OUT": self.dlg.mwse_cw_cb.isChecked(),
+                r"FINALDEP.OUT": self.dlg.fd_cw_cb.isChecked(),
+                r"FINALVEL.OUT": self.dlg.fv_cw_cb.isChecked(),
+                r"FINALDIR.OUT": self.dlg.fvv_cw_cb.isChecked(),
+                r"VEL_X_DEPTH.OUT": self.dlg.dv_cw_cb.isChecked(),
+                r"TIMEONEFT.OUT": self.dlg.t1ft_cw_cb.isChecked(),
+                r"TIMETWOFT.OUT": self.dlg.t2ft_cw_cb.isChecked(),
+                r"TIMETOPEAK.OUT": self.dlg.tmax_cw_cb.isChecked(),
+                r"DEPCH.OUT": self.dlg.cd_cw_cb.isChecked(),
+                r"VELOC.OUT": self.dlg.cv_cw_cb.isChecked(),
+                r"VELCHFINAL.OUT": self.dlg.fcv_cw_cb.isChecked(),
+                r"DEPCHFINAL.OUT": self.dlg.fcd_cw_cb.isChecked(),
+                r"LEVEEDEFIC.OUT": self.dlg.ld_cw_cb.isChecked(),
+                r"SPECENERGY.OUT": self.dlg.se_cw_cb.isChecked(),
+                r"STATICPRESS.OUT": self.dlg.sp_cw_cb.isChecked(),
+                r"IMPACT.OUT": self.dlg.if_cw_cb.isChecked(),
+                "VEL_SQ_X_DEPTH": self.dlg.v2xd_cw_cb.isChecked(),
             }
 
-            at_least_one_checked = any(
-                value if not isinstance(value, list) else any(value) for value in hazard_rbs.values())
-
-            if at_least_one_checked:
-                hazard_maps = HazardMaps(self.iface, self.units_switch)
-                hazard_maps.create_maps(
-                    hazard_rbs, flo2d_results_dir, map_output_dir, mapping_group, self.crs, project_id
-                )
-
-            # remove empty groups
-            groups = mapping_group.findGroups()
-            for group in groups:
-                subgroups = group.findGroups()
-                for subgroup in subgroups:
-                    all_subgrup_layers = subgroup.findLayers()
-                    if len(all_subgrup_layers) == 0:
-                        group.removeChildNode(subgroup)
-                all_group_layers = group.findLayers()
-                if len(all_group_layers) == 0:
-                    mapping_group.removeChildNode(group)
-
-            """
-            STORM DRAIN PLOTS
-            """
-
-            storm_drain_rbs = {
-                "Inflow": [self.dlg.inflow_chbox.isChecked()],
-                "Flooding": [self.dlg.flooding_chbox.isChecked()],
-                "Node Depth": [self.dlg.node_depth_chbox.isChecked()],
-                "Head": [self.dlg.head_chbox.isChecked()],
-                "Flow": [self.dlg.flow_chbox.isChecked()],
-                "Velocity": [self.dlg.velocity_chbox.isChecked()],
-                "Link Depth": [self.dlg.link_depth_chbox.isChecked()],
-                "Percent Full": [self.dlg.percent_full_chbox.isChecked()],
-                "Hours Flooded": [
-                    self.dlg.hours_flooded_chbox.isChecked(),
-                    self.dlg.hours_flooded_dsb.value()
-                ],
-                "Maximum Flooding": [
-                    self.dlg.max_flood_chbox.isChecked(),
-                    self.dlg.max_flood_dsb.value()
-                ],
-                "Total Flooding": [
-                    self.dlg.total_flood_chbox.isChecked(),
-                    self.dlg.total_flood_dsb.value()
-                ],
-                "Maximum Pond": [
-                    self.dlg.max_pond_chbox.isChecked(),
-                    self.dlg.max_pond_dsb.value()
-                ],
-                # "Profile": [
-                #     self.dlg.plot_profile_chbox.isChecked(),
-                #     self.dlg.start_cbo.currentText(),
-                #     self.dlg.end_cbo.currentText()
-                # ],
-            }
-
-            at_least_one_checked = any(
-                value[0] if isinstance(value, list) and len(value) > 0 else value
-                for value in storm_drain_rbs.values()
+            flood_maps = FloodMaps(self.iface, self.units_switch, vector_scale, self.toler_value)
+            flood_maps.create_maps(
+                flood_rbs, flo2d_results_dir, map_output_dir, mapping_group, self.crs, project_id
             )
 
-            if at_least_one_checked:
-                if project_id:
-                    sd_output_dir = map_output_dir + rf"\StormDrain - {project_id}"
-                else:
-                    sd_output_dir = map_output_dir + rf"\StormDrain"
-                if not os.path.exists(sd_output_dir):
-                    os.makedirs(sd_output_dir)
-                # Resolve swmm files
-                inp_file = os.path.join(flo2d_results_dir, "swmm.inp")
-                rpt_file = os.path.join(flo2d_results_dir, "swmm.rpt")
-                if not os.path.isfile(inp_file): inp_file = os.path.join(flo2d_results_dir, "SWMM.INP")
-                if not os.path.isfile(rpt_file): rpt_file = os.path.join(flo2d_results_dir, "SWMM.RPT")
+        """
+        SEDIMENT MAPS
+        """
 
-                model = self._load_swmm_model(inp_file, rpt_file)
+        if mud_switch == "0" and sed_switch == "1":
+            sediment_rbs = {
+                r"TOPO.DAT": self.dlg.ge_sd_cb.isChecked(),
+                r"DEPTH.OUT": self.dlg.md_sd_cb.isChecked(),
+                r"VELFP.OUT": self.dlg.mv_sd_cb.isChecked(),
+                r"VELDIREC.OUT": self.dlg.mvv_sd_cb.isChecked(),
+                r"MAXWSELEV.OUT": self.dlg.mwse_sd_cb.isChecked(),
+                r"FINALDEP.OUT": self.dlg.fd_sd_cb.isChecked(),
+                r"FINALVEL.OUT": self.dlg.fv_sd_cb.isChecked(),
+                r"FINALDIR.OUT": self.dlg.fvv_sd_cb.isChecked(),
+                r"VEL_X_DEPTH.OUT": self.dlg.dv_sd_cb.isChecked(),
+                r"TIMEONEFT.OUT": self.dlg.t1ft_sd_cb.isChecked(),
+                r"TIMETWOFT.OUT": self.dlg.t2ft_sd_cb.isChecked(),
+                r"TIMETOPEAK.OUT": self.dlg.tmax_sd_cb.isChecked(),
+                r"DEPCH.OUT": self.dlg.cd_sd_cb.isChecked(),
+                r"VELOC.OUT": self.dlg.cv_sd_cb.isChecked(),
+                r"VELCHFINAL.OUT": self.dlg.fcv_sd_cb.isChecked(),
+                r"DEPCHFINAL.OUT": self.dlg.fcd_sd_cb.isChecked(),
+                r"LEVEEDEFIC.OUT": self.dlg.ld_sd_cb.isChecked(),
+                r"SPECENERGY.OUT": self.dlg.se_sd_cb.isChecked(),
+                r"STATICPRESS.OUT": self.dlg.sp_sd_cb.isChecked(),
+                r"SEDFP.OUT": [
+                    self.dlg.mdep_sd_cb.isChecked(),
+                    self.dlg.msco_sd_cb.isChecked(),
+                    self.dlg.fbd_sd_cb.isChecked()
+                ],
+                r"IMPACT.OUT": self.dlg.if_sd_cb.isChecked(),
+            }
 
-                # Give the cached model to StormDrainPlots so it never re-parses
-                storm_drain_plots = StormDrainPlots(self.units_switch, self.iface, swmm_model=model)
-                t0 = time.perf_counter()
-                plots = storm_drain_plots.create_plots(storm_drain_rbs, flo2d_results_dir, sd_output_dir)
-                if plots:
-                    self.dlg.see_nodes_results_btn.setEnabled(True)
-                t1 = time.perf_counter()
-                storm_drain_plots.plot_graphics(storm_drain_rbs, flo2d_results_dir, sd_output_dir, self.crs.authid(),
-                                                mapping_group)
-                t2 = time.perf_counter()
-                storm_drain_plots.storm_drain_profile(storm_drain_rbs, flo2d_results_dir, sd_output_dir, True)
-                t3 = time.perf_counter()
-                QgsMessageLog.logMessage(
-                    f"SD timings: create_plots={t1 - t0:.2f}s, plot_graphics={t2 - t1:.2f}s, profile={t3 - t2:.2f}s",
-                    'FLO-2D', Qgis.Info)
+            sediment_maps = SedimentMaps(self.iface, self.units_switch, vector_scale, self.toler_value)
+            sediment_maps.create_maps(
+                sediment_rbs, flo2d_results_dir, map_output_dir, mapping_group, self.crs, project_id
+            )
 
-            QApplication.restoreOverrideCursor()
-            msg_box = QMessageBox()
-            msg_box.setIcon(QMessageBox.Information)
-            msg_box.setWindowTitle("Mapping complete!")
-            msg_box.setText("The selected maps were created!")
-            msg_box.exec_()
+        """"
+        MUDFLOW MAPS
+        """
 
-        except Exception as e:
-            QApplication.restoreOverrideCursor()
-            self.iface.messageBar().pushMessage(
-                "ERROR: Error while creating the maps! See log messages for more information.", level=Qgis.Critical,
-                duration=5)
-            QgsMessageLog.logMessage(str(e))
+        if mud_switch == "1" and sed_switch == "0":
+            mudflow_rbs = {
+                r"TOPO.DAT": self.dlg.ge_mf_cb.isChecked(),
+                r"DEPTH.OUT": self.dlg.md_mf_cb.isChecked(),
+                r"VELFP.OUT": self.dlg.mv_mf_cb.isChecked(),
+                r"VELDIREC.OUT": self.dlg.mvv_mf_cb.isChecked(),
+                r"MAXWSELEV.OUT": self.dlg.mwse_mf_cb.isChecked(),
+                r"FINALDEP.OUT": self.dlg.fd_mf_cb.isChecked(),
+                r"FINALVEL.OUT": self.dlg.fv_mf_cb.isChecked(),
+                r"FINALDIR.OUT": self.dlg.fvv_mf_cb.isChecked(),
+                r"VEL_X_DEPTH.OUT": self.dlg.dv_mf_cb.isChecked(),
+                r"TIMEONEFT.OUT": self.dlg.t1ft_mf_cb.isChecked(),
+                r"TIMETWOFT.OUT": self.dlg.t2ft_mf_cb.isChecked(),
+                r"TIMETOPEAK.OUT": self.dlg.tmax_mf_cb.isChecked(),
+                r"DEPCH.OUT": self.dlg.cd_mf_cb.isChecked(),
+                r"VELOC.OUT": self.dlg.cv_mf_cb.isChecked(),
+                r"VELCHFINAL.OUT": self.dlg.fcv_mf_cb.isChecked(),
+                r"DEPCHFINAL.OUT": self.dlg.fcd_mf_cb.isChecked(),
+                r"LEVEEDEFIC.OUT": self.dlg.ld_mf_cb.isChecked(),
+                r"SPECENERGY.OUT": self.dlg.se_mf_cb.isChecked(),
+                r"STATICPRESS.OUT": self.dlg.sp_mf_cb.isChecked(),
+                r"CVFPMAX.OUT": self.dlg.ms_mf_cb.isChecked(),
+                r"FINALCVFP.OUT": self.dlg.fs_mf_cb.isChecked(),
+                r"IMPACT.OUT": self.dlg.if_mf_cb.isChecked(),
+            }
 
-        finally:
-            QApplication.restoreOverrideCursor()
+            mudflow_maps = MudflowMaps(self.iface, self.units_switch, vector_scale, self.toler_value)
+            mudflow_maps.create_maps(
+                mudflow_rbs, flo2d_results_dir, map_output_dir, mapping_group, self.crs, project_id
+            )
+
+        """"
+        TWO-PHASE MAPS
+        """
+
+        if mud_switch == "2" and sed_switch == "0":
+            twophase_rbs = {
+                r"TOPO.DAT": self.dlg.ge_tp_cb.isChecked(),
+                r"DEPTH.OUT": self.dlg.mfd_tp_cb.isChecked(),
+                r"DEPFPMAX_MUD.OUT": self.dlg.mmd_tp_cb.isChecked(),
+                r"DEPTHMAX_2PHASE_COMBINED.OUT": self.dlg.cmd_tp_cb.isChecked(),
+                r"VELFP.OUT": self.dlg.mfv_tp_cb.isChecked(),
+                r"VELFP_MUD.OUT": self.dlg.mmv_tp_cb.isChecked(),
+                r"VELDIREC.OUT": self.dlg.mfvv_tp_cb.isChecked(),
+                r"VELDIREC_MUD.OUT": self.dlg.mmvv_tp_cb.isChecked(),
+                r"CVFPMAX.OUT": self.dlg.mfsc_tp_cb.isChecked(),
+                r"CVFPMAX_MUD.OUT": self.dlg.mmsc_tp_cb.isChecked(),
+                # r"FINALCVFP.OUT": self.dlg.ffsc_tp_cb,
+                r"FINALCVFP_MUD.OUT": self.dlg.fmsc_tp_cb.isChecked(),
+                # r"MAXWSELEV.OUT": self.dlg.mwse_mf_cb,
+                r"FINALDEP.OUT": self.dlg.ffd_tp_cb.isChecked(),
+                r"FINALDEP_MUD.OUT": self.dlg.fmd_tp_cb.isChecked(),
+                r"FINALDIR.OUT": self.dlg.ffvv_tp_cb.isChecked(),
+                r"FINALDIR_MUD.OUT": self.dlg.fmvv_tp_cb.isChecked(),
+                r"FINALDEP_COMBO.OUT": self.dlg.fcd_tp_cb.isChecked(),
+                r"FINALVEL.OUT": self.dlg.ffv_tp_cb.isChecked(),
+                r"FINALVEL_MUD.OUT": self.dlg.fmv_tp_cb.isChecked(),
+                r"VEL_X_DEPTH.OUT": self.dlg.dv_tp_cb.isChecked(),
+                r"TIMEONEFT.OUT": self.dlg.t1ft_tp_cb.isChecked(),
+                r"TIMETWOFT.OUT": self.dlg.t2ft_tp_cb.isChecked(),
+                r"TIMETOPEAK.OUT": self.dlg.tmax_tp_cb.isChecked(),
+                r"DEPCH.OUT": self.dlg.mchd_tp_cb.isChecked(),
+                r"VELOC.OUT": self.dlg.mchv_tp_cb.isChecked(),
+                r"VELCHFINAL.OUT": self.dlg.fchv_tp_cb.isChecked(),
+                r"DEPCHFINAL.OUT": self.dlg.fchd_tp_cb.isChecked(),
+                r"LEVEEDEFIC.OUT": self.dlg.ld_tp_cb.isChecked(),
+                r"SPECENERGY.OUT": self.dlg.se_tp_cb.isChecked(),
+                r"STATICPRESS.OUT": self.dlg.sp_tp_cb.isChecked(),
+                r"IMPACT.OUT": self.dlg.if_tp_cb.isChecked(),
+                r"SEDFP.OUT": [
+                    self.dlg.md_tp_cb.isChecked(),
+                    self.dlg.ms_tp_cb.isChecked(),
+                    self.dlg.fdb_tp_cb.isChecked()
+                ],
+                r"FP_BED_CHANGE_MUD.OUT": self.dlg.fdbmcd_tp_cb.isChecked()
+            }
+
+            twophase_maps = TwophaseMaps(self.iface, self.units_switch, vector_scale, self.toler_value)
+            twophase_maps.create_maps(
+                twophase_rbs, flo2d_results_dir, map_output_dir, mapping_group, self.crs, project_id
+            )
+
+        """
+        HYDRODYNAMIC RISK MAPS
+        """
+
+        hazard_rbs = {
+            "ARR": self.dlg.fh_australian_cb.isChecked(),
+            "Austrian": self.dlg.fh_austrian_cb.isChecked(),
+            "Swiss": [
+                self.dlg.fi_swiss_cb.isChecked(),
+                self.dlg.di_swiss_cb.isChecked()
+            ],
+            "UK": self.dlg.fh_uk_cb.isChecked(),
+            "USBR": [
+                self.dlg.usbrh_hm_cb.isChecked(),
+                self.dlg.usbrm_hm_cb.isChecked(),
+                self.dlg.usbrv_hm_cb.isChecked(),
+                self.dlg.usbra_hm_cb.isChecked(),
+                self.dlg.usbrc_hm_cb.isChecked(),
+            ],
+            "FEMA": self.dlg.fema_hm_cb.isChecked()
+        }
+
+        at_least_one_checked = any(
+            value if not isinstance(value, list) else any(value) for value in hazard_rbs.values())
+
+        if at_least_one_checked:
+            hazard_maps = HazardMaps(self.iface, self.units_switch)
+            hazard_maps.create_maps(
+                hazard_rbs, flo2d_results_dir, map_output_dir, mapping_group, self.crs, project_id
+            )
+
+        # remove empty groups
+        groups = mapping_group.findGroups()
+        for group in groups:
+            subgroups = group.findGroups()
+            for subgroup in subgroups:
+                all_subgrup_layers = subgroup.findLayers()
+                if len(all_subgrup_layers) == 0:
+                    group.removeChildNode(subgroup)
+            all_group_layers = group.findLayers()
+            if len(all_group_layers) == 0:
+                mapping_group.removeChildNode(group)
+
+        """
+        STORM DRAIN PLOTS
+        """
+
+        storm_drain_rbs = {
+            "Inflow": [self.dlg.inflow_chbox.isChecked()],
+            "Flooding": [self.dlg.flooding_chbox.isChecked()],
+            "Node Depth": [self.dlg.node_depth_chbox.isChecked()],
+            "Head": [self.dlg.head_chbox.isChecked()],
+            "Flow": [self.dlg.flow_chbox.isChecked()],
+            "Velocity": [self.dlg.velocity_chbox.isChecked()],
+            "Link Depth": [self.dlg.link_depth_chbox.isChecked()],
+            "Percent Full": [self.dlg.percent_full_chbox.isChecked()],
+            "Hours Flooded": [
+                self.dlg.hours_flooded_chbox.isChecked(),
+                self.dlg.hours_flooded_dsb.value()
+            ],
+            "Maximum Flooding": [
+                self.dlg.max_flood_chbox.isChecked(),
+                self.dlg.max_flood_dsb.value()
+            ],
+            "Total Flooding": [
+                self.dlg.total_flood_chbox.isChecked(),
+                self.dlg.total_flood_dsb.value()
+            ],
+            "Maximum Pond": [
+                self.dlg.max_pond_chbox.isChecked(),
+                self.dlg.max_pond_dsb.value()
+            ],
+            # "Profile": [
+            #     self.dlg.plot_profile_chbox.isChecked(),
+            #     self.dlg.start_cbo.currentText(),
+            #     self.dlg.end_cbo.currentText()
+            # ],
+        }
+
+        at_least_one_checked = any(
+            value[0] if isinstance(value, list) and len(value) > 0 else value
+            for value in storm_drain_rbs.values()
+        )
+
+        if at_least_one_checked:
+            if project_id:
+                sd_output_dir = map_output_dir + rf"\StormDrain - {project_id}"
+            else:
+                sd_output_dir = map_output_dir + rf"\StormDrain"
+            if not os.path.exists(sd_output_dir):
+                os.makedirs(sd_output_dir)
+            # Resolve swmm files
+            inp_file = os.path.join(flo2d_results_dir, "swmm.inp")
+            rpt_file = os.path.join(flo2d_results_dir, "swmm.rpt")
+            if not os.path.isfile(inp_file): inp_file = os.path.join(flo2d_results_dir, "SWMM.INP")
+            if not os.path.isfile(rpt_file): rpt_file = os.path.join(flo2d_results_dir, "SWMM.RPT")
+
+            model = self._load_swmm_model(inp_file, rpt_file)
+
+            # Give the cached model to StormDrainPlots so it never re-parses
+            storm_drain_plots = StormDrainPlots(self.units_switch, self.iface, swmm_model=model)
+            t0 = time.perf_counter()
+            plots = storm_drain_plots.create_plots(storm_drain_rbs, flo2d_results_dir, sd_output_dir)
+            if plots:
+                self.dlg.see_nodes_results_btn.setEnabled(True)
+            t1 = time.perf_counter()
+            storm_drain_plots.plot_graphics(storm_drain_rbs, flo2d_results_dir, sd_output_dir, self.crs.authid(),
+                                            mapping_group)
+            t2 = time.perf_counter()
+            storm_drain_plots.storm_drain_profile(storm_drain_rbs, flo2d_results_dir, sd_output_dir, True)
+            t3 = time.perf_counter()
+            QgsMessageLog.logMessage(
+                f"SD timings: create_plots={t1 - t0:.2f}s, plot_graphics={t2 - t1:.2f}s, profile={t3 - t2:.2f}s",
+                'FLO-2D', Qgis.Info)
+
+        QApplication.restoreOverrideCursor()
+        msg_box = QMessageBox()
+        msg_box.setIcon(QMessageBox.Information)
+        msg_box.setWindowTitle("Mapping complete!")
+        msg_box.setText("The selected maps were created!")
+        msg_box.exec_()
+
+        # except Exception as e:
+        #     QApplication.restoreOverrideCursor()
+        #     self.iface.messageBar().pushMessage(
+        #         "ERROR: Error while creating the maps! See log messages for more information.", level=Qgis.Critical,
+        #         duration=5)
+        #     QgsMessageLog.logMessage(str(e))
+        #
+        # finally:
+        #     QApplication.restoreOverrideCursor()
 
     def see_storm_drain_profile(self):
         """
@@ -2134,6 +2143,7 @@ class FLO2DMapCrafter:
             self.dlg.md_tp_cb,
             self.dlg.ms_tp_cb,
             self.dlg.fdb_tp_cb,
+            self.dlg.fdbmcd_tp_cb,
             self.dlg.mfvv_tp_cb,
             self.dlg.ffvv_tp_cb,
             self.dlg.fmvv_tp_cb,
@@ -2193,6 +2203,7 @@ class FLO2DMapCrafter:
             self.dlg.sv_tp_cgb,
             self.dlg.mv_tp_cgb,
             self.dlg.sdv_tp_cgb,
+            self.dlg.tp_tp_cgb,
             self.dlg.hp_tp_cgb,
         ]
         hm_grps = [
@@ -2278,6 +2289,7 @@ class FLO2DMapCrafter:
             self.dlg.sv_tp_cgb,
             self.dlg.mv_tp_cgb,
             self.dlg.sdv_tp_cgb,
+            self.dlg.tp_tp_cgb,
             self.dlg.hp_tp_cgb,
         ]
         hm_grps = [

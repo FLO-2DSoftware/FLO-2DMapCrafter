@@ -31,7 +31,7 @@ from flo2d_mapcrafter.mapping.scripts import read_ASCII, set_raster_style, set_v
 
 class SedimentMaps:
 
-    def __init__(self, iface, units_switch, vector_scale):
+    def __init__(self, iface, units_switch, vector_scale, toler_value):
         """
         Class constructor
         :param units_switch: 0 english 1 metric
@@ -40,6 +40,7 @@ class SedimentMaps:
         self.units_switch = units_switch
         self.max_vector_scale = vector_scale[0]
         self.min_vector_scale = vector_scale[1]
+        self.toler_value = toler_value
 
     # Helper 1 for progress bar
     def _make_progress(self, text: str, maximum: int) -> QProgressDialog:
@@ -384,7 +385,7 @@ class SedimentMaps:
         if raster_processed:
 
             QgsProject.instance().addMapLayer(raster_processed, False)
-            set_raster_style(raster_processed, style)
+            set_raster_style(raster_processed, style, self.toler_value)
 
             mapping_group.insertLayer(0, raster_processed)
 
