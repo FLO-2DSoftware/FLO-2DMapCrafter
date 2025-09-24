@@ -71,6 +71,7 @@ class FLO2DMapCrafter:
         """
         # Save reference to the QGIS interface
         self.units_switch = None
+        self.toler_value = None
         self.iface = iface
         self.dlg = FLO2DMapCrafterDialog()
         self._prime_sim_summary_table()
@@ -905,6 +906,12 @@ class FLO2DMapCrafter:
             # Leave _sim_type = None on any parsing issue
             pass
 
+        toler_path = os.path.join(output_directory, "TOLER.DAT")
+        if os.path.isfile(toler_path):
+            with open(toler_path, "r") as f:
+                lines = f.readlines()
+            self.toler_value = float(lines[0].split()[0])
+
         # --- Refresh the Summary tab with the NEW sim type ---
         self._update_summary_fields()
 
@@ -945,9 +952,9 @@ class FLO2DMapCrafter:
             self.dlg.tab1.setEnabled(True)
             self.dlg.tab2.setEnabled(False)
             self.dlg.tab3.setEnabled(False)
-            self.dlg.tabs.setCurrentIndex(0)
+            self.dlg.tabs.setCurrentIndex(1)
 
-            flood_maps = FloodMaps(self.iface, self.units_switch, vector_scale)
+            flood_maps = FloodMaps(self.iface, self.units_switch, vector_scale, self.toler_value)
             flood_files_dict = flood_maps.check_flood_files(output_directory)
 
             flood_rbs = {
@@ -991,9 +998,9 @@ class FLO2DMapCrafter:
             self.dlg.tab2.setEnabled(False)
             self.dlg.tab0.setEnabled(True)
             self.dlg.tab3.setEnabled(False)
-            self.dlg.tabs.setCurrentIndex(1)
+            self.dlg.tabs.setCurrentIndex(2)
 
-            sediment_maps = SedimentMaps(self.iface, self.units_switch, vector_scale)
+            sediment_maps = SedimentMaps(self.iface, self.units_switch, vector_scale, self.toler_value)
             sediment_files_dict = sediment_maps.check_sediment_files(output_directory)
 
             sediment_rbs = {
@@ -1045,9 +1052,9 @@ class FLO2DMapCrafter:
             self.dlg.tab1.setEnabled(False)
             self.dlg.tab2.setEnabled(True)
             self.dlg.tab3.setEnabled(False)
-            self.dlg.tabs.setCurrentIndex(2)
+            self.dlg.tabs.setCurrentIndex(3)
 
-            mudflow_maps = MudflowMaps(self.iface, self.units_switch, vector_scale)
+            mudflow_maps = MudflowMaps(self.iface, self.units_switch, vector_scale, self.toler_value)
             mudflow_files_dict = mudflow_maps.check_mudflow_files(output_directory)
 
             mudflow_rbs = {
@@ -1088,9 +1095,9 @@ class FLO2DMapCrafter:
             self.dlg.tab1.setEnabled(False)
             self.dlg.tab2.setEnabled(False)
             self.dlg.tab3.setEnabled(True)
-            self.dlg.tabs.setCurrentIndex(3)
+            self.dlg.tabs.setCurrentIndex(4)
 
-            twophase_maps = TwophaseMaps(self.iface, self.units_switch, vector_scale)
+            twophase_maps = TwophaseMaps(self.iface, self.units_switch, vector_scale, self.toler_value)
             twophase_files_dict = twophase_maps.check_twophase_files(output_directory)
 
             twophase_rbs = {
@@ -1131,6 +1138,7 @@ class FLO2DMapCrafter:
                     self.dlg.md_tp_cb,
                     self.dlg.fdb_tp_cb
                 ],
+                r"FP_BED_CHANGE_MUD.OUT": self.dlg.fdbmcd_tp_cb,
             }
 
             for key, value in twophase_files_dict.items():
@@ -1322,7 +1330,7 @@ class FLO2DMapCrafter:
                     "VEL_SQ_X_DEPTH": self.dlg.v2xd_cw_cb.isChecked(),
                 }
 
-                flood_maps = FloodMaps(self.iface, self.units_switch, vector_scale)
+                flood_maps = FloodMaps(self.iface, self.units_switch, vector_scale, self.toler_value)
                 flood_maps.create_maps(
                     flood_rbs, flo2d_results_dir, map_output_dir, mapping_group, self.crs, project_id
                 )
@@ -1360,7 +1368,7 @@ class FLO2DMapCrafter:
                     r"IMPACT.OUT": self.dlg.if_sd_cb.isChecked(),
                 }
 
-                sediment_maps = SedimentMaps(self.iface, self.units_switch, vector_scale)
+                sediment_maps = SedimentMaps(self.iface, self.units_switch, vector_scale, self.toler_value)
                 sediment_maps.create_maps(
                     sediment_rbs, flo2d_results_dir, map_output_dir, mapping_group, self.crs, project_id
                 )
@@ -1395,7 +1403,7 @@ class FLO2DMapCrafter:
                     r"IMPACT.OUT": self.dlg.if_mf_cb.isChecked(),
                 }
 
-                mudflow_maps = MudflowMaps(self.iface, self.units_switch, vector_scale)
+                mudflow_maps = MudflowMaps(self.iface, self.units_switch, vector_scale, self.toler_value)
                 mudflow_maps.create_maps(
                     mudflow_rbs, flo2d_results_dir, map_output_dir, mapping_group, self.crs, project_id
                 )
@@ -1439,13 +1447,14 @@ class FLO2DMapCrafter:
                     r"STATICPRESS.OUT": self.dlg.sp_tp_cb.isChecked(),
                     r"IMPACT.OUT": self.dlg.if_tp_cb.isChecked(),
                     r"SEDFP.OUT": [
-                        self.dlg.ms_tp_cb.isChecked(),
                         self.dlg.md_tp_cb.isChecked(),
+                        self.dlg.ms_tp_cb.isChecked(),
                         self.dlg.fdb_tp_cb.isChecked()
                     ],
+                    r"FP_BED_CHANGE_MUD.OUT": self.dlg.fdbmcd_tp_cb.isChecked()
                 }
 
-                twophase_maps = TwophaseMaps(self.iface, self.units_switch, vector_scale)
+                twophase_maps = TwophaseMaps(self.iface, self.units_switch, vector_scale, self.toler_value)
                 twophase_maps.create_maps(
                     twophase_rbs, flo2d_results_dir, map_output_dir, mapping_group, self.crs, project_id
                 )
@@ -2134,6 +2143,7 @@ class FLO2DMapCrafter:
             self.dlg.md_tp_cb,
             self.dlg.ms_tp_cb,
             self.dlg.fdb_tp_cb,
+            self.dlg.fdbmcd_tp_cb,
             self.dlg.mfvv_tp_cb,
             self.dlg.ffvv_tp_cb,
             self.dlg.fmvv_tp_cb,
@@ -2193,6 +2203,7 @@ class FLO2DMapCrafter:
             self.dlg.sv_tp_cgb,
             self.dlg.mv_tp_cgb,
             self.dlg.sdv_tp_cgb,
+            self.dlg.tp_tp_cgb,
             self.dlg.hp_tp_cgb,
         ]
         hm_grps = [
@@ -2278,6 +2289,7 @@ class FLO2DMapCrafter:
             self.dlg.sv_tp_cgb,
             self.dlg.mv_tp_cgb,
             self.dlg.sdv_tp_cgb,
+            self.dlg.tp_tp_cgb,
             self.dlg.hp_tp_cgb,
         ]
         hm_grps = [

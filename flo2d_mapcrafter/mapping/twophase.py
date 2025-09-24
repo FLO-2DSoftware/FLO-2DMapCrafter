@@ -25,7 +25,8 @@ import os, processing
 from functools import partial
 from qgis.PyQt.QtWidgets import QProgressDialog, QApplication
 from PyQt5.QtCore import QMetaType, QVariant, Qt
-from qgis._core import QgsProject, QgsVectorLayer, QgsField, QgsFeature, QgsPointXY, QgsGeometry, QgsVectorFileWriter
+from qgis._core import QgsProject, QgsVectorLayer, QgsField, QgsFeature, QgsPointXY, QgsGeometry, QgsVectorFileWriter, \
+    QgsMessageLog
 
 from flo2d_mapcrafter.mapping.check_data import check_project_id, check_mapping_group, check_raster_file, \
     check_vector_file
@@ -34,7 +35,7 @@ from flo2d_mapcrafter.mapping.scripts import read_ASCII, set_raster_style, set_v
 
 class TwophaseMaps:
 
-    def __init__(self, iface, units_switch, vector_scale):
+    def __init__(self, iface, units_switch, vector_scale, toler_value):
         """
         Class constructor
         :param units_switch: 0 english 1 metric
@@ -43,6 +44,7 @@ class TwophaseMaps:
         self.units_switch = units_switch
         self.max_vector_scale = vector_scale[0]
         self.min_vector_scale = vector_scale[1]
+        self.toler_value = toler_value
 
     # Helper 1 for progress bar
     def _make_progress(self, text: str, maximum: int) -> QProgressDialog:
@@ -461,6 +463,16 @@ class TwophaseMaps:
                 self.process_maps(name, raster, file, crs, sd_group, 14)
                 self._tick(dlg, "Final Bed Difference")
 
+            # Final Bed Difference + Mudflow Cessation Depth
+            if twophase_rbs.get(r"FP_BED_CHANGE_MUD.OUT"):
+                name = check_project_id("FP_BED_CHANGE_MUD", project_id)
+                name, raster = check_raster_file(name, map_output_dir)
+                file1 = flo2d_results_dir + r"\FINALDEP_MUD.OUT"
+                file2 = flo2d_results_dir + r"\SEDFP.OUT"
+                file3 = flo2d_results_dir + r"\FINALVEL_MUD.OUT"
+                self.process_maps(name, raster, [file1, file2, file3], crs, sd_group, 14)
+                self._tick(dlg, "Final Bed Difference + Mudflow Cessation Depth")
+
             # Uncheck and Collapse the layers added
             allLayers = mapping_group.findLayers()
             for layer in allLayers:
@@ -480,13 +492,47 @@ class TwophaseMaps:
         Function to process the maps
         """
 
+        # Combine the files and create a new OUT file
+        if isinstance(file, list) and len(file) == 3:
+            combined_file = os.path.join(os.path.dirname(file[0]), "COMBINED.OUT")
+            combined_list = []
+
+            # Open both files and process them line by line
+            with open(file[0], 'r') as f1, open(file[1], 'r') as f2, open(file[2], 'r') as f3:
+                for line1, line2, line3 in zip(f1, f2, f3):
+                    line1_parts = line1.split()
+                    line2_parts = line2.split()
+                    line3_parts = line3.split()
+
+                    cell = line1_parts[0]
+                    x = line2_parts[1]
+                    y = line2_parts[2]
+                    value1 = float(line1_parts[3])
+                    value2 = float(line2_parts[5])
+                    value3 = float(line3_parts[3])
+                    if value3 <= 0.02:
+                        value = value1 + value2
+                        if abs(value) < 0.01:
+                            value = 0
+                    else:
+                        value = 0
+
+                    combined_list.append((cell, x, y, value))
+
+            # Write the combined data to the output file
+            with open(combined_file, 'w') as cf:
+                for item in combined_list:
+                    cf.write(f"{item[0]} {item[1]} {item[2]} {item[3]}\n")
+
+            file = combined_file
+
         raster_processed = read_ASCII(
             file, raster, name, crs
         )
 
         if raster_processed:
             QgsProject.instance().addMapLayer(raster_processed, False)
-            set_raster_style(raster_processed, style)
+            set_raster_style(raster_processed, style, self.toler_value)
 
             mapping_group.insertLayer(0, raster_processed)
 
