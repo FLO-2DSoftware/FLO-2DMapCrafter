@@ -33,13 +33,14 @@ from flo2d_mapcrafter.mapping.scripts import read_ASCII, remove_layer, set_raste
 
 class HazardMaps:
 
-    def __init__(self, iface, units_switch):
+    def __init__(self, iface, units_switch, toler_value):
         """
         Class constructor
         :param units_switch: 0 english 1 metric
         """
         self.iface = iface
         self.units_switch = units_switch
+        self.toler_value = toler_value
 
     def _make_progress(self, text: str, maximum: int) -> QProgressDialog:
         dlg = QProgressDialog(text, "Cancel", 0, max(1, int(maximum)), self.iface.mainWindow())
@@ -167,7 +168,7 @@ class HazardMaps:
                 )
 
                 QgsProject.instance().addMapLayer(hydro_risk_raster, False)
-                set_raster_style(hydro_risk_raster, 2)
+                set_raster_style(hydro_risk_raster, 2, self.toler_value)
                 ARR_group.insertLayer(0, hydro_risk_raster)
 
                 self._tick(dlg, "ARR: done")
@@ -202,7 +203,7 @@ class HazardMaps:
                     name, raster, depth_data, vel_data, index, crs
                 )
                 QgsProject.instance().addMapLayer(hydro_risk_raster, False)
-                set_raster_style(hydro_risk_raster, 8)
+                set_raster_style(hydro_risk_raster, 8, 1)
                 USBR_group.insertLayer(0, hydro_risk_raster)
 
                 self._tick(dlg, f"{labels[index]}: done")
@@ -233,7 +234,7 @@ class HazardMaps:
                     name, raster, depth_data, vel_data, vel_x_depth_data, index, crs
                 )
                 QgsProject.instance().addMapLayer(hydro_risk_raster, False)
-                set_raster_style(hydro_risk_raster, 8)
+                set_raster_style(hydro_risk_raster, 8, 1)
                 SWISS_group.insertLayer(0, hydro_risk_raster)
 
                 self._tick(dlg, f"{labels[index]}: done")

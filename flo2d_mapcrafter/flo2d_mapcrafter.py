@@ -1157,7 +1157,7 @@ class FLO2DMapCrafter:
 
         # Hazard Maps
         self.dlg.tab5.setEnabled(True)
-        hazard_maps = HazardMaps(self.iface, self.units_switch)
+        hazard_maps = HazardMaps(self.iface, self.units_switch, self.toler_value)
         hazard_maps_dict = hazard_maps.check_hazard_files(output_directory)
 
         hazard_rbs = {
@@ -1485,7 +1485,7 @@ class FLO2DMapCrafter:
                 value if not isinstance(value, list) else any(value) for value in hazard_rbs.values())
 
             if at_least_one_checked:
-                hazard_maps = HazardMaps(self.iface, self.units_switch)
+                hazard_maps = HazardMaps(self.iface, self.units_switch, self.toler_value)
                 hazard_maps.create_maps(
                     hazard_rbs, flo2d_results_dir, map_output_dir, mapping_group, self.crs, project_id
                 )
