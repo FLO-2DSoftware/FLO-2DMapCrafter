@@ -287,7 +287,7 @@
       <enum>QTabWidget::Rounded</enum>
      </property>
      <property name="currentIndex">
-      <number>4</number>
+      <number>0</number>
      </property>
      <property name="elideMode">
       <enum>Qt::ElideNone</enum>
@@ -2223,343 +2223,6 @@ p, li { white-space: pre-wrap; }
            </item>
            <item row="0" column="0">
             <layout class="QGridLayout" name="gridLayout_21">
-             <item row="2" column="0">
-              <widget class="QgsCollapsibleGroupBox" name="dv_tp_cgb">
-               <property name="title">
-                <string>Derived</string>
-               </property>
-               <property name="collapsed">
-                <bool>true</bool>
-               </property>
-               <layout class="QGridLayout" name="gridLayout_67">
-                <item row="0" column="0">
-                 <layout class="QGridLayout" name="gridLayout_66">
-                  <item row="0" column="0">
-                   <widget class="QCheckBox" name="dv_tp_cb">
-                    <property name="toolTip">
-                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;VEL_X_DEPTH.OUT: Maximum of velocity times depth for each floodplain element (ft&lt;span style=&quot; vertical-align:super;&quot;&gt;2&lt;/span&gt;/s or m&lt;span style=&quot; vertical-align:super;&quot;&gt;2&lt;/span&gt;/s).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                    </property>
-                    <property name="toolTipDuration">
-                     <number>0</number>
-                    </property>
-                    <property name="text">
-                     <string>Depth x Velocity</string>
-                    </property>
-                   </widget>
-                  </item>
-                 </layout>
-                </item>
-               </layout>
-              </widget>
-             </item>
-             <item row="3" column="0">
-              <widget class="QgsCollapsibleGroupBox" name="tv_tp_cgb">
-               <property name="title">
-                <string>Time</string>
-               </property>
-               <property name="collapsed">
-                <bool>true</bool>
-               </property>
-               <layout class="QGridLayout" name="gridLayout_69">
-                <item row="0" column="0">
-                 <layout class="QGridLayout" name="gridLayout_68">
-                  <item row="0" column="1">
-                   <widget class="QCheckBox" name="t2ft_tp_cb">
-                    <property name="toolTip">
-                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;TIMETWOFT.OUT: Grid element number, the x- and y-coordinates and the initial time to two feet of depth (hr).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                    </property>
-                    <property name="toolTipDuration">
-                     <number>0</number>
-                    </property>
-                    <property name="text">
-                     <string>Time to 2 ft</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="0" column="0">
-                   <widget class="QCheckBox" name="t1ft_tp_cb">
-                    <property name="toolTip">
-                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;TIMEONEFT.OUT: Grid element number, the x- and y-coordinates and the initial time to one foot of depth (hr).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                    </property>
-                    <property name="toolTipDuration">
-                     <number>0</number>
-                    </property>
-                    <property name="text">
-                     <string>Time to 1 ft</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="0" column="2">
-                   <widget class="QCheckBox" name="tmax_tp_cb">
-                    <property name="toolTip">
-                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;TIMETOPEAK.OUT: Grid element number, the x- and y-coordinates and the time of occurrence of the maximum depth (hr).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                    </property>
-                    <property name="toolTipDuration">
-                     <number>0</number>
-                    </property>
-                    <property name="text">
-                     <string>Time to Max</string>
-                    </property>
-                   </widget>
-                  </item>
-                 </layout>
-                </item>
-               </layout>
-              </widget>
-             </item>
-             <item row="0" column="0">
-              <widget class="QgsCollapsibleGroupBox" name="sc_tp_cgb">
-               <property name="title">
-                <string>Site Characteristics</string>
-               </property>
-               <property name="collapsed">
-                <bool>true</bool>
-               </property>
-               <layout class="QGridLayout" name="gridLayout_19">
-                <item row="0" column="0">
-                 <layout class="QGridLayout" name="gridLayout_18">
-                  <item row="0" column="0">
-                   <widget class="QCheckBox" name="ge_tp_cb">
-                    <property name="toolTip">
-                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;TOPO.DAT: Grid element, x- and y-coordinates, and their elevations (ft or m).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                    </property>
-                    <property name="toolTipDuration">
-                     <number>0</number>
-                    </property>
-                    <property name="text">
-                     <string>Ground Elevation</string>
-                    </property>
-                   </widget>
-                  </item>
-                 </layout>
-                </item>
-               </layout>
-              </widget>
-             </item>
-             <item row="6" column="0">
-              <widget class="QgsCollapsibleGroupBox" name="mv_tp_cgb">
-               <property name="title">
-                <string>Mudflow</string>
-               </property>
-               <property name="collapsed">
-                <bool>true</bool>
-               </property>
-               <layout class="QGridLayout" name="gridLayout_96">
-                <item row="0" column="0">
-                 <layout class="QGridLayout" name="gridLayout_95">
-                  <item row="2" column="1">
-                   <widget class="QCheckBox" name="fmv_tp_cb">
-                    <property name="toolTip">
-                     <string>FINALVEL_MUD.OUT: Floodplain final mudflow velocity in the reported outflow direction (fps or mps)</string>
-                    </property>
-                    <property name="toolTipDuration">
-                     <number>0</number>
-                    </property>
-                    <property name="text">
-                     <string>Final Mudflow Velocity</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="2" column="2">
-                   <widget class="QCheckBox" name="fmsc_tp_cb">
-                    <property name="toolTip">
-                     <string>FINALCVFP_MUD.OUT: Final floodplain mudflow sediment concentration by volume</string>
-                    </property>
-                    <property name="toolTipDuration">
-                     <number>0</number>
-                    </property>
-                    <property name="text">
-                     <string>Final Mudflow Sed. Con.</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="1" column="0">
-                   <widget class="QCheckBox" name="mmvv_tp_cb">
-                    <property name="toolTip">
-                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;VELFP_MUD.OUT &amp;amp; VELDIREC_MUD.OUT: Combination of these two files to generate the maximum velocity vectors (fps or mps).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                    </property>
-                    <property name="toolTipDuration">
-                     <number>0</number>
-                    </property>
-                    <property name="text">
-                     <string>Maximum Mudflow Velocity Vectors</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="0" column="1">
-                   <widget class="QCheckBox" name="mmv_tp_cb">
-                    <property name="toolTip">
-                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;VELFP_MUD.OUT: Floodplain maximum mudflow velocity in the reported outflow direction (fps or mps).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                    </property>
-                    <property name="toolTipDuration">
-                     <number>0</number>
-                    </property>
-                    <property name="text">
-                     <string>Maximum Mudflow Velocity</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="3" column="0">
-                   <widget class="QCheckBox" name="fmvv_tp_cb">
-                    <property name="toolTip">
-                     <string>FINALVEL_MUD.OUT &amp; FINALDIR_MUD.OUT: Combination of these two files to generate the final velocity vectors (fps or mps)</string>
-                    </property>
-                    <property name="toolTipDuration">
-                     <number>0</number>
-                    </property>
-                    <property name="text">
-                     <string>Final Mudflow Velocity Vectors</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="0" column="0">
-                   <widget class="QCheckBox" name="mmd_tp_cb">
-                    <property name="toolTip">
-                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;DEPFPMAX_MUD.OUT: Floodplain maximum mudflow depth (ft or m).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                    </property>
-                    <property name="toolTipDuration">
-                     <number>0</number>
-                    </property>
-                    <property name="text">
-                     <string>Maximum Mudflow Depth</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="2" column="0">
-                   <widget class="QCheckBox" name="fmd_tp_cb">
-                    <property name="toolTip">
-                     <string>FINALDEP_MUD.OUT: Final mudflow depths (ft or m)</string>
-                    </property>
-                    <property name="toolTipDuration">
-                     <number>0</number>
-                    </property>
-                    <property name="text">
-                     <string>Final Mudflow Depth</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="0" column="2">
-                   <widget class="QCheckBox" name="mmsc_tp_cb">
-                    <property name="toolTip">
-                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;CVFPMAX_MUD.OUT: Floodplain mudflow maximum sediment concentration by volume.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                    </property>
-                    <property name="toolTipDuration">
-                     <number>0</number>
-                    </property>
-                    <property name="text">
-                     <string>Maximum Mudflow Sed. Con.</string>
-                    </property>
-                   </widget>
-                  </item>
-                 </layout>
-                </item>
-               </layout>
-              </widget>
-             </item>
-             <item row="5" column="0">
-              <widget class="QgsCollapsibleGroupBox" name="sv_tp_cgb">
-               <property name="title">
-                <string>Structures</string>
-               </property>
-               <property name="collapsed">
-                <bool>true</bool>
-               </property>
-               <layout class="QGridLayout" name="gridLayout_71">
-                <item row="0" column="0">
-                 <layout class="QGridLayout" name="gridLayout_70">
-                  <item row="0" column="0">
-                   <widget class="QCheckBox" name="ld_tp_cb">
-                    <property name="toolTip">
-                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;LEVEEDEFIC.OUT: Levee freeboard deficit.&lt;/p&gt;&lt;p&gt;0 = freeboard &amp;gt; 3 ft (0.9 m).&lt;/p&gt;&lt;p&gt;1 = 2 ft (0.6 m) &amp;lt; freeboard &amp;lt; 3 ft (0.9 m).&lt;/p&gt;&lt;p&gt;2 = 1 ft (0.3 m) &amp;lt; freeboard &amp;lt; 2 ft (0.6 m).&lt;/p&gt;&lt;p&gt;3 = freeboard &amp;lt; 1 ft (0.3 m).&lt;/p&gt;&lt;p&gt;4 = levee is overtopped by flow.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                    </property>
-                    <property name="toolTipDuration">
-                     <number>0</number>
-                    </property>
-                    <property name="text">
-                     <string>Levee Deficit</string>
-                    </property>
-                   </widget>
-                  </item>
-                 </layout>
-                </item>
-               </layout>
-              </widget>
-             </item>
-             <item row="4" column="0">
-              <widget class="QgsCollapsibleGroupBox" name="ch_tp_cgb">
-               <property name="title">
-                <string>Channel</string>
-               </property>
-               <property name="collapsed">
-                <bool>true</bool>
-               </property>
-               <layout class="QGridLayout" name="gridLayout_63">
-                <item row="0" column="0">
-                 <layout class="QGridLayout" name="gridLayout_62">
-                  <item row="0" column="1">
-                   <widget class="QCheckBox" name="mchv_tp_cb">
-                    <property name="toolTip">
-                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;VELOC.OUT: Maximum channel flow velocity (fps or mps).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                    </property>
-                    <property name="toolTipDuration">
-                     <number>0</number>
-                    </property>
-                    <property name="text">
-                     <string>Maximum Channel Velocity</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="0" column="0">
-                   <widget class="QCheckBox" name="mchd_tp_cb">
-                    <property name="toolTip">
-                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;DEPCH.OUT: Maximum channel flow depths (ft or m).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                    </property>
-                    <property name="toolTipDuration">
-                     <number>0</number>
-                    </property>
-                    <property name="text">
-                     <string>Maximum Channel Depth</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="0" column="2">
-                   <widget class="QLabel" name="label_14">
-                    <property name="text">
-                     <string/>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="1" column="0">
-                   <widget class="QCheckBox" name="fchd_tp_cb">
-                    <property name="toolTip">
-                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;DEPCHFINAL.OUT: Final channel flow depths (ft or m).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                    </property>
-                    <property name="toolTipDuration">
-                     <number>0</number>
-                    </property>
-                    <property name="text">
-                     <string>Final Channel Depth</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="1" column="1">
-                   <widget class="QCheckBox" name="fchv_tp_cb">
-                    <property name="toolTip">
-                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;VELCHFINAL.OUT: Final channel flow velocities (fps or mps).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                    </property>
-                    <property name="toolTipDuration">
-                     <number>0</number>
-                    </property>
-                    <property name="text">
-                     <string>Final Channel Velocity</string>
-                    </property>
-                   </widget>
-                  </item>
-                 </layout>
-                </item>
-               </layout>
-              </widget>
-             </item>
              <item row="7" column="0">
               <widget class="QgsCollapsibleGroupBox" name="sdv_tp_cgb">
                <property name="title">
@@ -2614,6 +2277,64 @@ p, li { white-space: pre-wrap; }
                    <widget class="QLabel" name="label_22">
                     <property name="text">
                      <string/>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </item>
+               </layout>
+              </widget>
+             </item>
+             <item row="0" column="0">
+              <widget class="QgsCollapsibleGroupBox" name="sc_tp_cgb">
+               <property name="title">
+                <string>Site Characteristics</string>
+               </property>
+               <property name="collapsed">
+                <bool>true</bool>
+               </property>
+               <layout class="QGridLayout" name="gridLayout_19">
+                <item row="0" column="0">
+                 <layout class="QGridLayout" name="gridLayout_18">
+                  <item row="0" column="0">
+                   <widget class="QCheckBox" name="ge_tp_cb">
+                    <property name="toolTip">
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;TOPO.DAT: Grid element, x- and y-coordinates, and their elevations (ft or m).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    </property>
+                    <property name="toolTipDuration">
+                     <number>0</number>
+                    </property>
+                    <property name="text">
+                     <string>Ground Elevation</string>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </item>
+               </layout>
+              </widget>
+             </item>
+             <item row="2" column="0">
+              <widget class="QgsCollapsibleGroupBox" name="dv_tp_cgb">
+               <property name="title">
+                <string>Derived</string>
+               </property>
+               <property name="collapsed">
+                <bool>true</bool>
+               </property>
+               <layout class="QGridLayout" name="gridLayout_67">
+                <item row="0" column="0">
+                 <layout class="QGridLayout" name="gridLayout_66">
+                  <item row="0" column="0">
+                   <widget class="QCheckBox" name="dv_tp_cb">
+                    <property name="toolTip">
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;VEL_X_DEPTH.OUT: Maximum of velocity times depth for each floodplain element (ft&lt;span style=&quot; vertical-align:super;&quot;&gt;2&lt;/span&gt;/s or m&lt;span style=&quot; vertical-align:super;&quot;&gt;2&lt;/span&gt;/s).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    </property>
+                    <property name="toolTipDuration">
+                     <number>0</number>
+                    </property>
+                    <property name="text">
+                     <string>Depth x Velocity</string>
                     </property>
                    </widget>
                   </item>
@@ -2755,24 +2476,277 @@ p, li { white-space: pre-wrap; }
                </layout>
               </widget>
              </item>
-             <item row="8" column="0">
-              <widget class="QgsCollapsibleGroupBox" name="tp_tp_cgb">
+             <item row="5" column="0">
+              <widget class="QgsCollapsibleGroupBox" name="sv_tp_cgb">
                <property name="title">
-                <string>Two-phase</string>
+                <string>Structures</string>
                </property>
                <property name="collapsed">
                 <bool>true</bool>
                </property>
-               <layout class="QGridLayout" name="gridLayout_117">
+               <layout class="QGridLayout" name="gridLayout_71">
                 <item row="0" column="0">
-                 <layout class="QGridLayout" name="gridLayout_113">
+                 <layout class="QGridLayout" name="gridLayout_70">
                   <item row="0" column="0">
-                   <widget class="QCheckBox" name="fdbmcd_tp_cb">
+                   <widget class="QCheckBox" name="ld_tp_cb">
                     <property name="toolTip">
-                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;FINALDEP_MUD.OUT, SEDFP.OUT &amp;amp; FINALVEL_MUD.OUT: Final Bed Difference + Mudflow Cessation Depth (ft or m).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;LEVEEDEFIC.OUT: Levee freeboard deficit.&lt;/p&gt;&lt;p&gt;0 = freeboard &amp;gt; 3 ft (0.9 m).&lt;/p&gt;&lt;p&gt;1 = 2 ft (0.6 m) &amp;lt; freeboard &amp;lt; 3 ft (0.9 m).&lt;/p&gt;&lt;p&gt;2 = 1 ft (0.3 m) &amp;lt; freeboard &amp;lt; 2 ft (0.6 m).&lt;/p&gt;&lt;p&gt;3 = freeboard &amp;lt; 1 ft (0.3 m).&lt;/p&gt;&lt;p&gt;4 = levee is overtopped by flow.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    </property>
+                    <property name="toolTipDuration">
+                     <number>0</number>
                     </property>
                     <property name="text">
-                     <string>Final Bed Difference + Mudflow Cessation Depth</string>
+                     <string>Levee Deficit</string>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </item>
+               </layout>
+              </widget>
+             </item>
+             <item row="4" column="0">
+              <widget class="QgsCollapsibleGroupBox" name="ch_tp_cgb">
+               <property name="title">
+                <string>Channel</string>
+               </property>
+               <property name="collapsed">
+                <bool>true</bool>
+               </property>
+               <layout class="QGridLayout" name="gridLayout_63">
+                <item row="0" column="0">
+                 <layout class="QGridLayout" name="gridLayout_62">
+                  <item row="0" column="1">
+                   <widget class="QCheckBox" name="mchv_tp_cb">
+                    <property name="toolTip">
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;VELOC.OUT: Maximum channel flow velocity (fps or mps).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    </property>
+                    <property name="toolTipDuration">
+                     <number>0</number>
+                    </property>
+                    <property name="text">
+                     <string>Maximum Channel Velocity</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="0">
+                   <widget class="QCheckBox" name="mchd_tp_cb">
+                    <property name="toolTip">
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;DEPCH.OUT: Maximum channel flow depths (ft or m).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    </property>
+                    <property name="toolTipDuration">
+                     <number>0</number>
+                    </property>
+                    <property name="text">
+                     <string>Maximum Channel Depth</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="2">
+                   <widget class="QLabel" name="label_14">
+                    <property name="text">
+                     <string/>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="0">
+                   <widget class="QCheckBox" name="fchd_tp_cb">
+                    <property name="toolTip">
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;DEPCHFINAL.OUT: Final channel flow depths (ft or m).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    </property>
+                    <property name="toolTipDuration">
+                     <number>0</number>
+                    </property>
+                    <property name="text">
+                     <string>Final Channel Depth</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="1">
+                   <widget class="QCheckBox" name="fchv_tp_cb">
+                    <property name="toolTip">
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;VELCHFINAL.OUT: Final channel flow velocities (fps or mps).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    </property>
+                    <property name="toolTipDuration">
+                     <number>0</number>
+                    </property>
+                    <property name="text">
+                     <string>Final Channel Velocity</string>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </item>
+               </layout>
+              </widget>
+             </item>
+             <item row="3" column="0">
+              <widget class="QgsCollapsibleGroupBox" name="tv_tp_cgb">
+               <property name="title">
+                <string>Time</string>
+               </property>
+               <property name="collapsed">
+                <bool>true</bool>
+               </property>
+               <layout class="QGridLayout" name="gridLayout_69">
+                <item row="0" column="0">
+                 <layout class="QGridLayout" name="gridLayout_68">
+                  <item row="0" column="1">
+                   <widget class="QCheckBox" name="t2ft_tp_cb">
+                    <property name="toolTip">
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;TIMETWOFT.OUT: Grid element number, the x- and y-coordinates and the initial time to two feet of depth (hr).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    </property>
+                    <property name="toolTipDuration">
+                     <number>0</number>
+                    </property>
+                    <property name="text">
+                     <string>Time to 2 ft</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="0">
+                   <widget class="QCheckBox" name="t1ft_tp_cb">
+                    <property name="toolTip">
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;TIMEONEFT.OUT: Grid element number, the x- and y-coordinates and the initial time to one foot of depth (hr).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    </property>
+                    <property name="toolTipDuration">
+                     <number>0</number>
+                    </property>
+                    <property name="text">
+                     <string>Time to 1 ft</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="2">
+                   <widget class="QCheckBox" name="tmax_tp_cb">
+                    <property name="toolTip">
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;TIMETOPEAK.OUT: Grid element number, the x- and y-coordinates and the time of occurrence of the maximum depth (hr).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    </property>
+                    <property name="toolTipDuration">
+                     <number>0</number>
+                    </property>
+                    <property name="text">
+                     <string>Time to Max</string>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </item>
+               </layout>
+              </widget>
+             </item>
+             <item row="6" column="0">
+              <widget class="QgsCollapsibleGroupBox" name="mv_tp_cgb">
+               <property name="title">
+                <string>Mudflow</string>
+               </property>
+               <property name="collapsed">
+                <bool>true</bool>
+               </property>
+               <layout class="QGridLayout" name="gridLayout_96">
+                <item row="0" column="0">
+                 <layout class="QGridLayout" name="gridLayout_95">
+                  <item row="2" column="1">
+                   <widget class="QCheckBox" name="fmv_tp_cb">
+                    <property name="toolTip">
+                     <string>FINALVEL_MUD.OUT: Floodplain final mudflow velocity in the reported outflow direction (fps or mps)</string>
+                    </property>
+                    <property name="toolTipDuration">
+                     <number>0</number>
+                    </property>
+                    <property name="text">
+                     <string>Final Mudflow Velocity</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="2" column="2">
+                   <widget class="QCheckBox" name="fmsc_tp_cb">
+                    <property name="toolTip">
+                     <string>FINALCVFP_MUD.OUT: Final floodplain mudflow sediment concentration by volume</string>
+                    </property>
+                    <property name="toolTipDuration">
+                     <number>0</number>
+                    </property>
+                    <property name="text">
+                     <string>Final Mudflow Sed. Con.</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="0">
+                   <widget class="QCheckBox" name="mmvv_tp_cb">
+                    <property name="toolTip">
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;VELFP_MUD.OUT &amp;amp; VELDIREC_MUD.OUT: Combination of these two files to generate the maximum velocity vectors (fps or mps).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    </property>
+                    <property name="toolTipDuration">
+                     <number>0</number>
+                    </property>
+                    <property name="text">
+                     <string>Maximum Mudflow Velocity Vectors</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="1">
+                   <widget class="QCheckBox" name="mmv_tp_cb">
+                    <property name="toolTip">
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;VELFP_MUD.OUT: Floodplain maximum mudflow velocity in the reported outflow direction (fps or mps).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    </property>
+                    <property name="toolTipDuration">
+                     <number>0</number>
+                    </property>
+                    <property name="text">
+                     <string>Maximum Mudflow Velocity</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="3" column="0">
+                   <widget class="QCheckBox" name="fmvv_tp_cb">
+                    <property name="toolTip">
+                     <string>FINALVEL_MUD.OUT &amp; FINALDIR_MUD.OUT: Combination of these two files to generate the final velocity vectors (fps or mps)</string>
+                    </property>
+                    <property name="toolTipDuration">
+                     <number>0</number>
+                    </property>
+                    <property name="text">
+                     <string>Final Mudflow Velocity Vectors</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="0">
+                   <widget class="QCheckBox" name="mmd_tp_cb">
+                    <property name="toolTip">
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;DEPFPMAX_MUD.OUT: Floodplain maximum mudflow depth (ft or m).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    </property>
+                    <property name="toolTipDuration">
+                     <number>0</number>
+                    </property>
+                    <property name="text">
+                     <string>Maximum Mudflow Depth</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="2" column="0">
+                   <widget class="QCheckBox" name="fmd_tp_cb">
+                    <property name="toolTip">
+                     <string>FINALDEP_MUD.OUT: Final mudflow depths (ft or m)</string>
+                    </property>
+                    <property name="toolTipDuration">
+                     <number>0</number>
+                    </property>
+                    <property name="text">
+                     <string>Final Mudflow Depth</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="2">
+                   <widget class="QCheckBox" name="mmsc_tp_cb">
+                    <property name="toolTip">
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;CVFPMAX_MUD.OUT: Floodplain mudflow maximum sediment concentration by volume.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    </property>
+                    <property name="toolTipDuration">
+                     <number>0</number>
+                    </property>
+                    <property name="text">
+                     <string>Maximum Mudflow Sed. Con.</string>
                     </property>
                    </widget>
                   </item>
