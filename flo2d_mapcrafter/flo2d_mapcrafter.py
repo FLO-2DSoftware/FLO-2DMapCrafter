@@ -878,8 +878,13 @@ class FLO2DMapCrafter:
     def check_files(self):
         """Function to check the type of files present on the simulation"""
 
-        files_in_directory = os.listdir(self.dlg.flo2d_out_folder.filePath())
         output_directory = self.dlg.flo2d_out_folder.filePath()
+
+        # Return immediately when folder is empty of invalid
+        if not output_directory or not os.path.isdir(output_directory):
+            return
+
+        files_in_directory = os.listdir(output_directory)
 
         # --- Decide sim type FIRST (from CONT.DAT) ---
         self._sim_type = None  # reset for new folder
@@ -927,9 +932,7 @@ class FLO2DMapCrafter:
             msg_box.setWindowTitle("Warning")
             msg_box.setText("No CONT.DAT and *.OUT files were found in this directory!")
             msg_box.exec_()
-            # return
-
-        # output_directory = self.dlg.flo2d_out_folder.filePath()
+            return
 
         with open(output_directory + r"\CONT.DAT", "r") as file:
             lines = file.readlines()
