@@ -526,8 +526,8 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>406</width>
-            <height>545</height>
+            <width>773</width>
+            <height>485</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_99">
@@ -720,6 +720,28 @@
                     </property>
                     <property name="text">
                      <string>Ground Elevation</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="1">
+                   <widget class="QCheckBox" name="mge_cw_cb">
+                    <property name="enabled">
+                     <bool>true</bool>
+                    </property>
+                    <property name="acceptDrops">
+                     <bool>true</bool>
+                    </property>
+                    <property name="toolTip">
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;TOPO.DAT: Grid element, x- and y-coordinates, and their elevations (ft or m).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    </property>
+                    <property name="toolTipDuration">
+                     <number>0</number>
+                    </property>
+                    <property name="whatsThis">
+                     <string/>
+                    </property>
+                    <property name="text">
+                     <string>Modified Ground Elevation</string>
                     </property>
                    </widget>
                   </item>
@@ -1044,8 +1066,8 @@ p, li { white-space: pre-wrap; }
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>406</width>
-            <height>603</height>
+            <width>773</width>
+            <height>485</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_100">
@@ -1676,8 +1698,8 @@ p, li { white-space: pre-wrap; }
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>406</width>
-            <height>603</height>
+            <width>752</width>
+            <height>715</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_101">
@@ -2188,8 +2210,8 @@ p, li { white-space: pre-wrap; }
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>781</width>
-            <height>518</height>
+            <width>752</width>
+            <height>961</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_102">
@@ -2875,8 +2897,8 @@ p, li { white-space: pre-wrap; }
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>420</width>
-            <height>476</height>
+            <width>752</width>
+            <height>565</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_103">
@@ -3227,8 +3249,8 @@ p, li { white-space: pre-wrap; }
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>250</width>
-            <height>408</height>
+            <width>773</width>
+            <height>485</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_111">
@@ -3648,8 +3670,8 @@ p, li { white-space: pre-wrap; }
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>291</width>
-            <height>304</height>
+            <width>773</width>
+            <height>485</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_104">
