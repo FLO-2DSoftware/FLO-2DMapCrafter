@@ -960,8 +960,18 @@ class FLO2DMapCrafter:
             flood_maps = FloodMaps(self.iface, self.units_switch, vector_scale, self.toler_value)
             flood_files_dict = flood_maps.check_flood_files(output_directory)
 
+            # Custom logic for modified ground elevation availability
+            files = os.listdir(output_directory)
+            if "TOPO_SDElev.RGH" in files:
+                flood_files_dict[r"TOPO_SDElev.RGH"] = True
+            elif "TOPO.DAT" in files and "FPREV.NEW" in files:
+                flood_files_dict[r"TOPO_SDElev.RGH"] = True # Since it can be generated
+            else:
+                flood_files_dict[r"TOPO_SDElev.RGH"] = False
+
             flood_rbs = {
                 r"TOPO.DAT": self.dlg.ge_cw_cb,
+                r"TOPO_SDElev.RGH": self.dlg.mge_cw_cb,
                 r"DEPTH.OUT": self.dlg.md_cw_cb,
                 r"VELFP.OUT": self.dlg.mv_cw_cb,
                 r"VELDIREC.OUT": self.dlg.mvv_cw_cb,
@@ -1006,8 +1016,18 @@ class FLO2DMapCrafter:
             sediment_maps = SedimentMaps(self.iface, self.units_switch, vector_scale, self.toler_value)
             sediment_files_dict = sediment_maps.check_sediment_files(output_directory)
 
+            # Custom logic for modified ground elevation availability
+            files = os.listdir(output_directory)
+            if "TOPO_SDElev.RGH" in files:
+                sediment_files_dict[r"TOPO_SDElev.RGH"] = True
+            elif "TOPO.DAT" in files and "FPREV.NEW" in files:
+                sediment_files_dict[r"TOPO_SDElev.RGH"] = True # Since it can be generated
+            else:
+                sediment_files_dict[r"TOPO_SDElev.RGH"] = False
+
             sediment_rbs = {
                 r"TOPO.DAT": self.dlg.ge_sd_cb,
+                r"TOPO_SDElev.RGH": self.dlg.mge_sd_cb,
                 r"DEPTH.OUT": self.dlg.md_sd_cb,
                 r"VELFP.OUT": self.dlg.mv_sd_cb,
                 r"VELDIREC.OUT": self.dlg.mvv_sd_cb,
@@ -1060,8 +1080,18 @@ class FLO2DMapCrafter:
             mudflow_maps = MudflowMaps(self.iface, self.units_switch, vector_scale, self.toler_value)
             mudflow_files_dict = mudflow_maps.check_mudflow_files(output_directory)
 
+            # Custom logic for modified ground elevation availability
+            files = os.listdir(output_directory)
+            if "TOPO_SDElev.RGH" in files:
+                mudflow_files_dict[r"TOPO_SDElev.RGH"] = True
+            elif "TOPO.DAT" in files and "FPREV.NEW" in files:
+                mudflow_files_dict[r"TOPO_SDElev.RGH"] = True # Since it can be generated
+            else:
+                mudflow_files_dict[r"TOPO_SDElev.RGH"] = False
+
             mudflow_rbs = {
                 r"TOPO.DAT": self.dlg.ge_mf_cb,
+                r"TOPO_SDElev.RGH": self.dlg.mge_mf_cb,
                 r"DEPTH.OUT": self.dlg.md_mf_cb,
                 r"VELFP.OUT": self.dlg.mv_mf_cb,
                 r"VELDIREC.OUT": self.dlg.mvv_mf_cb,
@@ -1103,8 +1133,18 @@ class FLO2DMapCrafter:
             twophase_maps = TwophaseMaps(self.iface, self.units_switch, vector_scale, self.toler_value)
             twophase_files_dict = twophase_maps.check_twophase_files(output_directory)
 
+            # Custom logic for modified ground elevation availability
+            files = os.listdir(output_directory)
+            if "TOPO_SDElev.RGH" in files:
+                twophase_files_dict[r"TOPO_SDElev.RGH"] = True
+            elif "TOPO.DAT" in files and "FPREV.NEW" in files:
+                twophase_files_dict[r"TOPO_SDElev.RGH"] = True # Since it can be generated
+            else:
+                twophase_files_dict[r"TOPO_SDElev.RGH"] = False
+
             twophase_rbs = {
                 r"TOPO.DAT": self.dlg.ge_tp_cb,
+                r"TOPO_SDElev.RGH": self.dlg.mge_tp_cb,
                 r"DEPTH.OUT": self.dlg.mfd_tp_cb,
                 r"DEPFPMAX_MUD.OUT": self.dlg.mmd_tp_cb,
                 r"DEPTHMAX_2PHASE_COMBINED.OUT": self.dlg.cmd_tp_cb,
@@ -1311,6 +1351,7 @@ class FLO2DMapCrafter:
             if mud_switch == "0" and sed_switch == "0":
                 flood_rbs = {
                     r"TOPO.DAT": self.dlg.ge_cw_cb.isChecked(),
+                    r"TOPO_SDElev.RGH": self.dlg.mge_cw_cb.isChecked(),
                     r"DEPTH.OUT": self.dlg.md_cw_cb.isChecked(),
                     r"VELFP.OUT": self.dlg.mv_cw_cb.isChecked(),
                     r"VELDIREC.OUT": self.dlg.mvv_cw_cb.isChecked(),
@@ -1345,6 +1386,7 @@ class FLO2DMapCrafter:
             if mud_switch == "0" and sed_switch == "1":
                 sediment_rbs = {
                     r"TOPO.DAT": self.dlg.ge_sd_cb.isChecked(),
+                    r"TOPO_SDElev.RGH": self.dlg.mge_sd_cb.isChecked(),
                     r"DEPTH.OUT": self.dlg.md_sd_cb.isChecked(),
                     r"VELFP.OUT": self.dlg.mv_sd_cb.isChecked(),
                     r"VELDIREC.OUT": self.dlg.mvv_sd_cb.isChecked(),
@@ -1383,6 +1425,7 @@ class FLO2DMapCrafter:
             if mud_switch == "1" and sed_switch == "0":
                 mudflow_rbs = {
                     r"TOPO.DAT": self.dlg.ge_mf_cb.isChecked(),
+                    r"TOPO_SDElev.RGH": self.dlg.mge_mf_cb.isChecked(),
                     r"DEPTH.OUT": self.dlg.md_mf_cb.isChecked(),
                     r"VELFP.OUT": self.dlg.mv_mf_cb.isChecked(),
                     r"VELDIREC.OUT": self.dlg.mvv_mf_cb.isChecked(),
@@ -1418,6 +1461,7 @@ class FLO2DMapCrafter:
             if mud_switch == "2" and sed_switch == "0":
                 twophase_rbs = {
                     r"TOPO.DAT": self.dlg.ge_tp_cb.isChecked(),
+                    r"TOPO_SDElev.RGH": self.dlg.mge_tp_cb.isChecked(),
                     r"DEPTH.OUT": self.dlg.mfd_tp_cb.isChecked(),
                     r"DEPFPMAX_MUD.OUT": self.dlg.mmd_tp_cb.isChecked(),
                     r"DEPTHMAX_2PHASE_COMBINED.OUT": self.dlg.cmd_tp_cb.isChecked(),
@@ -1942,6 +1986,7 @@ class FLO2DMapCrafter:
 
         flood_rbs = [
             self.dlg.ge_cw_cb,
+            self.dlg.mge_cw_cb,
             self.dlg.md_cw_cb,
             self.dlg.mv_cw_cb,
             self.dlg.mwse_cw_cb,
@@ -1980,6 +2025,7 @@ class FLO2DMapCrafter:
         """
         sediment_rbs = [
             self.dlg.ge_sd_cb,
+            self.dlg.mge_sd_cb,
             self.dlg.md_sd_cb,
             self.dlg.mv_sd_cb,
             self.dlg.mwse_sd_cb,
@@ -2078,6 +2124,7 @@ class FLO2DMapCrafter:
         """
         mudflow_rbs = [
             self.dlg.ge_mf_cb,
+            self.dlg.mge_mf_cb,
             self.dlg.md_mf_cb,
             self.dlg.mv_mf_cb,
             self.dlg.mvv_mf_cb,
@@ -2117,6 +2164,7 @@ class FLO2DMapCrafter:
         """
         twophase_rbs = [
             self.dlg.ge_tp_cb,
+            self.dlg.mge_tp_cb,
             self.dlg.mfd_tp_cb,
             self.dlg.mmd_tp_cb,
             self.dlg.cmd_tp_cb,

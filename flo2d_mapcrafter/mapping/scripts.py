@@ -22,8 +22,8 @@
  ***************************************************************************/
 """
 import os
-
 import numpy as np
+import pandas as pd
 from PyQt5.QtGui import QColor, QIcon
 from qgis._core import (
     QgsProject,
@@ -51,7 +51,7 @@ def read_ASCII(file_path, output_path, name, crs):
         for line in file:
             line = line.strip()
             fields = line.split()
-            if name.split()[0] == "GROUND_ELEVATION":
+            if name.split()[0] in ("GROUND_ELEVATION", "MODIFIED_GROUND_ELEVATION"):
                 x, y, value = (
                     float(fields[0]),
                     float(fields[1]),
@@ -514,3 +514,51 @@ def set_renderer(layer, color_list, raster_shader, min, max):
     myPseudoRenderer.createShader(color_ramp, clip=True)
 
     layer.setRenderer(myPseudoRenderer)
+
+
+def modified_ground_elev(results_dir, topo_name="TOPO.DAT", fprev_name="FPREV.NEW", mge_name="TOPO_SDElev.RGH"):
+    """
+    If TOPO_SDElev.RGH exists, return its path.
+    If missing but TOPO.DAT and FPREV.NEW exist, use them to create TOPO_SDElev.RGH.
+    Otherwise, return None.
+    """
+    # File paths
+    topo_path = os.path.join(results_dir, topo_name)
+    fprev_path = os.path.join(results_dir, fprev_name)
+    mge_path = os.path.join(results_dir, mge_name)
+
+    if os.path.isfile(mge_path):
+        return mge_path # TOPO_SDElev.RGH already exist, use it (prevent overwriting)
+
+    if (not os.path.isfile(topo_path)) or (not os.path.isfile(fprev_path)):
+        return None # missing either topo.dat or fprev.new, return none
+
+    # Build TOPO_SDElev.RGH from TOPO.DAT and FPREV.NEW
+    df_topo = pd.read_csv(
+        topo_path,
+        delim_whitespace=True,
+        header=None,
+        names=["X", "Y", "Z"]
+    )
+
+    df_fprev = pd.read_csv(
+        fprev_path,
+        delim_whitespace=True,
+        header=None,
+        names=["Index", "Z_mod"]
+    )
+
+    if len(df_topo) != len(df_fprev):
+        raise ValueError("Row count mismatch between TOPO.DAT and FPREV.NEW.") # Check if row counts match
+
+    df_topo["Z"] = df_fprev["Z_mod"] # Replace ground elevation with modified ground elevation
+
+    # Write the new file
+    with open(mge_path, "w") as f:
+        for _, r in df_topo.iterrows():
+            f.write(f"{r.X:14.3f} {r.Y:14.3f} {r.Z:10.2f}\n")
+
+    return mge_path
+
+
+

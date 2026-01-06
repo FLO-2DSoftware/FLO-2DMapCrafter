@@ -30,7 +30,7 @@ from qgis._core import QgsProject, QgsVectorLayer, QgsField, QgsFeature, QgsPoin
 
 from flo2d_mapcrafter.mapping.check_data import check_project_id, check_mapping_group, check_raster_file, \
     check_vector_file
-from flo2d_mapcrafter.mapping.scripts import read_ASCII, set_raster_style, set_velocity_vector_style
+from flo2d_mapcrafter.mapping.scripts import read_ASCII, set_raster_style, set_velocity_vector_style, modified_ground_elev
 
 
 class TwophaseMaps:
@@ -72,6 +72,7 @@ class TwophaseMaps:
 
         twophase_files = {
             r"TOPO.DAT": None,
+            r"TOPO_SDElev.RGH": None,
             r"DEPTH.OUT": None,
             r"DEPFPMAX_MUD.OUT": None,
             r"DEPTHMAX_2PHASE_COMBINED.OUT": None,
@@ -201,6 +202,19 @@ class TwophaseMaps:
                 file = flo2d_results_dir + r"\TOPO.DAT"
                 self.process_maps(name, raster, file, crs, sc_group, 6)
                 self._tick(dlg, "Ground elevation")
+
+            # Modified Ground Elevation
+            if twophase_rbs.get(r"TOPO_SDElev.RGH"):
+                mge_path = modified_ground_elev(flo2d_results_dir)
+            if not mge_path:
+                raise FileNotFoundError("Modified Ground Elevation requested but could not be generated.")
+
+            if twophase_rbs.get(r"TOPO_SDElev.RGH"):
+                name = check_project_id("MODIFIED_GROUND_ELEVATION", project_id)
+                name, raster = check_raster_file(name, map_output_dir)
+                file = flo2d_results_dir + r"\TOPO_SDElev.RGH"
+                self.process_maps(name, raster, file, crs, sc_group, 6)
+                self._tick(dlg, "Modified ground elevation")
 
             # Maximum Flood Depth
             if twophase_rbs.get(r"DEPTH.OUT"):

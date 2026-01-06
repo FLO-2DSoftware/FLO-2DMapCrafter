@@ -526,8 +526,8 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>406</width>
-            <height>545</height>
+            <width>773</width>
+            <height>485</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_99">
@@ -720,6 +720,19 @@
                     </property>
                     <property name="text">
                      <string>Ground Elevation</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="1">
+                   <widget class="QCheckBox" name="mge_cw_cb">
+                    <property name="toolTip">
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;TOPO.DAT&lt;/p&gt;&lt;p&gt;Contains the grid element ID, x- and y-coordinates, and corresponding elevations, reported in either feet or meters.&lt;/p&gt;&lt;p&gt;FPREV.NEW&lt;/p&gt;&lt;p&gt;Reports elevation differences between channel banks and outflow elements. During simulation, FLOPRO.exe may modify grid elevations associated with channel banks and outflow nodes. If a channel bank elevation differs from the grid elevation at the location occupied by the left or right bank, the final elevation is set to the cross-section bank elevation. For outflow nodes, if a connected upstream node has a lower elevation, FLOPRO adjusts the outflow node elevation to 0.1 ft (or equivalent metric value) below the lowest connected upstream node. Elevations are reported in feet or meters.&lt;/p&gt;&lt;p&gt;TOPO_SDElev.RGH&lt;/p&gt;&lt;p&gt;Extends the elevation adjustments reported in FPREV.NEW by documenting additional automatic corrections applied when the FLO-2D engine compares floodplain grid elevations to storm drain inlet rim elevations and Type 4 invert elevations. This file reports the grid element ID, x- and y-coordinates, and the elevation adjustments applied. The file is generated only when a storm drain system is included in the simulation. Elevations are reported in feet or meters.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    </property>
+                    <property name="toolTipDuration">
+                     <number>0</number>
+                    </property>
+                    <property name="text">
+                     <string>Modified Ground Elevation</string>
                     </property>
                    </widget>
                   </item>
@@ -1044,8 +1057,8 @@ p, li { white-space: pre-wrap; }
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>406</width>
-            <height>603</height>
+            <width>773</width>
+            <height>485</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_100">
@@ -1392,6 +1405,19 @@ p, li { white-space: pre-wrap; }
                     </property>
                    </widget>
                   </item>
+                  <item row="0" column="1">
+                   <widget class="QCheckBox" name="mge_sd_cb">
+                    <property name="toolTip">
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;TOPO.DAT&lt;/p&gt;&lt;p&gt;Contains the grid element ID, x- and y-coordinates, and corresponding elevations, reported in either feet or meters.&lt;/p&gt;&lt;p&gt;FPREV.NEW&lt;/p&gt;&lt;p&gt;Reports elevation differences between channel banks and outflow elements. During simulation, FLOPRO.exe may modify grid elevations associated with channel banks and outflow nodes. If a channel bank elevation differs from the grid elevation at the location occupied by the left or right bank, the final elevation is set to the cross-section bank elevation. For outflow nodes, if a connected upstream node has a lower elevation, FLOPRO adjusts the outflow node elevation to 0.1 ft (or equivalent metric value) below the lowest connected upstream node. Elevations are reported in feet or meters.&lt;/p&gt;&lt;p&gt;TOPO_SDElev.RGH&lt;/p&gt;&lt;p&gt;Extends the elevation adjustments reported in FPREV.NEW by documenting additional automatic corrections applied when the FLO-2D engine compares floodplain grid elevations to storm drain inlet rim elevations and Type 4 invert elevations. This file reports the grid element ID, x- and y-coordinates, and the elevation adjustments applied. The file is generated only when a storm drain system is included in the simulation. Elevations are reported in feet or meters.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    </property>
+                    <property name="toolTipDuration">
+                     <number>0</number>
+                    </property>
+                    <property name="text">
+                     <string>Modified Ground Elevation</string>
+                    </property>
+                   </widget>
+                  </item>
                  </layout>
                 </item>
                </layout>
@@ -1676,8 +1702,8 @@ p, li { white-space: pre-wrap; }
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>406</width>
-            <height>603</height>
+            <width>773</width>
+            <height>485</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_101">
@@ -2031,6 +2057,19 @@ p, li { white-space: pre-wrap; }
                     </property>
                    </widget>
                   </item>
+                  <item row="0" column="1">
+                   <widget class="QCheckBox" name="mge_mf_cb">
+                    <property name="toolTip">
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;TOPO.DAT&lt;/p&gt;&lt;p&gt;Contains the grid element ID, x- and y-coordinates, and corresponding elevations, reported in either feet or meters.&lt;/p&gt;&lt;p&gt;FPREV.NEW&lt;/p&gt;&lt;p&gt;Reports elevation differences between channel banks and outflow elements. During simulation, FLOPRO.exe may modify grid elevations associated with channel banks and outflow nodes. If a channel bank elevation differs from the grid elevation at the location occupied by the left or right bank, the final elevation is set to the cross-section bank elevation. For outflow nodes, if a connected upstream node has a lower elevation, FLOPRO adjusts the outflow node elevation to 0.1 ft (or equivalent metric value) below the lowest connected upstream node. Elevations are reported in feet or meters.&lt;/p&gt;&lt;p&gt;TOPO_SDElev.RGH&lt;/p&gt;&lt;p&gt;Extends the elevation adjustments reported in FPREV.NEW by documenting additional automatic corrections applied when the FLO-2D engine compares floodplain grid elevations to storm drain inlet rim elevations and Type 4 invert elevations. This file reports the grid element ID, x- and y-coordinates, and the elevation adjustments applied. The file is generated only when a storm drain system is included in the simulation. Elevations are reported in feet or meters.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    </property>
+                    <property name="toolTipDuration">
+                     <number>0</number>
+                    </property>
+                    <property name="text">
+                     <string>Modified Ground Elevation</string>
+                    </property>
+                   </widget>
+                  </item>
                  </layout>
                 </item>
                </layout>
@@ -2188,8 +2227,8 @@ p, li { white-space: pre-wrap; }
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>781</width>
-            <height>518</height>
+            <width>773</width>
+            <height>485</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_102">
@@ -2328,6 +2367,19 @@ p, li { white-space: pre-wrap; }
                     </property>
                     <property name="text">
                      <string>Ground Elevation</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="1">
+                   <widget class="QCheckBox" name="mge_tp_cb">
+                    <property name="toolTip">
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;TOPO.DAT&lt;/p&gt;&lt;p&gt;Contains the grid element ID, x- and y-coordinates, and corresponding elevations, reported in either feet or meters.&lt;/p&gt;&lt;p&gt;FPREV.NEW&lt;/p&gt;&lt;p&gt;Reports elevation differences between channel banks and outflow elements. During simulation, FLOPRO.exe may modify grid elevations associated with channel banks and outflow nodes. If a channel bank elevation differs from the grid elevation at the location occupied by the left or right bank, the final elevation is set to the cross-section bank elevation. For outflow nodes, if a connected upstream node has a lower elevation, FLOPRO adjusts the outflow node elevation to 0.1 ft (or equivalent metric value) below the lowest connected upstream node. Elevations are reported in feet or meters.&lt;/p&gt;&lt;p&gt;TOPO_SDElev.RGH&lt;/p&gt;&lt;p&gt;Extends the elevation adjustments reported in FPREV.NEW by documenting additional automatic corrections applied when the FLO-2D engine compares floodplain grid elevations to storm drain inlet rim elevations and Type 4 invert elevations. This file reports the grid element ID, x- and y-coordinates, and the elevation adjustments applied. The file is generated only when a storm drain system is included in the simulation. Elevations are reported in feet or meters.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    </property>
+                    <property name="toolTipDuration">
+                     <number>0</number>
+                    </property>
+                    <property name="text">
+                     <string>Modified Ground Elevation</string>
                     </property>
                    </widget>
                   </item>
@@ -2875,8 +2927,8 @@ p, li { white-space: pre-wrap; }
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>420</width>
-            <height>476</height>
+            <width>773</width>
+            <height>485</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_103">
@@ -3227,8 +3279,8 @@ p, li { white-space: pre-wrap; }
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>250</width>
-            <height>408</height>
+            <width>773</width>
+            <height>485</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_111">
@@ -3648,8 +3700,8 @@ p, li { white-space: pre-wrap; }
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>291</width>
-            <height>304</height>
+            <width>773</width>
+            <height>485</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_104">
