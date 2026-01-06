@@ -203,7 +203,7 @@ class TwophaseMaps:
                 self.process_maps(name, raster, file, crs, sc_group, 6)
                 self._tick(dlg, "Ground elevation")
 
-            # MGE
+            # Modified Ground Elevation
             if twophase_rbs.get(r"TOPO_SDElev.RGH"):
                 mge_path = modified_ground_elev(flo2d_results_dir)
             if not mge_path:

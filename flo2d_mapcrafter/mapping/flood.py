@@ -32,7 +32,7 @@ from qgis._core import QgsProject, QgsVectorLayer, QgsField, QgsFeature, QgsGeom
 from flo2d_mapcrafter.mapping.check_data import check_project_id, check_mapping_group, check_raster_file, \
     check_vector_file
 from flo2d_mapcrafter.mapping.scripts import read_ASCII, set_raster_style, \
-    set_velocity_vector_style
+    set_velocity_vector_style, modified_ground_elev
 
 class FloodMaps:
 
@@ -72,6 +72,7 @@ class FloodMaps:
 
         flood_files = {
             r"TOPO.DAT": False,
+            r"TOPO_SDElev.RGH": False,
             r"DEPTH.OUT": False,
             r"VELFP.OUT": False,
             r"VELDIREC.OUT": False,
@@ -154,6 +155,19 @@ class FloodMaps:
                 file = os.path.join(flo2d_results_dir, "TOPO.DAT")
                 self.process_maps(name, raster, file, crs, sc_group, 6)
                 self._tick(dlg, "Ground Elevation")
+
+            # Modified Ground Elevation
+            if flood_rbs.get(r"TOPO_SDElev.RGH"):
+                mge_path = modified_ground_elev(flo2d_results_dir)
+            if not mge_path:
+                raise FileNotFoundError("Modified Ground Elevation requested but could not be generated.")
+
+            if flood_rbs.get(r"TOPO_SDElev.RGH"):
+                name = check_project_id("MODIFIED_GROUND_ELEVATION", project_id)
+                name, raster = check_raster_file(name, map_output_dir)
+                file = flo2d_results_dir + r"\TOPO_SDElev.RGH"
+                self.process_maps(name, raster, file, crs, sc_group, 6)
+                self._tick(dlg, "Modified ground elevation")
 
             # Maximum Depth (prefer DEPFP.OUT, fallback DEPTH.OUT)
             if flood_rbs.get(r"DEPTH.OUT"):
