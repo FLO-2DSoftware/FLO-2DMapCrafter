@@ -51,7 +51,7 @@ def read_ASCII(file_path, output_path, name, crs):
         for line in file:
             line = line.strip()
             fields = line.split()
-            if name.split()[0] == "GROUND_ELEVATION":
+            if name.split()[0] in ("GROUND_ELEVATION", "MODIFIED_GROUND_ELEVATION"):
                 x, y, value = (
                     float(fields[0]),
                     float(fields[1]),
