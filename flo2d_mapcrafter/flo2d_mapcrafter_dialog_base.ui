@@ -526,8 +526,8 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>490</width>
-            <height>646</height>
+            <width>773</width>
+            <height>485</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_99">
@@ -720,28 +720,6 @@
                     </property>
                     <property name="text">
                      <string>Ground Elevation</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="0" column="1">
-                   <widget class="QCheckBox" name="mge_cw_cb">
-                    <property name="enabled">
-                     <bool>true</bool>
-                    </property>
-                    <property name="acceptDrops">
-                     <bool>true</bool>
-                    </property>
-                    <property name="toolTip">
-                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;TOPO.DAT: Grid element, x- and y-coordinates, and their elevations (ft or m).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                    </property>
-                    <property name="toolTipDuration">
-                     <number>0</number>
-                    </property>
-                    <property name="whatsThis">
-                     <string/>
-                    </property>
-                    <property name="text">
-                     <string>Modified Ground Elevation</string>
                     </property>
                    </widget>
                   </item>
@@ -2210,8 +2188,8 @@ p, li { white-space: pre-wrap; }
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>773</width>
-            <height>485</height>
+            <width>669</width>
+            <height>961</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_102">
