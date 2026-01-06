@@ -1103,8 +1103,18 @@ class FLO2DMapCrafter:
             twophase_maps = TwophaseMaps(self.iface, self.units_switch, vector_scale, self.toler_value)
             twophase_files_dict = twophase_maps.check_twophase_files(output_directory)
 
+            # Custom logic for modified ground elevation availability
+            files = os.listdir(output_directory)
+            if "TOPO_SDElev.RGH" in files:
+                twophase_files_dict[r"TOPO_SDElev.RGH"] = True
+            elif "TOPO.DAT" in files and "FPREV.NEW" in files:
+                twophase_files_dict[r"TOPO_SDElev.RGH"] = True # Since it can be generated
+            else:
+                twophase_files_dict[r"TOPO_SDElev.RGH"] = False
+
             twophase_rbs = {
                 r"TOPO.DAT": self.dlg.ge_tp_cb,
+                r"TOPO_SDElev.RGH": self.dlg.mge_tp_cb,
                 r"DEPTH.OUT": self.dlg.mfd_tp_cb,
                 r"DEPFPMAX_MUD.OUT": self.dlg.mmd_tp_cb,
                 r"DEPTHMAX_2PHASE_COMBINED.OUT": self.dlg.cmd_tp_cb,
@@ -1418,6 +1428,7 @@ class FLO2DMapCrafter:
             if mud_switch == "2" and sed_switch == "0":
                 twophase_rbs = {
                     r"TOPO.DAT": self.dlg.ge_tp_cb.isChecked(),
+                    r"TOPO_SDElev.RGH": self.dlg.mge_tp_cb.isChecked(),
                     r"DEPTH.OUT": self.dlg.mfd_tp_cb.isChecked(),
                     r"DEPFPMAX_MUD.OUT": self.dlg.mmd_tp_cb.isChecked(),
                     r"DEPTHMAX_2PHASE_COMBINED.OUT": self.dlg.cmd_tp_cb.isChecked(),
@@ -2117,6 +2128,7 @@ class FLO2DMapCrafter:
         """
         twophase_rbs = [
             self.dlg.ge_tp_cb,
+            self.dlg.mge_tp_cb,
             self.dlg.mfd_tp_cb,
             self.dlg.mmd_tp_cb,
             self.dlg.cmd_tp_cb,
