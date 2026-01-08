@@ -183,8 +183,8 @@ class SedimentMaps:
             # Modified Ground Elevation
             if sediment_rbs.get(r"TOPO_SDElev.RGH"):
                 mge_path = modified_ground_elev(flo2d_results_dir)
-            if not mge_path:
-                raise FileNotFoundError("Modified Ground Elevation requested but could not be generated.")
+                if not mge_path:
+                    raise FileNotFoundError("Modified Ground Elevation requested but could not be generated.")
 
             if sediment_rbs.get(r"TOPO_SDElev.RGH"):
                 name = check_project_id("MODIFIED_GROUND_ELEVATION", project_id)
