@@ -287,7 +287,7 @@
       <enum>QTabWidget::Rounded</enum>
      </property>
      <property name="currentIndex">
-      <number>0</number>
+      <number>1</number>
      </property>
      <property name="elideMode">
       <enum>Qt::ElideNone</enum>
@@ -583,7 +583,7 @@
                 <string>Basic</string>
                </property>
                <property name="collapsed">
-                <bool>true</bool>
+                <bool>false</bool>
                </property>
                <layout class="QGridLayout" name="gridLayout_29">
                 <item row="2" column="1">
@@ -676,6 +676,19 @@
                     </property>
                     <property name="text">
                      <string>Final Depth</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="4" column="0">
+                   <widget class="QCheckBox" name="fwse_cw_cb">
+                    <property name="toolTip">
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;FINALDEP.OUT: Final floodplain flow depths (ft or m).&lt;/p&gt;&lt;p&gt;TOPO_SDElev.RGH: Extends the elevation adjustments reported in FPREV.NEW by documenting additional automatic corrections applied when the FLO-2D engine compares floodplain grid elevations to storm drain inlet rim elevations and Type 4 invert elevations. This file reports the grid element ID, x- and y-coordinates, and the elevation adjustments applied. The file is generated only when a storm drain system is included in the simulation. Elevations are reported in feet or meters.&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    </property>
+                    <property name="toolTipDuration">
+                     <number>0</number>
+                    </property>
+                    <property name="text">
+                     <string>Final WSE</string>
                     </property>
                    </widget>
                   </item>
@@ -1465,7 +1478,7 @@ p, li { white-space: pre-wrap; }
                      <number>0</number>
                     </property>
                     <property name="text">
-                     <string>Final Depth</string>
+                     <string>Final Depth2</string>
                     </property>
                    </widget>
                   </item>
@@ -1836,7 +1849,7 @@ p, li { white-space: pre-wrap; }
                      <number>0</number>
                     </property>
                     <property name="text">
-                     <string>Final Depth</string>
+                     <string>Final Depth3</string>
                     </property>
                    </widget>
                   </item>
