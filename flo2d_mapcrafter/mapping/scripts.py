@@ -558,7 +558,7 @@ def modified_ground_elev(results_dir, topo_name="TOPO.DAT", fprev_name="FPREV.NE
     # Write the new file
     with open(mge_path, "w") as f:
         for _, r in df_topo.iterrows():
-            f.write(f"{r.X:14.3f} {r.Y:14.3f} {r.Z:10.2f}\n")
+            f.write(f"{r.X:14.3f} {r.Y:14.3f} {r.Z:10.4f}\n")
 
     return mge_path
 
