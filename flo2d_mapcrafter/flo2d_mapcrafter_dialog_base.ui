@@ -287,7 +287,7 @@
       <enum>QTabWidget::Rounded</enum>
      </property>
      <property name="currentIndex">
-      <number>1</number>
+      <number>0</number>
      </property>
      <property name="elideMode">
       <enum>Qt::ElideNone</enum>
@@ -583,7 +583,7 @@
                 <string>Basic</string>
                </property>
                <property name="collapsed">
-                <bool>false</bool>
+                <bool>true</bool>
                </property>
                <layout class="QGridLayout" name="gridLayout_29">
                 <item row="2" column="1">
@@ -679,7 +679,6 @@
                     </property>
                    </widget>
                   </item>
-
                   <item row="4" column="0">
                    <widget class="QCheckBox" name="fwse_cw_cb">
                     <property name="toolTip">
@@ -693,7 +692,6 @@
                     </property>
                    </widget>
                   </item>
-
                  </layout>
                 </item>
                </layout>
@@ -1484,7 +1482,6 @@ p, li { white-space: pre-wrap; }
                     </property>
                    </widget>
                   </item>
-
                   <item row="4" column="0">
                    <widget class="QCheckBox" name="fwse_sd_cb">
                     <property name="toolTip">
@@ -1498,7 +1495,6 @@ p, li { white-space: pre-wrap; }
                     </property>
                    </widget>
                   </item>
-
                   <item row="2" column="1">
                    <widget class="QCheckBox" name="fv_sd_cb">
                     <property name="enabled">
@@ -1870,7 +1866,6 @@ p, li { white-space: pre-wrap; }
                     </property>
                    </widget>
                   </item>
-
                   <item row="4" column="0">
                    <widget class="QCheckBox" name="fwse_mf_cb">
                     <property name="toolTip">
@@ -1884,7 +1879,6 @@ p, li { white-space: pre-wrap; }
                     </property>
                    </widget>
                   </item>
-
                   <item row="1" column="0">
                    <widget class="QCheckBox" name="mwse_mf_cb">
                     <property name="toolTip">
@@ -2769,7 +2763,6 @@ p, li { white-space: pre-wrap; }
                     </property>
                    </widget>
                   </item>
-
                   <item row="5" column="0">
                    <widget class="QCheckBox" name="fwse_tp_cb">
                     <property name="toolTip">
@@ -2783,7 +2776,6 @@ p, li { white-space: pre-wrap; }
                     </property>
                    </widget>
                   </item>
-
                   <item row="0" column="0">
                    <widget class="QCheckBox" name="mfd_tp_cb">
                     <property name="toolTip">
@@ -2987,8 +2979,8 @@ p, li { white-space: pre-wrap; }
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>773</width>
-            <height>485</height>
+            <width>502</width>
+            <height>565</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_103">
@@ -3339,8 +3331,8 @@ p, li { white-space: pre-wrap; }
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>773</width>
-            <height>485</height>
+            <width>299</width>
+            <height>477</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_111">
@@ -3760,8 +3752,8 @@ p, li { white-space: pre-wrap; }
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>773</width>
-            <height>485</height>
+            <width>343</width>
+            <height>364</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_104">
