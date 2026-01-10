@@ -27,7 +27,8 @@ from PyQt5.QtCore import QMetaType, QVariant, Qt
 from qgis._core import QgsProject, QgsVectorLayer, QgsField, QgsFeature, QgsPointXY, QgsGeometry, QgsVectorFileWriter
 from flo2d_mapcrafter.mapping.check_data import check_project_id, check_mapping_group, check_raster_file, \
     check_vector_file
-from flo2d_mapcrafter.mapping.scripts import read_ASCII, set_raster_style, set_velocity_vector_style, modified_ground_elev
+from flo2d_mapcrafter.mapping.scripts import read_ASCII, set_raster_style, \
+    set_velocity_vector_style, modified_ground_elev, final_wse
 
 class SedimentMaps:
 
@@ -89,6 +90,7 @@ class SedimentMaps:
             r"STATICPRESS.OUT": False,
             r"SEDFP.OUT": False,
             r"IMPACT.OUT": False,
+            r"FINAL_WSE.DAT": False,
         }
 
         files = os.listdir(output_dir)
@@ -224,6 +226,17 @@ class SedimentMaps:
                 file = flo2d_results_dir + r"\FINALDEP.OUT"
                 self.process_maps(name, raster, file, crs, bv_group, 0)
                 self._tick(dlg, "Final Depth")
+
+            # Final WSE
+            if sediment_rbs.get(r"FINAL_WSE.DAT"):
+                wse_path = final_wse(flo2d_results_dir)
+                if not wse_path:
+                    raise FileNotFoundError("FINAL_WSE.DAT requested but could not be generated.")
+
+                name = check_project_id("FINAL_WSE", project_id)
+                name, raster = check_raster_file(name, map_output_dir)
+                self.process_maps(name, raster, wse_path, crs, bv_group, 6)
+                self._tick(dlg, "Final Water Surface Elevation")
 
             # Final Velocity
             if sediment_rbs.get(r"FINALVEL.OUT"):

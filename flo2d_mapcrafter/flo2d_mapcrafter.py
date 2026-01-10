@@ -969,6 +969,15 @@ class FLO2DMapCrafter:
             else:
                 flood_files_dict[r"TOPO_SDElev.RGH"] = False
 
+            # Custom logic for FINAL WSE availability
+            files = os.listdir(output_directory)
+            if "FINAL_WSE.DAT" in files:
+                flood_files_dict[r"FINAL_WSE.DAT"] = True
+            elif "TOPO.DAT" in files and "FINALDEP.OUT" in files:
+                flood_files_dict[r"FINAL_WSE.DAT"] = True  # can be generated
+            else:
+                flood_files_dict[r"FINAL_WSE.DAT"] = False
+
             flood_rbs = {
                 r"TOPO.DAT": self.dlg.ge_cw_cb,
                 r"TOPO_SDElev.RGH": self.dlg.mge_cw_cb,
@@ -991,6 +1000,7 @@ class FLO2DMapCrafter:
                 r"SPECENERGY.OUT": self.dlg.se_cw_cb,
                 r"STATICPRESS.OUT": self.dlg.sp_cw_cb,
                 r"IMPACT.OUT": self.dlg.if_cw_cb,
+                r"FINAL_WSE.DAT": self.dlg.fwse_cw_cb,
             }
 
             for key, value in flood_files_dict.items():
@@ -1025,6 +1035,15 @@ class FLO2DMapCrafter:
             else:
                 sediment_files_dict[r"TOPO_SDElev.RGH"] = False
 
+            # Custom logic for FINAL WSE availability
+            files = os.listdir(output_directory)
+            if "FINAL_WSE.DAT" in files:
+                sediment_files_dict[r"FINAL_WSE.DAT"] = True
+            elif "TOPO.DAT" in files and "FINALDEP.OUT" in files:
+                sediment_files_dict[r"FINAL_WSE.DAT"] = True  # can be generated
+            else:
+                sediment_files_dict[r"FINAL_WSE.DAT"] = False
+
             sediment_rbs = {
                 r"TOPO.DAT": self.dlg.ge_sd_cb,
                 r"TOPO_SDElev.RGH": self.dlg.mge_sd_cb,
@@ -1052,6 +1071,7 @@ class FLO2DMapCrafter:
                     self.dlg.fbd_sd_cb
                 ],
                 r"IMPACT.OUT": self.dlg.if_sd_cb,
+                r"FINAL_WSE.DAT": self.dlg.fwse_sd_cb,
             }
 
             for key, value in sediment_files_dict.items():
@@ -1089,6 +1109,15 @@ class FLO2DMapCrafter:
             else:
                 mudflow_files_dict[r"TOPO_SDElev.RGH"] = False
 
+            # Custom logic for FINAL WSE availability
+            files = os.listdir(output_directory)
+            if "FINAL_WSE.DAT" in files:
+                mudflow_files_dict[r"FINAL_WSE.DAT"] = True
+            elif "TOPO.DAT" in files and "FINALDEP.OUT" in files:
+                mudflow_files_dict[r"FINAL_WSE.DAT"] = True  # can be generated
+            else:
+                mudflow_files_dict[r"FINAL_WSE.DAT"] = False
+
             mudflow_rbs = {
                 r"TOPO.DAT": self.dlg.ge_mf_cb,
                 r"TOPO_SDElev.RGH": self.dlg.mge_mf_cb,
@@ -1113,6 +1142,7 @@ class FLO2DMapCrafter:
                 r"CVFPMAX.OUT": self.dlg.ms_mf_cb,
                 r"FINALCVFP.OUT": self.dlg.fs_mf_cb,
                 r"IMPACT.OUT": self.dlg.if_mf_cb,
+                r"FINAL_WSE.DAT": self.dlg.fwse_mf_cb,
             }
 
             for key, value in mudflow_files_dict.items():
@@ -1141,6 +1171,15 @@ class FLO2DMapCrafter:
                 twophase_files_dict[r"TOPO_SDElev.RGH"] = True # Since it can be generated
             else:
                 twophase_files_dict[r"TOPO_SDElev.RGH"] = False
+
+            # Custom logic for FINAL WSE availability
+            files = os.listdir(output_directory)
+            if "FINAL_WSE.DAT" in files:
+                twophase_files_dict[r"FINAL_WSE.DAT"] = True
+            elif "TOPO.DAT" in files and "FINALDEP.OUT" in files:
+                twophase_files_dict[r"FINAL_WSE.DAT"] = True  # can be generated
+            else:
+                twophase_files_dict[r"FINAL_WSE.DAT"] = False
 
             twophase_rbs = {
                 r"TOPO.DAT": self.dlg.ge_tp_cb,
@@ -1182,6 +1221,7 @@ class FLO2DMapCrafter:
                     self.dlg.fdb_tp_cb
                 ],
                 r"FP_BED_CHANGE_MUD.OUT": self.dlg.fdbmcd_tp_cb,
+                r"FINAL_WSE.DAT": self.dlg.fwse_tp_cb,
             }
 
             for key, value in twophase_files_dict.items():
@@ -1372,6 +1412,7 @@ class FLO2DMapCrafter:
                     r"STATICPRESS.OUT": self.dlg.sp_cw_cb.isChecked(),
                     r"IMPACT.OUT": self.dlg.if_cw_cb.isChecked(),
                     "VEL_SQ_X_DEPTH": self.dlg.v2xd_cw_cb.isChecked(),
+                    r"FINAL_WSE.DAT": self.dlg.fwse_cw_cb.isChecked(),
                 }
 
                 flood_maps = FloodMaps(self.iface, self.units_switch, vector_scale, self.toler_value)
@@ -1411,6 +1452,7 @@ class FLO2DMapCrafter:
                         self.dlg.fbd_sd_cb.isChecked()
                     ],
                     r"IMPACT.OUT": self.dlg.if_sd_cb.isChecked(),
+                    r"FINAL_WSE.DAT": self.dlg.fwse_sd_cb.isChecked(),
                 }
 
                 sediment_maps = SedimentMaps(self.iface, self.units_switch, vector_scale, self.toler_value)
@@ -1447,6 +1489,7 @@ class FLO2DMapCrafter:
                     r"CVFPMAX.OUT": self.dlg.ms_mf_cb.isChecked(),
                     r"FINALCVFP.OUT": self.dlg.fs_mf_cb.isChecked(),
                     r"IMPACT.OUT": self.dlg.if_mf_cb.isChecked(),
+                    r"FINAL_WSE.DAT": self.dlg.fwse_mf_cb.isChecked(),
                 }
 
                 mudflow_maps = MudflowMaps(self.iface, self.units_switch, vector_scale, self.toler_value)
@@ -1498,7 +1541,8 @@ class FLO2DMapCrafter:
                         self.dlg.ms_tp_cb.isChecked(),
                         self.dlg.fdb_tp_cb.isChecked()
                     ],
-                    r"FP_BED_CHANGE_MUD.OUT": self.dlg.fdbmcd_tp_cb.isChecked()
+                    r"FP_BED_CHANGE_MUD.OUT": self.dlg.fdbmcd_tp_cb.isChecked(),
+                    r"FINAL_WSE.DAT": self.dlg.fwse_tp_cb.isChecked(),
                 }
 
                 twophase_maps = TwophaseMaps(self.iface, self.units_switch, vector_scale, self.toler_value)
