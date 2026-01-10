@@ -32,7 +32,7 @@ from qgis._core import QgsProject, QgsVectorLayer, QgsField, QgsFeature, QgsGeom
 from flo2d_mapcrafter.mapping.check_data import check_project_id, check_mapping_group, check_raster_file, \
     check_vector_file
 from flo2d_mapcrafter.mapping.scripts import read_ASCII, set_raster_style, \
-    set_velocity_vector_style, modified_ground_elev
+    set_velocity_vector_style, modified_ground_elev, final_wse
 
 class FloodMaps:
 
@@ -92,6 +92,7 @@ class FloodMaps:
             r"SPECENERGY.OUT": False,
             r"STATICPRESS.OUT": False,
             r"IMPACT.OUT": False,
+            r"FINAL_WSE.DAT": False,
         }
 
         files = os.listdir(output_dir)
@@ -202,6 +203,17 @@ class FloodMaps:
                 file = os.path.join(flo2d_results_dir, "FINALDEP.OUT")
                 self.process_maps(name, raster, file, crs, bv_group, 0)
                 self._tick(dlg, "Final Depth")
+
+            # Final WSE
+            if flood_rbs.get(r"FINAL_WSE.DAT"):
+                wse_path = final_wse(flo2d_results_dir)
+                if not wse_path:
+                    raise FileNotFoundError("FINAL_WSE.DAT requested but could not be generated.")
+
+                name = check_project_id("FINAL_WSE", project_id)
+                name, raster = check_raster_file(name, map_output_dir)
+                self.process_maps(name, raster, wse_path, crs, bv_group, 6)
+                self._tick(dlg, "Final Water Surface Elevation")
 
             # Final Velocity
             if flood_rbs.get(r"FINALVEL.OUT"):
