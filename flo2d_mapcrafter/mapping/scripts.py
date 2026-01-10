@@ -35,7 +35,9 @@ from qgis._core import (
     QgsGraduatedSymbolRenderer, QgsStyle,
     QgsClassificationQuantile,
     QgsProperty, QgsSymbolLayer,
-    QgsGradientColorRamp, QgsGradientStop, QgsColorRampShader
+    QgsGradientColorRamp, QgsGradientStop, QgsColorRampShader,
+    Qgis,
+    QgsMessageLog
 )
 from osgeo import gdal
 
@@ -51,7 +53,7 @@ def read_ASCII(file_path, output_path, name, crs):
         for line in file:
             line = line.strip()
             fields = line.split()
-            if name.split()[0] in ("GROUND_ELEVATION", "MODIFIED_GROUND_ELEVATION"):
+            if name.split()[0] in ("GROUND_ELEVATION", "MODIFIED_GROUND_ELEVATION", "FINAL_WSE"):
                 x, y, value = (
                     float(fields[0]),
                     float(fields[1]),
@@ -560,5 +562,71 @@ def modified_ground_elev(results_dir, topo_name="TOPO.DAT", fprev_name="FPREV.NE
 
     return mge_path
 
+def final_wse(results_dir, topo_sd_name="TOPO_SDElev.RGH", topo_name="TOPO.DAT", finaldep_name="FINALDEP.OUT", out_name="FINAL_WSE.DAT"):
+    """
+    FINAL_WSE = Z(in TOPO_SDElev.RGH(preferred) or TOPO.DAT(fallback)) + dZ (from FINALDEP.OUT)
+    """
+    topo_sd_path = os.path.join(results_dir, topo_sd_name)
+    topo_path = os.path.join(results_dir, topo_name)
+    finaldep_path = os.path.join(results_dir, finaldep_name)
+    out_path = os.path.join(results_dir, out_name)
+
+    # Select elevation source (prefer modified topo)
+    if os.path.isfile(topo_sd_path):
+        elev_path = topo_sd_path
+    elif os.path.isfile(topo_path):
+        elev_path = topo_path
+    else:
+        QgsMessageLog.logMessage(
+            "FINAL_WSE.DAT could not be generated (missing TOPO_SDElev.RGH and TOPO.DAT)",
+            level=Qgis.Warning
+        )
+        return None
+
+    # Check FINALDEP.OUT
+    if not os.path.isfile(finaldep_path):
+        QgsMessageLog.logMessage(
+            "FINAL_WSE.DAT could not be generated (missing FINALDEP.OUT)",
+            level=Qgis.Warning
+        )
+        return None
+
+    try:
+        # Read elevation source
+        topo_df = pd.read_csv(elev_path, delim_whitespace=True, header=None)
+        topo_df.columns = ["X", "Y", "Z"]
+
+        # Read FINALDEP.OUT
+        finaldep_df = pd.read_csv(finaldep_path, delim_whitespace=True, header=None)
+        finaldep_df.columns = ["CellID", "X_fd", "Y_fd", "dZ"]
+
+        if len(topo_df) != len(finaldep_df):
+            raise ValueError(
+                f"Row count mismatch between {os.path.basename(elev_path)} and FINALDEP.OUT"
+            )
+
+        # Compute Final WSE
+        result_df = pd.DataFrame({
+            "X": topo_df["X"],
+            "Y": topo_df["Y"],
+            "WSE": topo_df["Z"] + finaldep_df["dZ"]
+        })
+
+        # Compute Final WSE
+        topo_df["WSE"] = topo_df["Z"] + finaldep_df["dZ"]
+
+        # Write FINAL_WSE.DAT
+        with open(out_path, "w") as f:
+            for _, r in topo_df.iterrows():
+                f.write(f"{r.X:14.3f} {r.Y:14.3f} {r.WSE:10.4f}\n")
+
+        return out_path
+
+    except Exception as e:
+        QgsMessageLog.logMessage(
+            f"Failed to generate FINAL_WSE.DAT: {e}",
+            level=Qgis.Critical
+        )
+        return None
 
 
