@@ -101,7 +101,7 @@ class SedimentMaps:
 
         return sediment_files
 
-    def create_maps(self, sediment_rbs, flo2d_results_dir, map_output_dir, mapping_group, crs, project_id):
+    def create_maps(self, sediment_rbs, flo2d_results_dir, map_output_dir, mapping_group, crs, project_id, sim_type=None):
         """
         Function to create the maps
         """
@@ -184,7 +184,7 @@ class SedimentMaps:
 
             # Modified Ground Elevation
             if sediment_rbs.get(r"TOPO_SDElev.RGH"):
-                mge_path = modified_ground_elev(flo2d_results_dir)
+                mge_path = modified_ground_elev(flo2d_results_dir, sim_type=sim_type)
                 if not mge_path:
                     raise FileNotFoundError("Modified Ground Elevation requested but could not be generated.")
 
