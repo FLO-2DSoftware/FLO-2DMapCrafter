@@ -277,9 +277,6 @@
      <property name="enabled">
       <bool>true</bool>
      </property>
-     <property name="toolTip">
-      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Final Corrected Water Elevation: FINALDEP.OUT + Final Ground Elevation (ft or m).&lt;/p&gt;&lt;p&gt;FLO-2D Pro Engine corrects the grid elevation automatically at runtime for several conditions.&lt;/p&gt;&lt;p&gt;1. Outflow elements - an outflow element that has 3 upstream neighbors that are lower elevation will be corrected to 0.1 ft below the lowest elevation.&lt;/p&gt;&lt;p&gt;2. Channel banks - grid elevations along channel banks will be corrected to the bank elevation defined in CHAN.DAT for prismatic channels or XSEC.DAT for natural channels.&lt;/p&gt;&lt;p&gt;3. Storm Drains - grid elevations that contain storm drain inlets or manholes will be adjusted to the rim elevation of the storm drain. This is represented by the invert elevation + max depth for the node in SWMM.inp.&lt;/p&gt;&lt;p&gt;Corrections are stored in two files:&lt;/p&gt;&lt;p&gt;FPREV.NEW for runs without storm drains.&lt;/p&gt;&lt;p&gt;TOPO_SDElev.RGH for runs with storm drains.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;4</string>
-     </property>
      <property name="tabPosition">
       <enum>QTabWidget::North</enum>
      </property>
