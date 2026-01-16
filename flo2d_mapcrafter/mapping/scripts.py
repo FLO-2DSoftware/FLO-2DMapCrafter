@@ -25,7 +25,7 @@ import os
 import numpy as np
 import pandas as pd
 from PyQt5.QtGui import QColor, QIcon
-from qgis._core import (
+from qgis.core import (
     QgsProject,
     QgsRasterLayer,
     QgsVectorLayer,
@@ -518,7 +518,7 @@ def set_renderer(layer, color_list, raster_shader, min, max):
     layer.setRenderer(myPseudoRenderer)
 
 
-def modified_ground_elev(results_dir, topo_name="TOPO.DAT", fprev_name="FPREV.NEW", mge_name="TOPO_SDElev.RGH"):
+def modified_ground_elev(results_dir, sim_type=None, topo_name="TOPO.DAT", fprev_name="FPREV.NEW", mge_name="TOPO_SDElev.RGH"):
     """
     If TOPO_SDElev.RGH exists, return its path.
     If missing but TOPO.DAT and FPREV.NEW exist, use them to create TOPO_SDElev.RGH.
@@ -543,6 +543,8 @@ def modified_ground_elev(results_dir, topo_name="TOPO.DAT", fprev_name="FPREV.NE
         names=["X", "Y", "Z"]
     )
 
+    grid_count = len(df_topo)
+
     df_fprev = pd.read_csv(
         fprev_path,
         delim_whitespace=True,
@@ -550,12 +552,23 @@ def modified_ground_elev(results_dir, topo_name="TOPO.DAT", fprev_name="FPREV.NE
         names=["Index", "Z_mod"]
     )
 
-    if len(df_topo) != len(df_fprev):
-        raise ValueError("Row count mismatch between TOPO.DAT and FPREV.NEW.") # Check if row counts match
+    # Detect sediment run (two datasets)
+    if len(df_fprev) == 2 * grid_count:
+        # Use second dataset (final bed elevation)
+        df_fprev_use = df_fprev.iloc[grid_count:].reset_index(drop=True)
+    elif len(df_fprev) == grid_count:
+        # Non-sediment run
+        df_fprev_use = df_fprev
+    else:
+        if sim_type == "Sediment":
+            QgsMessageLog.logMessage(f"FPREV.NEW has {len(df_fprev)} rows; expected {grid_count} (intermediate) or {2 * grid_count} (final).", "FLO-2D", Qgis.Warning)
+        else:
+            QgsMessageLog.logMessage(f"FPREV.NEW row count ({len(df_fprev)}) does not match TOPO.DAT row count ({grid_count}).", "FLO-2D", Qgis.Warning)
+        return None
 
-    df_topo["Z"] = df_fprev["Z_mod"] # Replace ground elevation with modified ground elevation
+    df_topo["Z"] = df_fprev_use["Z_mod"] # Replace ground elevation with modified ground elevation
 
-    # Write the new file
+    # Write TOPO_SDElev.RGH
     with open(mge_path, "w") as f:
         for _, r in df_topo.iterrows():
             f.write(f"{r.X:14.3f} {r.Y:14.3f} {r.Z:10.4f}\n")
