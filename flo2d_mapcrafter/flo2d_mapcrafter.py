@@ -1417,7 +1417,7 @@ class FLO2DMapCrafter:
 
                 flood_maps = FloodMaps(self.iface, self.units_switch, vector_scale, self.toler_value)
                 flood_maps.create_maps(
-                    flood_rbs, flo2d_results_dir, map_output_dir, mapping_group, self.crs, project_id
+                    flood_rbs, flo2d_results_dir, map_output_dir, mapping_group, self.crs, project_id, sim_type=self._sim_type
                 )
 
             """
@@ -1457,7 +1457,7 @@ class FLO2DMapCrafter:
 
                 sediment_maps = SedimentMaps(self.iface, self.units_switch, vector_scale, self.toler_value)
                 sediment_maps.create_maps(
-                    sediment_rbs, flo2d_results_dir, map_output_dir, mapping_group, self.crs, project_id
+                    sediment_rbs, flo2d_results_dir, map_output_dir, mapping_group, self.crs, project_id, sim_type=self._sim_type
                 )
 
             """"
@@ -1494,7 +1494,7 @@ class FLO2DMapCrafter:
 
                 mudflow_maps = MudflowMaps(self.iface, self.units_switch, vector_scale, self.toler_value)
                 mudflow_maps.create_maps(
-                    mudflow_rbs, flo2d_results_dir, map_output_dir, mapping_group, self.crs, project_id
+                    mudflow_rbs, flo2d_results_dir, map_output_dir, mapping_group, self.crs, project_id, sim_type=self._sim_type
                 )
 
             """"
@@ -1547,7 +1547,7 @@ class FLO2DMapCrafter:
 
                 twophase_maps = TwophaseMaps(self.iface, self.units_switch, vector_scale, self.toler_value)
                 twophase_maps.create_maps(
-                    twophase_rbs, flo2d_results_dir, map_output_dir, mapping_group, self.crs, project_id
+                    twophase_rbs, flo2d_results_dir, map_output_dir, mapping_group, self.crs, project_id, sim_type=self._sim_type
                 )
 
             """
