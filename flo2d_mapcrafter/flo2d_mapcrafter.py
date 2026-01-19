@@ -970,13 +970,18 @@ class FLO2DMapCrafter:
                 flood_files_dict[r"TOPO_SDElev.RGH"] = False
 
             # Custom logic for FINAL WSE availability
-            files = os.listdir(output_directory)
-            if "FINAL_WSE.DAT" in files:
-                flood_files_dict[r"FINAL_WSE.DAT"] = True
-            elif "TOPO.DAT" in files and "FINALDEP.OUT" in files:
-                flood_files_dict[r"FINAL_WSE.DAT"] = True  # can be generated
-            else:
-                flood_files_dict[r"FINAL_WSE.DAT"] = False
+            files_results = set(os.listdir(output_directory)) # Collect all filenames in the FLO-2D results directory for fast membership checks
+            files_map = set() # Initialize an empty set for MapCrafter output files
+            try:
+                files_map = set(os.listdir(self.dlg.mapper_out_folder.filePath())) # Attempt to collect filenames from the MapCrafter output directory,
+            except Exception:
+                pass
+            has_final_wse = ("FINAL_WSE.DAT" in files_map)
+            has_finaldep = "FINALDEP.OUT" in files_results
+            has_topo_sd = ("TOPO_SDElev.RGH" in files_results or "TOPO_SDElev.RGH" in files_map )
+            can_generate_topo_sd = ("TOPO.DAT" in files_results and "FPREV.NEW" in files_results)
+            has_topo = "TOPO.DAT" in files_results # Fallback if TOPO_SDElev.RGH does not exist and cannot be generated
+            flood_files_dict[r"FINAL_WSE.DAT"] = (has_final_wse or (has_finaldep and (has_topo_sd or can_generate_topo_sd or has_topo)))
 
             flood_rbs = {
                 r"TOPO.DAT": self.dlg.ge_cw_cb,
@@ -1036,13 +1041,19 @@ class FLO2DMapCrafter:
                 sediment_files_dict[r"TOPO_SDElev.RGH"] = False
 
             # Custom logic for FINAL WSE availability
-            files = os.listdir(output_directory)
-            if "FINAL_WSE.DAT" in files:
-                sediment_files_dict[r"FINAL_WSE.DAT"] = True
-            elif "TOPO.DAT" in files and "FINALDEP.OUT" in files:
-                sediment_files_dict[r"FINAL_WSE.DAT"] = True  # can be generated
-            else:
-                sediment_files_dict[r"FINAL_WSE.DAT"] = False
+            files_results = set(os.listdir(output_directory)) # Collect all filenames in the FLO-2D results directory for fast membership checks
+            files_map = set() # Initialize an empty set for MapCrafter output files
+            try:
+                files_map = set(os.listdir(self.dlg.mapper_out_folder.filePath())) # Attempt to collect filenames from the MapCrafter output directory,
+            except Exception:
+                pass
+            has_final_wse = ("FINAL_WSE.DAT" in files_map)
+            has_finaldep = "FINALDEP.OUT" in files_results
+            has_topo_sd = ("TOPO_SDElev.RGH" in files_results or "TOPO_SDElev.RGH" in files_map )
+            can_generate_topo_sd = ("TOPO.DAT" in files_results and "FPREV.NEW" in files_results)
+            has_topo = "TOPO.DAT" in files_results # Fallback if TOPO_SDElev.RGH does not exist and cannot be generated
+            sediment_files_dict[r"FINAL_WSE.DAT"] = (has_final_wse or (has_finaldep and (has_topo_sd or can_generate_topo_sd or has_topo)))
+
 
             sediment_rbs = {
                 r"TOPO.DAT": self.dlg.ge_sd_cb,
@@ -1110,13 +1121,19 @@ class FLO2DMapCrafter:
                 mudflow_files_dict[r"TOPO_SDElev.RGH"] = False
 
             # Custom logic for FINAL WSE availability
-            files = os.listdir(output_directory)
-            if "FINAL_WSE.DAT" in files:
-                mudflow_files_dict[r"FINAL_WSE.DAT"] = True
-            elif "TOPO.DAT" in files and "FINALDEP.OUT" in files:
-                mudflow_files_dict[r"FINAL_WSE.DAT"] = True  # can be generated
-            else:
-                mudflow_files_dict[r"FINAL_WSE.DAT"] = False
+            files_results = set(os.listdir(output_directory)) # Collect all filenames in the FLO-2D results directory for fast membership checks
+            files_map = set() # Initialize an empty set for MapCrafter output files
+            try:
+                files_map = set(os.listdir(self.dlg.mapper_out_folder.filePath())) # Attempt to collect filenames from the MapCrafter output directory,
+            except Exception:
+                pass
+            has_final_wse = ("FINAL_WSE.DAT" in files_map)
+            has_finaldep = "FINALDEP.OUT" in files_results
+            has_topo_sd = ("TOPO_SDElev.RGH" in files_results or "TOPO_SDElev.RGH" in files_map )
+            can_generate_topo_sd = ("TOPO.DAT" in files_results and "FPREV.NEW" in files_results)
+            has_topo = "TOPO.DAT" in files_results # Fallback if TOPO_SDElev.RGH does not exist and cannot be generated
+            mudflow_files_dict[r"FINAL_WSE.DAT"] = (has_final_wse or (has_finaldep and (has_topo_sd or can_generate_topo_sd or has_topo)))
+
 
             mudflow_rbs = {
                 r"TOPO.DAT": self.dlg.ge_mf_cb,
@@ -1173,13 +1190,18 @@ class FLO2DMapCrafter:
                 twophase_files_dict[r"TOPO_SDElev.RGH"] = False
 
             # Custom logic for FINAL WSE availability
-            files = os.listdir(output_directory)
-            if "FINAL_WSE.DAT" in files:
-                twophase_files_dict[r"FINAL_WSE.DAT"] = True
-            elif "TOPO.DAT" in files and "FINALDEP.OUT" in files:
-                twophase_files_dict[r"FINAL_WSE.DAT"] = True  # can be generated
-            else:
-                twophase_files_dict[r"FINAL_WSE.DAT"] = False
+            files_results = set(os.listdir(output_directory)) # Collect all filenames in the FLO-2D results directory for fast membership checks
+            files_map = set() # Initialize an empty set for MapCrafter output files
+            try:
+                files_map = set(os.listdir(self.dlg.mapper_out_folder.filePath())) # Attempt to collect filenames from the MapCrafter output directory,
+            except Exception:
+                pass
+            has_final_wse = ("FINAL_WSE.DAT" in files_map)
+            has_finaldep = "FINALDEP.OUT" in files_results
+            has_topo_sd = ("TOPO_SDElev.RGH" in files_results or "TOPO_SDElev.RGH" in files_map )
+            can_generate_topo_sd = ("TOPO.DAT" in files_results and "FPREV.NEW" in files_results)
+            has_topo = "TOPO.DAT" in files_results # Fallback if TOPO_SDElev.RGH does not exist and cannot be generated
+            twophase_files_dict[r"FINAL_WSE.DAT"] = (has_final_wse or (has_finaldep and (has_topo_sd or can_generate_topo_sd or has_topo)))
 
             twophase_rbs = {
                 r"TOPO.DAT": self.dlg.ge_tp_cb,

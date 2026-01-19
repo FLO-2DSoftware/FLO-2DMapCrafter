@@ -611,23 +611,41 @@ def modified_ground_elev(results_dir, map_output_dir, sim_type=None, topo_name="
         return None
 
 
-def final_wse(results_dir, topo_sd_name="TOPO_SDElev.RGH", topo_name="TOPO.DAT", finaldep_name="FINALDEP.OUT", out_name="FINAL_WSE.DAT"):
+def final_wse(results_dir, map_output_dir, topo_sd_name="TOPO_SDElev.RGH", topo_name="TOPO.DAT", finaldep_name="FINALDEP.OUT", out_name="FINAL_WSE.DAT"):
     """
-    FINAL_WSE = Z(in TOPO_SDElev.RGH(preferred) or TOPO.DAT(fallback)) + dZ (from FINALDEP.OUT)
+    FINAL_WSE = Z(in TOPO_SDElev.RGH (preferred, multiple locations)
+                or TOPO.DAT (fallback))
+                + dZ (from FINALDEP.OUT)
+
+    Priority:
+    1) results_dir/TOPO_SDElev.RGH
+    2) map_output_dir/TOPO_SDElev.RGH
+    4) map_output_dir/TOPO_SDElev.RGH (generated from TOPO.DAT, FPREV.NEW)
+    3) results_dir/TOPO.DAT
     """
-    topo_sd_path = os.path.join(results_dir, topo_sd_name)
+
     topo_path = os.path.join(results_dir, topo_name)
     finaldep_path = os.path.join(results_dir, finaldep_name)
-    out_path = os.path.join(results_dir, out_name)
 
-    # Select elevation source (prefer modified topo)
-    if os.path.isfile(topo_sd_path):
-        elev_path = topo_sd_path
+    flo2d_topo_sd_path = os.path.join(results_dir, topo_sd_name)
+    mapcrafter_topo_sd_path = os.path.join(map_output_dir, topo_sd_name)
+
+    out_path = os.path.join(map_output_dir, out_name)
+
+    if not os.path.isfile(flo2d_topo_sd_path) and not os.path.isfile(mapcrafter_topo_sd_path):
+        mge_path = modified_ground_elev(results_dir=results_dir, map_output_dir=map_output_dir)
+        if mge_path:
+            mapcrafter_topo_sd_path = mge_path
+
+    if os.path.isfile(flo2d_topo_sd_path):
+        elev_path = flo2d_topo_sd_path
+    elif os.path.isfile(mapcrafter_topo_sd_path):
+        elev_path = mapcrafter_topo_sd_path
     elif os.path.isfile(topo_path):
         elev_path = topo_path
     else:
         QgsMessageLog.logMessage(
-            "FINAL_WSE.DAT could not be generated (missing TOPO_SDElev.RGH and TOPO.DAT)",
+            "Final WSE could not be created (missing TOPO_SDElev.RGH and TOPO.DAT)",
             level=Qgis.Warning
         )
         return None
@@ -637,7 +655,7 @@ def final_wse(results_dir, topo_sd_name="TOPO_SDElev.RGH", topo_name="TOPO.DAT",
         QgsMessageLog.logMessage(
             "FINAL_WSE.DAT could not be generated (missing FINALDEP.OUT)",
             level=Qgis.Warning
-        )
+         )
         return None
 
     try:
@@ -655,15 +673,7 @@ def final_wse(results_dir, topo_sd_name="TOPO_SDElev.RGH", topo_name="TOPO.DAT",
             )
 
         # Compute Final WSE
-        result_df = pd.DataFrame({
-            "X": topo_df["X"],
-            "Y": topo_df["Y"],
-            "WSE": topo_df["Z"] + finaldep_df["dZ"]
-        })
-
-        # Compute Final WSE
         topo_df["WSE"] = topo_df["Z"] + finaldep_df["dZ"]
-
         # Write FINAL_WSE.DAT
         with open(out_path, "w") as f:
             for _, r in topo_df.iterrows():

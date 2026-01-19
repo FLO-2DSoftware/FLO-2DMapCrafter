@@ -233,7 +233,7 @@ class MudflowMaps:
 
             # Final WSE
             if mudflow_rbs.get(r"FINAL_WSE.DAT"):
-                wse_path = final_wse(flo2d_results_dir)
+                wse_path = final_wse(results_dir=flo2d_results_dir, map_output_dir=map_output_dir)
                 if not wse_path:
                     raise FileNotFoundError("FINAL_WSE.DAT requested but could not be generated.")
 
