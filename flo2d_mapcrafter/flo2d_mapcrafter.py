@@ -961,13 +961,15 @@ class FLO2DMapCrafter:
             flood_files_dict = flood_maps.check_flood_files(output_directory)
 
             # Custom logic for modified ground elevation availability
-            files = os.listdir(output_directory)
-            if "TOPO_SDElev.RGH" in files:
-                flood_files_dict[r"TOPO_SDElev.RGH"] = True
-            elif "TOPO.DAT" in files and "FPREV.NEW" in files:
-                flood_files_dict[r"TOPO_SDElev.RGH"] = True # Since it can be generated
-            else:
-                flood_files_dict[r"TOPO_SDElev.RGH"] = False
+            files_results = set(os.listdir(output_directory))
+            files_map = set()
+            try:
+                files_map = set(os.listdir(self.dlg.mapper_out_folder.filePath()))
+            except Exception:
+                pass
+            has_mge = ("TOPO_SDElev.RGH" in files_results or "TOPO_SDElev.RGH" in files_map)
+            can_generate_mge = ("TOPO.DAT" in files_results and "FPREV.NEW" in files_results)
+            flood_files_dict[r"TOPO_SDElev.RGH"] = (has_mge or can_generate_mge)
 
             # Custom logic for FINAL WSE availability
             files_results = set(os.listdir(output_directory)) # Collect all filenames in the FLO-2D results directory for fast membership checks
@@ -1032,13 +1034,15 @@ class FLO2DMapCrafter:
             sediment_files_dict = sediment_maps.check_sediment_files(output_directory)
 
             # Custom logic for modified ground elevation availability
-            files = os.listdir(output_directory)
-            if "TOPO_SDElev.RGH" in files:
-                sediment_files_dict[r"TOPO_SDElev.RGH"] = True
-            elif "TOPO.DAT" in files and "FPREV.NEW" in files:
-                sediment_files_dict[r"TOPO_SDElev.RGH"] = True # Since it can be generated
-            else:
-                sediment_files_dict[r"TOPO_SDElev.RGH"] = False
+            files_results = set(os.listdir(output_directory))
+            files_map = set()
+            try:
+                files_map = set(os.listdir(self.dlg.mapper_out_folder.filePath()))
+            except Exception:
+                pass
+            has_mge = ("TOPO_SDElev.RGH" in files_results or "TOPO_SDElev.RGH" in files_map)
+            can_generate_mge = ("TOPO.DAT" in files_results and "FPREV.NEW" in files_results)
+            sediment_files_dict[r"TOPO_SDElev.RGH"] = (has_mge or can_generate_mge)
 
             # Custom logic for FINAL WSE availability
             files_results = set(os.listdir(output_directory)) # Collect all filenames in the FLO-2D results directory for fast membership checks
@@ -1112,13 +1116,15 @@ class FLO2DMapCrafter:
             mudflow_files_dict = mudflow_maps.check_mudflow_files(output_directory)
 
             # Custom logic for modified ground elevation availability
-            files = os.listdir(output_directory)
-            if "TOPO_SDElev.RGH" in files:
-                mudflow_files_dict[r"TOPO_SDElev.RGH"] = True
-            elif "TOPO.DAT" in files and "FPREV.NEW" in files:
-                mudflow_files_dict[r"TOPO_SDElev.RGH"] = True # Since it can be generated
-            else:
-                mudflow_files_dict[r"TOPO_SDElev.RGH"] = False
+            files_results = set(os.listdir(output_directory))
+            files_map = set()
+            try:
+                files_map = set(os.listdir(self.dlg.mapper_out_folder.filePath()))
+            except Exception:
+                pass
+            has_mge = ("TOPO_SDElev.RGH" in files_results or "TOPO_SDElev.RGH" in files_map)
+            can_generate_mge = ("TOPO.DAT" in files_results and "FPREV.NEW" in files_results)
+            mudflow_files_dict[r"TOPO_SDElev.RGH"] = (has_mge or can_generate_mge)
 
             # Custom logic for FINAL WSE availability
             files_results = set(os.listdir(output_directory)) # Collect all filenames in the FLO-2D results directory for fast membership checks
@@ -1181,13 +1187,15 @@ class FLO2DMapCrafter:
             twophase_files_dict = twophase_maps.check_twophase_files(output_directory)
 
             # Custom logic for modified ground elevation availability
-            files = os.listdir(output_directory)
-            if "TOPO_SDElev.RGH" in files:
-                twophase_files_dict[r"TOPO_SDElev.RGH"] = True
-            elif "TOPO.DAT" in files and "FPREV.NEW" in files:
-                twophase_files_dict[r"TOPO_SDElev.RGH"] = True # Since it can be generated
-            else:
-                twophase_files_dict[r"TOPO_SDElev.RGH"] = False
+            files_results = set(os.listdir(output_directory))
+            files_map = set()
+            try:
+                files_map = set(os.listdir(self.dlg.mapper_out_folder.filePath()))
+            except Exception:
+                pass
+            has_mge = ("TOPO_SDElev.RGH" in files_results or "TOPO_SDElev.RGH" in files_map)
+            can_generate_mge = ("TOPO.DAT" in files_results and "FPREV.NEW" in files_results)
+            twophase_files_dict[r"TOPO_SDElev.RGH"] = (has_mge or can_generate_mge)
 
             # Custom logic for FINAL WSE availability
             files_results = set(os.listdir(output_directory)) # Collect all filenames in the FLO-2D results directory for fast membership checks
