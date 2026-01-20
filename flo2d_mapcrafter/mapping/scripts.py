@@ -630,7 +630,7 @@ def final_wse(results_dir, map_output_dir, topo_sd_name="TOPO_SDElev.RGH", topo_
     flo2d_topo_sd_path = os.path.join(results_dir, topo_sd_name)
     mapcrafter_topo_sd_path = os.path.join(map_output_dir, topo_sd_name)
 
-    out_path = os.path.join(map_output_dir, out_name)
+    fwse_path = os.path.join(map_output_dir, out_name)
 
     if not os.path.isfile(flo2d_topo_sd_path) and not os.path.isfile(mapcrafter_topo_sd_path):
         mge_path = modified_ground_elev(results_dir=results_dir, map_output_dir=map_output_dir)
@@ -675,11 +675,17 @@ def final_wse(results_dir, map_output_dir, topo_sd_name="TOPO_SDElev.RGH", topo_
         # Compute Final WSE
         topo_df["WSE"] = topo_df["Z"] + finaldep_df["dZ"]
         # Write FINAL_WSE.DAT
-        with open(out_path, "w") as f:
+        with open(fwse_path, "w") as f:
             for _, r in topo_df.iterrows():
                 f.write(f"{r.X:14.3f} {r.Y:14.3f} {r.WSE:10.4f}\n")
 
-        return out_path
+        QgsMessageLog.logMessage(
+            message=f"Created FINAL_WSE.DAT: {fwse_path}",
+            tag="FLO-2D",
+            level=Qgis.Info
+        )
+
+        return fwse_path
 
     except Exception as e:
         QgsMessageLog.logMessage(
