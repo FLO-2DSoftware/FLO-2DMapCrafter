@@ -540,51 +540,27 @@ def modified_ground_elev(results_dir, map_output_dir, sim_type=None, topo_name="
         return mapcrafter_mge_path
 
     if (not os.path.isfile(topo_path)) or (not os.path.isfile(fprev_path)):
-        QgsMessageLog.logMessage(
-            "TOPO_SDElev.RGH could not be generated (missing either TOPO.DAT or FRPREV.NEW)",
-            level=Qgis.Warning
-        )
+        QgsMessageLog.logMessage("TOPO_SDElev.RGH could not be generated (missing either TOPO.DAT or FRPREV.NEW)", level=Qgis.Warning)
         return None
-
 
     try:
         # Build TOPO_SDElev.RGH from TOPO.DAT and FPREV.NEW
-        df_topo = pd.read_csv(
-            topo_path,
-            delim_whitespace=True,
-            header=None,
-            names=["X", "Y", "Z"]
-        )
+        df_topo = pd.read_csv(topo_path, delim_whitespace=True, header=None, names=["X", "Y", "Z"])
 
         grid_count = len(df_topo)
 
-        df_fprev = pd.read_csv(
-            fprev_path,
-            delim_whitespace=True,
-            header=None,
-            names=["Index", "Z_mod"]
-        )
+        df_fprev = pd.read_csv(fprev_path, delim_whitespace=True, header=None, names=["Index", "Z_mod"])
 
         # Detect sediment run (two datasets)
         if len(df_fprev) == 2 * grid_count:
-            # Use second dataset (final bed elevation)
-            df_fprev_use = df_fprev.iloc[grid_count:].reset_index(drop=True)
+            df_fprev_use = df_fprev.iloc[grid_count:].reset_index(drop=True) # Use second dataset (final bed elevation)
         elif len(df_fprev) == grid_count:
-            # Non-sediment run
-            df_fprev_use = df_fprev
+            df_fprev_use = df_fprev # Non-sediment run
         else:
             if sim_type == "Sediment":
-                QgsMessageLog.logMessage(
-                    message=f"FPREV.NEW has {len(df_fprev)} rows; expected {grid_count} (intermediate) or {2 * grid_count} (final).",
-                    tag="FLO-2D",
-                    level=Qgis.Warning
-                )
+                QgsMessageLog.logMessage(message=f"FPREV.NEW has {len(df_fprev)} rows; expected {grid_count} (intermediate) or {2 * grid_count} (final).", tag="FLO-2D", level=Qgis.Warning)
             else:
-                QgsMessageLog.logMessage(
-                    message=f"FPREV.NEW row count ({len(df_fprev)}) does not match TOPO.DAT row count ({grid_count}).",
-                    tag="FLO-2D",
-                    level=Qgis.Warning
-                )
+                QgsMessageLog.logMessage(message=f"FPREV.NEW row count ({len(df_fprev)}) does not match TOPO.DAT row count ({grid_count}).", tag="FLO-2D", level=Qgis.Warning)
             return None
 
         df_topo["Z"] = df_fprev_use["Z_mod"] # Replace ground elevation with modified ground elevation
@@ -594,26 +570,17 @@ def modified_ground_elev(results_dir, map_output_dir, sim_type=None, topo_name="
             for _, r in df_topo.iterrows():
                 f.write(f"{r.X:14.3f} {r.Y:14.3f} {r.Z:10.4f}\n")
 
-        QgsMessageLog.logMessage(
-            message=f"Created MapCrafter TOPO_SDElev.RGH: {mapcrafter_mge_path}",
-            tag="FLO-2D",
-            level=Qgis.Info
-        )
-
+        QgsMessageLog.logMessage(message=f"Created MapCrafter TOPO_SDElev.RGH: {mapcrafter_mge_path}", tag="FLO-2D", level=Qgis.Info)
         return mapcrafter_mge_path
 
     except Exception as e:
-        QgsMessageLog.logMessage(
-            message=f"Failed to create TOPO_SDElev.RGH: {e}",
-            tag="FLO-2D",
-            level=Qgis.Critical
-        )
+        QgsMessageLog.logMessage(message=f"Failed to create TOPO_SDElev.RGH: {e}", tag="FLO-2D", level=Qgis.Critical)
         return None
 
 
 def final_wse(results_dir, map_output_dir, topo_sd_name="TOPO_SDElev.RGH", topo_name="TOPO.DAT", finaldep_name="FINALDEP.OUT", out_name="FINAL_WSE.DAT"):
     """
-    FINAL_WSE = Z(in TOPO_SDElev.RGH (preferred, multiple locations)
+    FINAL_WSE = Z(in TOPO_SDElev.RGH (preferred)
                 or TOPO.DAT (fallback))
                 + dZ (from FINALDEP.OUT)
 
@@ -644,18 +611,12 @@ def final_wse(results_dir, map_output_dir, topo_sd_name="TOPO_SDElev.RGH", topo_
     elif os.path.isfile(topo_path):
         elev_path = topo_path
     else:
-        QgsMessageLog.logMessage(
-            "Final WSE could not be created (missing TOPO_SDElev.RGH and TOPO.DAT)",
-            level=Qgis.Warning
-        )
+        QgsMessageLog.logMessage("Final WSE could not be created (missing TOPO_SDElev.RGH and TOPO.DAT)", level=Qgis.Warning)
         return None
 
     # Check FINALDEP.OUT
     if not os.path.isfile(finaldep_path):
-        QgsMessageLog.logMessage(
-            "FINAL_WSE.DAT could not be generated (missing FINALDEP.OUT)",
-            level=Qgis.Warning
-         )
+        QgsMessageLog.logMessage("FINAL_WSE.DAT could not be generated (missing FINALDEP.OUT)", level=Qgis.Warning)
         return None
 
     try:
@@ -668,9 +629,7 @@ def final_wse(results_dir, map_output_dir, topo_sd_name="TOPO_SDElev.RGH", topo_
         finaldep_df.columns = ["CellID", "X_fd", "Y_fd", "dZ"]
 
         if len(topo_df) != len(finaldep_df):
-            raise ValueError(
-                f"Row count mismatch between {os.path.basename(elev_path)} and FINALDEP.OUT"
-            )
+            raise ValueError(f"Row count mismatch between {os.path.basename(elev_path)} and FINALDEP.OUT")
 
         # Compute Final WSE
         topo_df["WSE"] = topo_df["Z"] + finaldep_df["dZ"]
@@ -679,19 +638,11 @@ def final_wse(results_dir, map_output_dir, topo_sd_name="TOPO_SDElev.RGH", topo_
             for _, r in topo_df.iterrows():
                 f.write(f"{r.X:14.3f} {r.Y:14.3f} {r.WSE:10.4f}\n")
 
-        QgsMessageLog.logMessage(
-            message=f"Created FINAL_WSE.DAT: {fwse_path}",
-            tag="FLO-2D",
-            level=Qgis.Info
-        )
-
+        QgsMessageLog.logMessage(message=f"Created FINAL_WSE.DAT: {fwse_path}", tag="FLO-2D", level=Qgis.Info)
         return fwse_path
 
     except Exception as e:
-        QgsMessageLog.logMessage(
-            f"Failed to generate FINAL_WSE.DAT: {e}",
-            level=Qgis.Critical
-        )
+        QgsMessageLog.logMessage(f"Failed to generate FINAL_WSE.DAT: {e}", level=Qgis.Critical)
         return None
 
 
