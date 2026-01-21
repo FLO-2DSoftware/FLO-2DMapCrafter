@@ -117,7 +117,7 @@ class TwophaseMaps:
 
         return twophase_files
 
-    def create_maps(self, twophase_rbs, flo2d_results_dir, map_output_dir, mapping_group, crs, project_id):
+    def create_maps(self, twophase_rbs, flo2d_results_dir, map_output_dir, mapping_group, crs, project_id, sim_type=None):
         """
         Function to create the maps
         """
@@ -207,14 +207,14 @@ class TwophaseMaps:
 
             # Modified Ground Elevation
             if twophase_rbs.get(r"TOPO_SDElev.RGH"):
-                mge_path = modified_ground_elev(flo2d_results_dir)
+                mge_path = modified_ground_elev(results_dir=flo2d_results_dir,map_output_dir=map_output_dir, sim_type=sim_type)
                 if not mge_path:
                     raise FileNotFoundError("Modified Ground Elevation requested but could not be generated.")
 
             if twophase_rbs.get(r"TOPO_SDElev.RGH"):
                 name = check_project_id("MODIFIED_GROUND_ELEVATION", project_id)
                 name, raster = check_raster_file(name, map_output_dir)
-                file = flo2d_results_dir + r"\TOPO_SDElev.RGH"
+                file = mge_path
                 self.process_maps(name, raster, file, crs, sc_group, 6)
                 self._tick(dlg, "Modified ground elevation")
 
@@ -284,7 +284,7 @@ class TwophaseMaps:
 
             # Final WSE
             if twophase_rbs.get(r"FINAL_WSE.DAT"):
-                wse_path = final_wse(flo2d_results_dir)
+                wse_path = final_wse(results_dir=flo2d_results_dir, map_output_dir=map_output_dir)
                 if not wse_path:
                     raise FileNotFoundError("FINAL_WSE.DAT requested but could not be generated.")
 

@@ -25,7 +25,7 @@ import os
 import numpy as np
 import pandas as pd
 from PyQt5.QtGui import QColor, QIcon
-from qgis._core import (
+from qgis.core import (
     QgsProject,
     QgsRasterLayer,
     QgsVectorLayer,
@@ -36,8 +36,7 @@ from qgis._core import (
     QgsClassificationQuantile,
     QgsProperty, QgsSymbolLayer,
     QgsGradientColorRamp, QgsGradientStop, QgsColorRampShader,
-    Qgis,
-    QgsMessageLog
+    Qgis
 )
 from osgeo import gdal
 
@@ -518,77 +517,106 @@ def set_renderer(layer, color_list, raster_shader, min, max):
     layer.setRenderer(myPseudoRenderer)
 
 
-def modified_ground_elev(results_dir, topo_name="TOPO.DAT", fprev_name="FPREV.NEW", mge_name="TOPO_SDElev.RGH"):
+def modified_ground_elev(results_dir, map_output_dir, sim_type=None, topo_name="TOPO.DAT", fprev_name="FPREV.NEW", mge_name="TOPO_SDElev.RGH"):
     """
-    If TOPO_SDElev.RGH exists, return its path.
-    If missing but TOPO.DAT and FPREV.NEW exist, use them to create TOPO_SDElev.RGH.
-    Otherwise, return None.
+    Priority rules:
+    1) Use results_dir/TOPO_SDElev.RGH if it exists
+    2) Else use results_dir/MapCrafter/TOPO_SDElev.RGH if exists
+    3) Else generate results_dir/MapCrafter/TOPO_SDElev.RGH if valid TOPO.DAT and FPREV.NEW exists and use it.
+    4) Otherwise, return None.
     """
     # File paths
     topo_path = os.path.join(results_dir, topo_name)
     fprev_path = os.path.join(results_dir, fprev_name)
-    mge_path = os.path.join(results_dir, mge_name)
 
-    if os.path.isfile(mge_path):
-        return mge_path # TOPO_SDElev.RGH already exist, use it (prevent overwriting)
+    # prefer FLO-2D-generated TOPO_SDElev.RGH if it exists
+    flo2d_mge_path = os.path.join(results_dir, mge_name)
+    if os.path.isfile(flo2d_mge_path):
+        return flo2d_mge_path
+
+    # Otherwise, generate MapCrafter-owned file
+    mapcrafter_mge_path = os.path.join(map_output_dir, mge_name)
+    if os.path.isfile(mapcrafter_mge_path):
+        return mapcrafter_mge_path
 
     if (not os.path.isfile(topo_path)) or (not os.path.isfile(fprev_path)):
-        return None # missing either topo.dat or fprev.new, return none
+        QgsMessageLog.logMessage("TOPO_SDElev.RGH could not be generated (missing either TOPO.DAT or FRPREV.NEW)", level=Qgis.Warning)
+        return None
 
-    # Build TOPO_SDElev.RGH from TOPO.DAT and FPREV.NEW
-    df_topo = pd.read_csv(
-        topo_path,
-        delim_whitespace=True,
-        header=None,
-        names=["X", "Y", "Z"]
-    )
+    try:
+        # Build TOPO_SDElev.RGH from TOPO.DAT and FPREV.NEW
+        df_topo = pd.read_csv(topo_path, delim_whitespace=True, header=None, names=["X", "Y", "Z"])
 
-    df_fprev = pd.read_csv(
-        fprev_path,
-        delim_whitespace=True,
-        header=None,
-        names=["Index", "Z_mod"]
-    )
+        grid_count = len(df_topo)
 
-    if len(df_topo) != len(df_fprev):
-        raise ValueError("Row count mismatch between TOPO.DAT and FPREV.NEW.") # Check if row counts match
+        df_fprev = pd.read_csv(fprev_path, delim_whitespace=True, header=None, names=["Index", "Z_mod"])
 
-    df_topo["Z"] = df_fprev["Z_mod"] # Replace ground elevation with modified ground elevation
+        # Detect sediment run (two datasets)
+        if len(df_fprev) == 2 * grid_count:
+            df_fprev_use = df_fprev.iloc[grid_count:].reset_index(drop=True) # Use second dataset (final bed elevation)
+        elif len(df_fprev) == grid_count:
+            df_fprev_use = df_fprev # Non-sediment run
+        else:
+            if sim_type == "Sediment":
+                QgsMessageLog.logMessage(message=f"FPREV.NEW has {len(df_fprev)} rows; expected {grid_count} (intermediate) or {2 * grid_count} (final).", tag="FLO-2D", level=Qgis.Warning)
+            else:
+                QgsMessageLog.logMessage(message=f"FPREV.NEW row count ({len(df_fprev)}) does not match TOPO.DAT row count ({grid_count}).", tag="FLO-2D", level=Qgis.Warning)
+            return None
 
-    # Write the new file
-    with open(mge_path, "w") as f:
-        for _, r in df_topo.iterrows():
-            f.write(f"{r.X:14.3f} {r.Y:14.3f} {r.Z:10.4f}\n")
+        df_topo["Z"] = df_fprev_use["Z_mod"] # Replace ground elevation with modified ground elevation
 
-    return mge_path
+        # Write TOPO_SDElev.RGH
+        with open(mapcrafter_mge_path, "w") as f:
+            for _, r in df_topo.iterrows():
+                f.write(f"{r.X:14.3f} {r.Y:14.3f} {r.Z:10.4f}\n")
 
-def final_wse(results_dir, topo_sd_name="TOPO_SDElev.RGH", topo_name="TOPO.DAT", finaldep_name="FINALDEP.OUT", out_name="FINAL_WSE.DAT"):
+        QgsMessageLog.logMessage(message=f"Created MapCrafter TOPO_SDElev.RGH: {mapcrafter_mge_path}", tag="FLO-2D", level=Qgis.Info)
+        return mapcrafter_mge_path
+
+    except Exception as e:
+        QgsMessageLog.logMessage(message=f"Failed to create TOPO_SDElev.RGH: {e}", tag="FLO-2D", level=Qgis.Critical)
+        return None
+
+
+def final_wse(results_dir, map_output_dir, topo_sd_name="TOPO_SDElev.RGH", topo_name="TOPO.DAT", finaldep_name="FINALDEP.OUT", out_name="FINAL_WSE.DAT"):
     """
-    FINAL_WSE = Z(in TOPO_SDElev.RGH(preferred) or TOPO.DAT(fallback)) + dZ (from FINALDEP.OUT)
+    FINAL_WSE = Z(in TOPO_SDElev.RGH (preferred)
+                or TOPO.DAT (fallback))
+                + dZ (from FINALDEP.OUT)
+
+    Priority:
+    1) results_dir/TOPO_SDElev.RGH
+    2) map_output_dir/TOPO_SDElev.RGH
+    4) map_output_dir/TOPO_SDElev.RGH (generated from TOPO.DAT, FPREV.NEW)
+    3) results_dir/TOPO.DAT
     """
-    topo_sd_path = os.path.join(results_dir, topo_sd_name)
+
     topo_path = os.path.join(results_dir, topo_name)
     finaldep_path = os.path.join(results_dir, finaldep_name)
-    out_path = os.path.join(results_dir, out_name)
 
-    # Select elevation source (prefer modified topo)
-    if os.path.isfile(topo_sd_path):
-        elev_path = topo_sd_path
+    flo2d_topo_sd_path = os.path.join(results_dir, topo_sd_name)
+    mapcrafter_topo_sd_path = os.path.join(map_output_dir, topo_sd_name)
+
+    fwse_path = os.path.join(map_output_dir, out_name)
+
+    if not os.path.isfile(flo2d_topo_sd_path) and not os.path.isfile(mapcrafter_topo_sd_path):
+        mge_path = modified_ground_elev(results_dir=results_dir, map_output_dir=map_output_dir)
+        if mge_path:
+            mapcrafter_topo_sd_path = mge_path
+
+    if os.path.isfile(flo2d_topo_sd_path):
+        elev_path = flo2d_topo_sd_path
+    elif os.path.isfile(mapcrafter_topo_sd_path):
+        elev_path = mapcrafter_topo_sd_path
     elif os.path.isfile(topo_path):
         elev_path = topo_path
     else:
-        QgsMessageLog.logMessage(
-            "FINAL_WSE.DAT could not be generated (missing TOPO_SDElev.RGH and TOPO.DAT)",
-            level=Qgis.Warning
-        )
+        QgsMessageLog.logMessage("Final WSE could not be created (missing TOPO_SDElev.RGH and TOPO.DAT)", level=Qgis.Warning)
         return None
 
     # Check FINALDEP.OUT
     if not os.path.isfile(finaldep_path):
-        QgsMessageLog.logMessage(
-            "FINAL_WSE.DAT could not be generated (missing FINALDEP.OUT)",
-            level=Qgis.Warning
-        )
+        QgsMessageLog.logMessage("FINAL_WSE.DAT could not be generated (missing FINALDEP.OUT)", level=Qgis.Warning)
         return None
 
     try:
@@ -601,32 +629,20 @@ def final_wse(results_dir, topo_sd_name="TOPO_SDElev.RGH", topo_name="TOPO.DAT",
         finaldep_df.columns = ["CellID", "X_fd", "Y_fd", "dZ"]
 
         if len(topo_df) != len(finaldep_df):
-            raise ValueError(
-                f"Row count mismatch between {os.path.basename(elev_path)} and FINALDEP.OUT"
-            )
-
-        # Compute Final WSE
-        result_df = pd.DataFrame({
-            "X": topo_df["X"],
-            "Y": topo_df["Y"],
-            "WSE": topo_df["Z"] + finaldep_df["dZ"]
-        })
+            raise ValueError(f"Row count mismatch between {os.path.basename(elev_path)} and FINALDEP.OUT")
 
         # Compute Final WSE
         topo_df["WSE"] = topo_df["Z"] + finaldep_df["dZ"]
-
         # Write FINAL_WSE.DAT
-        with open(out_path, "w") as f:
+        with open(fwse_path, "w") as f:
             for _, r in topo_df.iterrows():
                 f.write(f"{r.X:14.3f} {r.Y:14.3f} {r.WSE:10.4f}\n")
 
-        return out_path
+        QgsMessageLog.logMessage(message=f"Created FINAL_WSE.DAT: {fwse_path}", tag="FLO-2D", level=Qgis.Info)
+        return fwse_path
 
     except Exception as e:
-        QgsMessageLog.logMessage(
-            f"Failed to generate FINAL_WSE.DAT: {e}",
-            level=Qgis.Critical
-        )
+        QgsMessageLog.logMessage(f"Failed to generate FINAL_WSE.DAT: {e}", level=Qgis.Critical)
         return None
 
 

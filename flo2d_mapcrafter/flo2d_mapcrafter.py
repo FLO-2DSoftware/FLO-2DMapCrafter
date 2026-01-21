@@ -875,6 +875,37 @@ class FLO2DMapCrafter:
             self._swmm_model._rpt_mtime = rpt_mtime
         return self._swmm_model
 
+    # Custom logic for TOPO_SDElev.RGH availability.
+    def mge_availability(self, results_dir: str) -> bool:
+        if not results_dir or not os.path.isdir(results_dir):
+            return False
+        files_results = set(os.listdir(results_dir))
+        files_map = set()
+        try:
+            files_map = set(os.listdir(self.dlg.mapper_out_folder.filePath()))
+        except Exception:
+            pass
+        has_mge = "TOPO_SDElev.RGH" in files_results or "TOPO_SDElev.RGH" in files_map
+        can_generate_mge = "TOPO.DAT" in files_results and "FPREV.NEW" in files_results
+        return has_mge or can_generate_mge
+
+    # Custom logic for FINAL_WSE.DAT availability
+    def final_wse_availability(self, results_dir: str) -> bool:
+        if not results_dir or not os.path.isdir(results_dir):
+            return False
+        files_results = set(os.listdir(results_dir))
+        files_map = set()
+        try:
+            files_map = set(os.listdir(self.dlg.mapper_out_folder.filePath()))
+        except Exception:
+            pass
+        has_finaldep = "FINALDEP.OUT" in files_results
+        has_final_wse = "FINAL_WSE.DAT" in files_map
+        has_topo_sd = "TOPO_SDElev.RGH" in files_results or "TOPO_SDElev.RGH" in files_map
+        can_generate_topo_sd = "TOPO.DAT" in files_results and "FPREV.NEW" in files_results
+        has_topo = "TOPO.DAT" in files_results
+        return has_final_wse or (has_finaldep and (has_topo_sd or can_generate_topo_sd or has_topo))
+
     def check_files(self):
         """Function to check the type of files present on the simulation"""
 
@@ -948,6 +979,7 @@ class FLO2DMapCrafter:
 
         self._sim_type = None
 
+
         # Flood simulation
         if mud_switch == "0" and sed_switch == "0":
             self._sim_type = "Flood"
@@ -960,23 +992,11 @@ class FLO2DMapCrafter:
             flood_maps = FloodMaps(self.iface, self.units_switch, vector_scale, self.toler_value)
             flood_files_dict = flood_maps.check_flood_files(output_directory)
 
-            # Custom logic for modified ground elevation availability
-            files = os.listdir(output_directory)
-            if "TOPO_SDElev.RGH" in files:
-                flood_files_dict[r"TOPO_SDElev.RGH"] = True
-            elif "TOPO.DAT" in files and "FPREV.NEW" in files:
-                flood_files_dict[r"TOPO_SDElev.RGH"] = True # Since it can be generated
-            else:
-                flood_files_dict[r"TOPO_SDElev.RGH"] = False
+            # Flood TOPO_SDElev.RGH availability
+            flood_files_dict[r"TOPO_SDElev.RGH"] = self.mge_availability(output_directory)
 
-            # Custom logic for FINAL WSE availability
-            files = os.listdir(output_directory)
-            if "FINAL_WSE.DAT" in files:
-                flood_files_dict[r"FINAL_WSE.DAT"] = True
-            elif "TOPO.DAT" in files and "FINALDEP.OUT" in files:
-                flood_files_dict[r"FINAL_WSE.DAT"] = True  # can be generated
-            else:
-                flood_files_dict[r"FINAL_WSE.DAT"] = False
+            # Flood FINAL_WSE.DAT availability
+            flood_files_dict[r"FINAL_WSE.DAT"] = self.final_wse_availability(output_directory)
 
             flood_rbs = {
                 r"TOPO.DAT": self.dlg.ge_cw_cb,
@@ -1026,23 +1046,11 @@ class FLO2DMapCrafter:
             sediment_maps = SedimentMaps(self.iface, self.units_switch, vector_scale, self.toler_value)
             sediment_files_dict = sediment_maps.check_sediment_files(output_directory)
 
-            # Custom logic for modified ground elevation availability
-            files = os.listdir(output_directory)
-            if "TOPO_SDElev.RGH" in files:
-                sediment_files_dict[r"TOPO_SDElev.RGH"] = True
-            elif "TOPO.DAT" in files and "FPREV.NEW" in files:
-                sediment_files_dict[r"TOPO_SDElev.RGH"] = True # Since it can be generated
-            else:
-                sediment_files_dict[r"TOPO_SDElev.RGH"] = False
+            # Sediments TOPO_SDElev.RGH availability
+            sediment_files_dict[r"TOPO_SDElev.RGH"] = self.mge_availability(output_directory)
 
-            # Custom logic for FINAL WSE availability
-            files = os.listdir(output_directory)
-            if "FINAL_WSE.DAT" in files:
-                sediment_files_dict[r"FINAL_WSE.DAT"] = True
-            elif "TOPO.DAT" in files and "FINALDEP.OUT" in files:
-                sediment_files_dict[r"FINAL_WSE.DAT"] = True  # can be generated
-            else:
-                sediment_files_dict[r"FINAL_WSE.DAT"] = False
+            # Sediments FINAL_WSE.DAT availability
+            sediment_files_dict[r"FINAL_WSE.DAT"] = self.final_wse_availability(output_directory)
 
             sediment_rbs = {
                 r"TOPO.DAT": self.dlg.ge_sd_cb,
@@ -1100,23 +1108,11 @@ class FLO2DMapCrafter:
             mudflow_maps = MudflowMaps(self.iface, self.units_switch, vector_scale, self.toler_value)
             mudflow_files_dict = mudflow_maps.check_mudflow_files(output_directory)
 
-            # Custom logic for modified ground elevation availability
-            files = os.listdir(output_directory)
-            if "TOPO_SDElev.RGH" in files:
-                mudflow_files_dict[r"TOPO_SDElev.RGH"] = True
-            elif "TOPO.DAT" in files and "FPREV.NEW" in files:
-                mudflow_files_dict[r"TOPO_SDElev.RGH"] = True # Since it can be generated
-            else:
-                mudflow_files_dict[r"TOPO_SDElev.RGH"] = False
+            # Mudflow TOPO_SDElev.RGH availability
+            mudflow_files_dict[r"TOPO_SDElev.RGH"] = self.mge_availability(output_directory)
 
-            # Custom logic for FINAL WSE availability
-            files = os.listdir(output_directory)
-            if "FINAL_WSE.DAT" in files:
-                mudflow_files_dict[r"FINAL_WSE.DAT"] = True
-            elif "TOPO.DAT" in files and "FINALDEP.OUT" in files:
-                mudflow_files_dict[r"FINAL_WSE.DAT"] = True  # can be generated
-            else:
-                mudflow_files_dict[r"FINAL_WSE.DAT"] = False
+            # Mudflow FINAL_WSE.DAT availability
+            mudflow_files_dict[r"FINAL_WSE.DAT"] = self.final_wse_availability(output_directory)
 
             mudflow_rbs = {
                 r"TOPO.DAT": self.dlg.ge_mf_cb,
@@ -1163,23 +1159,10 @@ class FLO2DMapCrafter:
             twophase_maps = TwophaseMaps(self.iface, self.units_switch, vector_scale, self.toler_value)
             twophase_files_dict = twophase_maps.check_twophase_files(output_directory)
 
-            # Custom logic for modified ground elevation availability
-            files = os.listdir(output_directory)
-            if "TOPO_SDElev.RGH" in files:
-                twophase_files_dict[r"TOPO_SDElev.RGH"] = True
-            elif "TOPO.DAT" in files and "FPREV.NEW" in files:
-                twophase_files_dict[r"TOPO_SDElev.RGH"] = True # Since it can be generated
-            else:
-                twophase_files_dict[r"TOPO_SDElev.RGH"] = False
-
-            # Custom logic for FINAL WSE availability
-            files = os.listdir(output_directory)
-            if "FINAL_WSE.DAT" in files:
-                twophase_files_dict[r"FINAL_WSE.DAT"] = True
-            elif "TOPO.DAT" in files and "FINALDEP.OUT" in files:
-                twophase_files_dict[r"FINAL_WSE.DAT"] = True  # can be generated
-            else:
-                twophase_files_dict[r"FINAL_WSE.DAT"] = False
+            # Two-phase TOPO_SDElev.RGH availability
+            twophase_files_dict[r"TOPO_SDElev.RGH"] = self.mge_availability(output_directory)
+            # Two-phase FINAL_WSE.DAT availability
+            twophase_files_dict[r"FINAL_WSE.DAT"] = self.final_wse_availability(output_directory)
 
             twophase_rbs = {
                 r"TOPO.DAT": self.dlg.ge_tp_cb,
@@ -1417,7 +1400,7 @@ class FLO2DMapCrafter:
 
                 flood_maps = FloodMaps(self.iface, self.units_switch, vector_scale, self.toler_value)
                 flood_maps.create_maps(
-                    flood_rbs, flo2d_results_dir, map_output_dir, mapping_group, self.crs, project_id
+                    flood_rbs, flo2d_results_dir, map_output_dir, mapping_group, self.crs, project_id, sim_type=self._sim_type
                 )
 
             """
@@ -1457,7 +1440,7 @@ class FLO2DMapCrafter:
 
                 sediment_maps = SedimentMaps(self.iface, self.units_switch, vector_scale, self.toler_value)
                 sediment_maps.create_maps(
-                    sediment_rbs, flo2d_results_dir, map_output_dir, mapping_group, self.crs, project_id
+                    sediment_rbs, flo2d_results_dir, map_output_dir, mapping_group, self.crs, project_id, sim_type=self._sim_type
                 )
 
             """"
@@ -1494,7 +1477,7 @@ class FLO2DMapCrafter:
 
                 mudflow_maps = MudflowMaps(self.iface, self.units_switch, vector_scale, self.toler_value)
                 mudflow_maps.create_maps(
-                    mudflow_rbs, flo2d_results_dir, map_output_dir, mapping_group, self.crs, project_id
+                    mudflow_rbs, flo2d_results_dir, map_output_dir, mapping_group, self.crs, project_id, sim_type=self._sim_type
                 )
 
             """"
@@ -1547,7 +1530,7 @@ class FLO2DMapCrafter:
 
                 twophase_maps = TwophaseMaps(self.iface, self.units_switch, vector_scale, self.toler_value)
                 twophase_maps.create_maps(
-                    twophase_rbs, flo2d_results_dir, map_output_dir, mapping_group, self.crs, project_id
+                    twophase_rbs, flo2d_results_dir, map_output_dir, mapping_group, self.crs, project_id, sim_type=self._sim_type
                 )
 
             """
