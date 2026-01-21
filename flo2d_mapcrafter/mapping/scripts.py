@@ -545,11 +545,11 @@ def modified_ground_elev(results_dir, map_output_dir, sim_type=None, topo_name="
 
     try:
         # Build TOPO_SDElev.RGH from TOPO.DAT and FPREV.NEW
-        df_topo = pd.read_csv(topo_path, delim_whitespace=True, header=None, names=["X", "Y", "Z"])
+        df_topo = pd.read_csv(topo_path, sep=r"\s+", engine="python", header=None, names=["X", "Y", "Z"])
 
         grid_count = len(df_topo)
 
-        df_fprev = pd.read_csv(fprev_path, delim_whitespace=True, header=None, names=["Index", "Z_mod"])
+        df_fprev = pd.read_csv(fprev_path, sep=r"\s+", engine="python", header=None, names=["Index", "Z_mod"])
 
         # Detect sediment run (two datasets)
         if len(df_fprev) == 2 * grid_count:
@@ -621,11 +621,11 @@ def final_wse(results_dir, map_output_dir, topo_sd_name="TOPO_SDElev.RGH", topo_
 
     try:
         # Read elevation source
-        topo_df = pd.read_csv(elev_path, delim_whitespace=True, header=None)
+        topo_df = pd.read_csv(elev_path, sep=r"\s+", engine="python", header=None)
         topo_df.columns = ["X", "Y", "Z"]
 
         # Read FINALDEP.OUT
-        finaldep_df = pd.read_csv(finaldep_path, delim_whitespace=True, header=None)
+        finaldep_df = pd.read_csv(finaldep_path, sep=r"\s+", engine="python", header=None)
         finaldep_df.columns = ["CellID", "X_fd", "Y_fd", "dZ"]
 
         if len(topo_df) != len(finaldep_df):
