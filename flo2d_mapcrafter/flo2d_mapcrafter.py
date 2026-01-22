@@ -541,6 +541,32 @@ class FLO2DMapCrafter:
             return None
         return None
 
+    # Project Summary: Simulation Duration
+    def detect_computer_run_time(self, summary_path: str):
+        if not summary_path or not os.path.isfile(summary_path):
+            return None
+
+        pat = re.compile(r"COMPUTER\s+RUN\s+TIME\s*:\s*([0-9]+(?:\.[0-9]+)?)\s*HRS", re.IGNORECASE)
+
+        try:
+            with open(summary_path, "r", errors="ignore") as f:
+                for line in f:
+                    m = pat.search(line)
+                    if not m:
+                        continue
+                    hours = float(m.group(1))
+                    total_seconds = int(round(hours * 3600))
+
+                    hh = total_seconds //3600
+                    mm = (total_seconds % 3600) //60
+                    ss = total_seconds % 60
+
+                    return f"{hh:02d}:{mm:02d}:{ss:02d}"
+        except Exception:
+            return None
+
+        return None
+
     # --------------------------------------------#
     # Project Summary: Coordinate System (EPSG)  #
     # --------------------------------------------#
@@ -683,6 +709,7 @@ class FLO2DMapCrafter:
             self.dlg.sumNElems.setText("—")
             self.dlg.sumSimType.setText("—")
             self.dlg.sumSimDate.setText("—")
+            self.dlg.sumSimDur.setText("---")
             self.dlg.sumEPSG.setText("—")
 
             if hasattr(self.dlg, "sumSimSummaryTable") and self.dlg.sumSimSummaryTable:
@@ -699,6 +726,7 @@ class FLO2DMapCrafter:
         nelems = self._detect_elements_from_summary(summary_path)
         # simtype = self._detect_simulation_type(base, cont_path, summary_path)
         simdate = self._detect_simulation_date_from_summary(summary_path)
+        sim_duration = self.detect_computer_run_time(summary_path)
         epsg = self._detect_epsg_code()
         simtype = getattr(self, "_sim_type", None)
 
@@ -708,6 +736,7 @@ class FLO2DMapCrafter:
         self.dlg.sumNElems.setText(nelems or "—")
         self.dlg.sumSimType.setText(simtype or "—")
         self.dlg.sumSimDate.setText(simdate or "—")
+        self.dlg.sumSimDur.setText(sim_duration or "---")
         self.dlg.sumEPSG.setText(epsg or "—")
 
         # --- Simulation Summary (3-column table) ---
