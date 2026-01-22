@@ -81,6 +81,7 @@ class FloodMaps:
             r"FINALVEL.OUT": False,
             r"FINALDIR.OUT": False,
             r"VEL_X_DEPTH.OUT": False,
+            r"VEL_SQUARED_X_DEPTH.OUT": False,
             r"TIMEONEFT.OUT": False,
             r"TIMETWOFT.OUT": False,
             r"TIMETOPEAK.OUT": False,
@@ -223,92 +224,21 @@ class FloodMaps:
                 self.process_maps(name, raster, file, crs, bv_group, 1)
                 self._tick(dlg, "Final Velocity")
 
-            # Depth x Velocity
+            # Velocity x Depth
             if flood_rbs.get(r"VEL_X_DEPTH.OUT"):
                 name = check_project_id("DEPTH_X_VELOCITY", project_id)
                 name, raster = check_raster_file(name, map_output_dir)
                 file = os.path.join(flo2d_results_dir, "VEL_X_DEPTH.OUT")
                 self.process_maps(name, raster, file, crs, dv_group, 7)
-                self._tick(dlg, "Depth × Velocity")
+                self._tick(dlg, "Velocity x Depth")
 
-            # Velocity^2 x Depth  => (VEL_X_DEPTH) * (VELFP)
-            if flood_rbs.get("VEL_SQ_X_DEPTH"):
-                name = check_project_id("VELOCITY_SQUARED_X_DEPTH", project_id)
-                name, out_raster = check_raster_file(name, map_output_dir)
-                vxd_ascii = os.path.join(flo2d_results_dir, "VEL_X_DEPTH.OUT")
-                v_ascii   = os.path.join(flo2d_results_dir, "VELFP.OUT")
-
-                tmp_name_a = check_project_id("_TMP_VEL_X_DEPTH", project_id)
-                tmp_name_a, tmp_raster_a = check_raster_file(tmp_name_a, map_output_dir)
-                A = read_ASCII(vxd_ascii, tmp_raster_a, tmp_name_a, crs)
-
-                tmp_name_b = check_project_id("_TMP_VELFP", project_id)
-                tmp_name_b, tmp_raster_b = check_raster_file(tmp_name_b, map_output_dir)
-                B = read_ASCII(v_ascii, tmp_raster_b, tmp_name_b, crs)
-
-                if A and B and A.isValid() and B.isValid():
-                    from qgis import processing
-                    from qgis._core import QgsRasterLayer
-                    from qgis.PyQt import sip
-                    import gc, time
-
-                    def _safe_remove_layer(layer):
-                        try:
-                            lyr_id = layer.id() if hasattr(layer, "id") else None
-                            if lyr_id and QgsProject.instance().mapLayer(lyr_id):
-                                QgsProject.instance().removeMapLayer(lyr_id)
-                        except Exception:
-                            pass
-                        try:
-                            sip.delete(layer)
-                        except Exception:
-                            pass
-
-                    def _unlink_with_retries(path, attempts=10, delay=0.15):
-                        for _ in range(attempts):
-                            try:
-                                if os.path.exists(path):
-                                    os.remove(path)
-                                return True
-                            except Exception:
-                                time.sleep(delay)
-                                gc.collect()
-                        return False
-
-                    try:
-                        processing.run(
-                            "gdal:rastercalculator",
-                            {
-                                "INPUT_A": tmp_raster_a, "BAND_A": 1,
-                                "INPUT_B": tmp_raster_b, "BAND_B": 1,
-                                "INPUT_C": None, "BAND_C": 1,
-                                "INPUT_D": None, "BAND_D": 1,
-                                "INPUT_E": None, "BAND_E": 1,
-                                "INPUT_F": None, "BAND_F": 1,
-                                "FORMULA": "A*B",
-                                "NO_DATA": None,
-                                "RTYPE": 6,   # Float32
-                                "OPTIONS": "",
-                                "EXTRA": "",
-                                "OUTPUT": out_raster,
-                            }
-                        )
-                        result = QgsRasterLayer(out_raster, name)
-                        if result.isValid():
-                            QgsProject.instance().addMapLayer(result, False)
-                            set_raster_style(result, 7)
-                            dv_group.insertLayer(0, result)
-                        self._tick(dlg, "Velocity² × Depth")
-                    finally:
-                        try:
-                            _safe_remove_layer(A)
-                            _safe_remove_layer(B)
-                        finally:
-                            A = None; B = None
-                            gc.collect(); time.sleep(0.1)
-                            for base in (tmp_raster_a, tmp_raster_b):
-                                for suffix in ("", ".aux.xml", ".ovr", ".tfw", ".wld"):
-                                    _unlink_with_retries(base + suffix)
+            # Velocity_Squared x Depth
+            if flood_rbs.get(r"VEL_SQUARED_X_DEPTH.OUT"):
+                name = check_project_id("VEL_SQUARED_X_DEPTH", project_id)
+                name, raster = check_raster_file(name, map_output_dir)
+                file = os.path.join(flo2d_results_dir, "VEL_SQUARED_X_DEPTH.OUT")
+                self.process_maps(name, raster, file, crs, dv_group, 7)
+                self._tick(dlg, "Velocity_Squared x Depth")
 
             # Time to one ft
             if flood_rbs.get(r"TIMEONEFT.OUT"):

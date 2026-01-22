@@ -78,6 +78,7 @@ class SedimentMaps:
             r"FINALVEL.OUT": False,
             r"FINALDIR.OUT": False,
             r"VEL_X_DEPTH.OUT": False,
+            r"VEL_SQUARED_X_DEPTH.OUT": False,
             r"TIMEONEFT.OUT": False,
             r"TIMETWOFT.OUT": False,
             r"TIMETOPEAK.OUT": False,
@@ -246,13 +247,21 @@ class SedimentMaps:
                 self.process_maps(name, raster, file, crs, bv_group, 1)
                 self._tick(dlg, "Final Velocity")
 
-            # Depth x Velocity
+            # Velocity x Depth
             if sediment_rbs.get(r"VEL_X_DEPTH.OUT"):
                 name = check_project_id("DEPTH_X_VELOCITY", project_id)
                 name, raster = check_raster_file(name, map_output_dir)
                 file = flo2d_results_dir + r"\VEL_X_DEPTH.OUT"
                 self.process_maps(name, raster, file, crs, dv_group, 7)
-                self._tick(dlg, "Depth x Velocity")
+                self._tick(dlg, "Velocity x Depth")
+
+            # Velocity_Squared x Depth
+            if sediment_rbs.get(r"VEL_SQUARED_X_DEPTH.OUT"):
+                name = check_project_id("VEL_SQUARED_X_DEPTH", project_id)
+                name, raster = check_raster_file(name, map_output_dir)
+                file = os.path.join(flo2d_results_dir, "VEL_SQUARED_X_DEPTH.OUT")
+                self.process_maps(name, raster, file, crs, dv_group, 7)
+                self._tick(dlg, "Velocity_Squared x Depth")
 
             # Time to one ft
             if sediment_rbs.get(r"TIMEONEFT.OUT"):

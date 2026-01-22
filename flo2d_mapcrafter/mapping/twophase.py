@@ -94,6 +94,7 @@ class TwophaseMaps:
             r"FINALDIR.OUT": None,
             r"FINALDIR_MUD.OUT": None,
             r"VEL_X_DEPTH.OUT": None,
+            r"VEL_SQUARED_X_DEPTH.OUT": None,
             r"TIMEONEFT.OUT": None,
             r"TIMETWOFT.OUT": None,
             r"TIMETOPEAK.OUT": None,
@@ -333,13 +334,21 @@ class TwophaseMaps:
                 self.process_maps(name, raster, file, crs, md_group, 10)
                 self._tick(dlg, "Final Mudflow Sediment Concentration")
 
-            # Depth x Velocity
+            # Velocity x Depth
             if twophase_rbs.get(r"VEL_X_DEPTH.OUT"):
                 name = check_project_id("DEPTH_X_VELOCITY", project_id)
                 name, raster = check_raster_file(name, map_output_dir)
                 file = flo2d_results_dir + r"\VEL_X_DEPTH.OUT"
                 self.process_maps(name, raster, file, crs, dv_group, 7)
-                self._tick(dlg, "Depth x Velocity")
+                self._tick(dlg, "Velocity x Depth")
+
+            # Velocity_Squared x Depth
+            if twophase_rbs.get(r"VEL_SQUARED_X_DEPTH.OUT"):
+                name = check_project_id("VEL_SQUARED_X_DEPTH", project_id)
+                name, raster = check_raster_file(name, map_output_dir)
+                file = os.path.join(flo2d_results_dir, "VEL_SQUARED_X_DEPTH.OUT")
+                self.process_maps(name, raster, file, crs, dv_group, 7)
+                self._tick(dlg, "Velocity_Squared x Depth")
 
             # Time to One ft
             if twophase_rbs.get(r"TIMEONEFT.OUT"):
