@@ -709,7 +709,7 @@ class FLO2DMapCrafter:
             self.dlg.sumNElems.setText("—")
             self.dlg.sumSimType.setText("—")
             self.dlg.sumSimDate.setText("—")
-            self.dlg.sumSimDur.setText("---")
+            self.dlg.sumSimDur.setText("—")
             self.dlg.sumEPSG.setText("—")
 
             if hasattr(self.dlg, "sumSimSummaryTable") and self.dlg.sumSimSummaryTable:
@@ -736,7 +736,7 @@ class FLO2DMapCrafter:
         self.dlg.sumNElems.setText(nelems or "—")
         self.dlg.sumSimType.setText(simtype or "—")
         self.dlg.sumSimDate.setText(simdate or "—")
-        self.dlg.sumSimDur.setText(sim_duration or "---")
+        self.dlg.sumSimDur.setText(sim_duration or "—")
         self.dlg.sumEPSG.setText(epsg or "—")
 
         # --- Simulation Summary (3-column table) ---
