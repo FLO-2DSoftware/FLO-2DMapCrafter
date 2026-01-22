@@ -901,7 +901,7 @@
                   </item>
                  </layout>
                 </item>
-                <item row="0" column="0">
+                <item row="2" column="0">
                  <widget class="QCheckBox" name="v2xd_cw_cb">
                   <property name="toolTip">
                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The maximum value of synchronized velocity squared x depth.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
