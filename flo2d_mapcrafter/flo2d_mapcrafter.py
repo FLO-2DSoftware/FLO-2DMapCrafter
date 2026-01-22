@@ -1030,11 +1030,6 @@ class FLO2DMapCrafter:
                 else:
                     flood_rbs[key].setEnabled(False)
 
-            # Enable the virtual derived checkbox (needs both inputs)
-            vxd_ok = flood_files_dict.get(r"VEL_X_DEPTH.OUT", False)
-            v_ok = flood_files_dict.get(r"VELFP.OUT", False)
-            self.dlg.v2xd_cw_cb.setEnabled(vxd_ok and v_ok)
-
         # Sediment simulation
         if mud_switch == "0" and sed_switch == "1":
             self._sim_type = "Sediment"
