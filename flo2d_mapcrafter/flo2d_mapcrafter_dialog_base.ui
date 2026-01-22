@@ -1099,7 +1099,7 @@ p, li { white-space: pre-wrap; }
                 <bool>true</bool>
                </property>
                <layout class="QGridLayout" name="gridLayout_84">
-                <item row="0" column="0">
+                <item row="1" column="0">
                  <layout class="QGridLayout" name="gridLayout_83">
                   <item row="0" column="0">
                    <widget class="QCheckBox" name="dv_sd_cb">
@@ -1113,7 +1113,7 @@ p, li { white-space: pre-wrap; }
                      <number>0</number>
                     </property>
                     <property name="text">
-                     <string>Depth x Velocity</string>
+                     <string>Velocity x Depth</string>
                     </property>
                    </widget>
                   </item>
@@ -2120,7 +2120,7 @@ p, li { white-space: pre-wrap; }
                 <bool>true</bool>
                </property>
                <layout class="QGridLayout" name="gridLayout_25">
-                <item row="0" column="0">
+                <item row="1" column="0">
                  <layout class="QGridLayout" name="gridLayout_24">
                   <item row="0" column="0">
                    <widget class="QCheckBox" name="dv_mf_cb">
@@ -2131,7 +2131,7 @@ p, li { white-space: pre-wrap; }
                      <number>0</number>
                     </property>
                     <property name="text">
-                     <string>Depth x Velocity</string>
+                     <string>Velocity x Depth</string>
                     </property>
                    </widget>
                   </item>
@@ -2307,7 +2307,7 @@ p, li { white-space: pre-wrap; }
                 <bool>true</bool>
                </property>
                <layout class="QGridLayout" name="gridLayout_67">
-                <item row="0" column="0">
+                <item row="1" column="0">
                  <layout class="QGridLayout" name="gridLayout_66">
                   <item row="0" column="0">
                    <widget class="QCheckBox" name="dv_tp_cb">
@@ -2318,7 +2318,7 @@ p, li { white-space: pre-wrap; }
                      <number>0</number>
                     </property>
                     <property name="text">
-                     <string>Depth x Velocity</string>
+                     <string>Velocity x Depth</string>
                     </property>
                    </widget>
                   </item>
