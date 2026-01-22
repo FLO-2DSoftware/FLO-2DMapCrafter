@@ -2036,6 +2036,7 @@ class FLO2DMapCrafter:
             self.dlg.mvv_cw_cb,
             self.dlg.fvv_cw_cb,
             self.dlg.if_cw_cb,
+            self.dlg.fwse_cw_cb,
         ]
 
         if self.dlg.check_cw_cb.isChecked():
@@ -2078,6 +2079,7 @@ class FLO2DMapCrafter:
             self.dlg.mvv_sd_cb,
             self.dlg.fvv_sd_cb,
             self.dlg.if_sd_cb,
+            self.dlg.fwse_sd_cb,
         ]
 
         if self.dlg.check_sd_cb.isChecked():
@@ -2177,6 +2179,7 @@ class FLO2DMapCrafter:
             self.dlg.ms_mf_cb,
             self.dlg.fs_mf_cb,
             self.dlg.if_mf_cb,
+            self.dlg.fwse_mf_cb,
         ]
 
         if self.dlg.check_mf_cb.isChecked():
@@ -2210,6 +2213,7 @@ class FLO2DMapCrafter:
             self.dlg.fmd_tp_cb,
             self.dlg.fcd_tp_cb,
             self.dlg.ffv_tp_cb,
+            self.dlg.fwse_tp_cb,
             self.dlg.fmv_tp_cb,
             self.dlg.dv_tp_cb,
             self.dlg.v2xd_tp_cb,
