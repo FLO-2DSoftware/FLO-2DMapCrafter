@@ -911,7 +911,7 @@ class FLO2DMapCrafter:
 
         output_directory = self.dlg.flo2d_out_folder.filePath()
 
-        # Return immediately when folder is empty of invalid
+        # Return immediately when folder is empty or invalid
         if not output_directory or not os.path.isdir(output_directory):
             return
 
@@ -1009,6 +1009,7 @@ class FLO2DMapCrafter:
                 r"FINALVEL.OUT": self.dlg.fv_cw_cb,
                 r"FINALDIR.OUT": self.dlg.fvv_cw_cb,
                 r"VEL_X_DEPTH.OUT": self.dlg.dv_cw_cb,
+                r"VEL_SQUARED_X_DEPTH.OUT": self.dlg.v2xd_cw_cb,
                 r"TIMEONEFT.OUT": self.dlg.t1ft_cw_cb,
                 r"TIMETWOFT.OUT": self.dlg.t2ft_cw_cb,
                 r"TIMETOPEAK.OUT": self.dlg.tmax_cw_cb,
@@ -1063,6 +1064,7 @@ class FLO2DMapCrafter:
                 r"FINALVEL.OUT": self.dlg.fv_sd_cb,
                 r"FINALDIR.OUT": self.dlg.fvv_sd_cb,
                 r"VEL_X_DEPTH.OUT": self.dlg.dv_sd_cb,
+                r"VEL_SQUARED_X_DEPTH.OUT": self.dlg.v2xd_sd_cb,
                 r"TIMEONEFT.OUT": self.dlg.t1ft_sd_cb,
                 r"TIMETWOFT.OUT": self.dlg.t2ft_sd_cb,
                 r"TIMETOPEAK.OUT": self.dlg.tmax_sd_cb,
@@ -1125,6 +1127,7 @@ class FLO2DMapCrafter:
                 r"FINALVEL.OUT": self.dlg.fv_mf_cb,
                 r"FINALDIR.OUT": self.dlg.fvv_mf_cb,
                 r"VEL_X_DEPTH.OUT": self.dlg.dv_mf_cb,
+                r"VEL_SQUARED_X_DEPTH.OUT": self.dlg.v2xd_mf_cb,
                 r"TIMEONEFT.OUT": self.dlg.t1ft_mf_cb,
                 r"TIMETWOFT.OUT": self.dlg.t2ft_mf_cb,
                 r"TIMETOPEAK.OUT": self.dlg.tmax_mf_cb,
@@ -1187,6 +1190,7 @@ class FLO2DMapCrafter:
                 r"FINALVEL.OUT": self.dlg.ffv_tp_cb,
                 r"FINALVEL_MUD.OUT": self.dlg.fmv_tp_cb,
                 r"VEL_X_DEPTH.OUT": self.dlg.dv_tp_cb,
+                r"VEL_SQUARED_X_DEPTH.OUT": self.dlg.v2xd_tp_cb,
                 r"TIMEONEFT.OUT": self.dlg.t1ft_tp_cb,
                 r"TIMETWOFT.OUT": self.dlg.t2ft_tp_cb,
                 r"TIMETOPEAK.OUT": self.dlg.tmax_tp_cb,
@@ -1383,6 +1387,7 @@ class FLO2DMapCrafter:
                     r"FINALVEL.OUT": self.dlg.fv_cw_cb.isChecked(),
                     r"FINALDIR.OUT": self.dlg.fvv_cw_cb.isChecked(),
                     r"VEL_X_DEPTH.OUT": self.dlg.dv_cw_cb.isChecked(),
+                    r"VEL_SQUARED_X_DEPTH.OUT": self.dlg.v2xd_cw_cb.isChecked(),
                     r"TIMEONEFT.OUT": self.dlg.t1ft_cw_cb.isChecked(),
                     r"TIMETWOFT.OUT": self.dlg.t2ft_cw_cb.isChecked(),
                     r"TIMETOPEAK.OUT": self.dlg.tmax_cw_cb.isChecked(),
@@ -1394,7 +1399,6 @@ class FLO2DMapCrafter:
                     r"SPECENERGY.OUT": self.dlg.se_cw_cb.isChecked(),
                     r"STATICPRESS.OUT": self.dlg.sp_cw_cb.isChecked(),
                     r"IMPACT.OUT": self.dlg.if_cw_cb.isChecked(),
-                    "VEL_SQ_X_DEPTH": self.dlg.v2xd_cw_cb.isChecked(),
                     r"FINAL_WSE.DAT": self.dlg.fwse_cw_cb.isChecked(),
                 }
 
@@ -1419,6 +1423,7 @@ class FLO2DMapCrafter:
                     r"FINALVEL.OUT": self.dlg.fv_sd_cb.isChecked(),
                     r"FINALDIR.OUT": self.dlg.fvv_sd_cb.isChecked(),
                     r"VEL_X_DEPTH.OUT": self.dlg.dv_sd_cb.isChecked(),
+                    r"VEL_SQUARED_X_DEPTH.OUT": self.dlg.v2xd_sd_cb.isChecked(),
                     r"TIMEONEFT.OUT": self.dlg.t1ft_sd_cb.isChecked(),
                     r"TIMETWOFT.OUT": self.dlg.t2ft_sd_cb.isChecked(),
                     r"TIMETOPEAK.OUT": self.dlg.tmax_sd_cb.isChecked(),
@@ -1459,6 +1464,7 @@ class FLO2DMapCrafter:
                     r"FINALVEL.OUT": self.dlg.fv_mf_cb.isChecked(),
                     r"FINALDIR.OUT": self.dlg.fvv_mf_cb.isChecked(),
                     r"VEL_X_DEPTH.OUT": self.dlg.dv_mf_cb.isChecked(),
+                    r"VEL_SQUARED_X_DEPTH.OUT": self.dlg.v2xd_mf_cb.isChecked(),
                     r"TIMEONEFT.OUT": self.dlg.t1ft_mf_cb.isChecked(),
                     r"TIMETWOFT.OUT": self.dlg.t2ft_mf_cb.isChecked(),
                     r"TIMETOPEAK.OUT": self.dlg.tmax_mf_cb.isChecked(),
@@ -1508,6 +1514,7 @@ class FLO2DMapCrafter:
                     r"FINALVEL.OUT": self.dlg.ffv_tp_cb.isChecked(),
                     r"FINALVEL_MUD.OUT": self.dlg.fmv_tp_cb.isChecked(),
                     r"VEL_X_DEPTH.OUT": self.dlg.dv_tp_cb.isChecked(),
+                    r"VEL_SQUARED_X_DEPTH.OUT": self.dlg.v2xd_tp_cb.isChecked(),
                     r"TIMEONEFT.OUT": self.dlg.t1ft_tp_cb.isChecked(),
                     r"TIMETWOFT.OUT": self.dlg.t2ft_tp_cb.isChecked(),
                     r"TIMETOPEAK.OUT": self.dlg.tmax_tp_cb.isChecked(),
@@ -2020,6 +2027,7 @@ class FLO2DMapCrafter:
             self.dlg.fd_cw_cb,
             self.dlg.fv_cw_cb,
             self.dlg.dv_cw_cb,
+            self.dlg.v2xd_cw_cb,
             self.dlg.t1ft_cw_cb,
             self.dlg.t2ft_cw_cb,
             self.dlg.tmax_cw_cb,
@@ -2033,7 +2041,6 @@ class FLO2DMapCrafter:
             self.dlg.mvv_cw_cb,
             self.dlg.fvv_cw_cb,
             self.dlg.if_cw_cb,
-            self.dlg.v2xd_cw_cb,
         ]
 
         if self.dlg.check_cw_cb.isChecked():
@@ -2059,6 +2066,7 @@ class FLO2DMapCrafter:
             self.dlg.fd_sd_cb,
             self.dlg.fv_sd_cb,
             self.dlg.dv_sd_cb,
+            self.dlg.v2xd_sd_cb,
             self.dlg.t1ft_sd_cb,
             self.dlg.t2ft_sd_cb,
             self.dlg.tmax_sd_cb,
@@ -2160,6 +2168,7 @@ class FLO2DMapCrafter:
             self.dlg.fv_mf_cb,
             self.dlg.fvv_mf_cb,
             self.dlg.dv_mf_cb,
+            self.dlg.v2xd_mf_cb,
             self.dlg.t1ft_mf_cb,
             self.dlg.t2ft_mf_cb,
             self.dlg.tmax_mf_cb,
@@ -2208,6 +2217,7 @@ class FLO2DMapCrafter:
             self.dlg.ffv_tp_cb,
             self.dlg.fmv_tp_cb,
             self.dlg.dv_tp_cb,
+            self.dlg.v2xd_tp_cb,
             self.dlg.t1ft_tp_cb,
             self.dlg.t2ft_tp_cb,
             self.dlg.tmax_tp_cb,
