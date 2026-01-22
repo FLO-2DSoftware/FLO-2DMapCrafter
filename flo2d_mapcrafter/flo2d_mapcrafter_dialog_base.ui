@@ -886,7 +886,7 @@
                     </property>
                    </widget>
                   </item>
-                  <item row="1" column="0">
+                  <item row="0" column="0">
                    <widget class="QCheckBox" name="dv_cw_cb">
                     <property name="toolTip">
                      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;VEL_X_DEPTH.OUT: Maximum of synchroznized velocity times depth for each floodplain element (ft&lt;span style=&quot; vertical-align:super;&quot;&gt;2&lt;/span&gt;/s or m&lt;span style=&quot; vertical-align:super;&quot;&gt;2&lt;/span&gt;/s).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -1099,7 +1099,7 @@ p, li { white-space: pre-wrap; }
                 <bool>true</bool>
                </property>
                <layout class="QGridLayout" name="gridLayout_84">
-                <item row="1" column="0">
+                <item row="0" column="0">
                  <layout class="QGridLayout" name="gridLayout_83">
                   <item row="0" column="0">
                    <widget class="QCheckBox" name="dv_sd_cb">
@@ -2120,7 +2120,7 @@ p, li { white-space: pre-wrap; }
                 <bool>true</bool>
                </property>
                <layout class="QGridLayout" name="gridLayout_25">
-                <item row="1" column="0">
+                <item row="0" column="0">
                  <layout class="QGridLayout" name="gridLayout_24">
                   <item row="0" column="0">
                    <widget class="QCheckBox" name="dv_mf_cb">
@@ -2307,7 +2307,7 @@ p, li { white-space: pre-wrap; }
                 <bool>true</bool>
                </property>
                <layout class="QGridLayout" name="gridLayout_67">
-                <item row="1" column="0">
+                <item row="0" column="0">
                  <layout class="QGridLayout" name="gridLayout_66">
                   <item row="0" column="0">
                    <widget class="QCheckBox" name="dv_tp_cb">
