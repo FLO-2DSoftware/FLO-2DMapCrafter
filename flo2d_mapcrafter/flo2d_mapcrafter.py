@@ -938,6 +938,9 @@ class FLO2DMapCrafter:
     def check_files(self):
         """Function to check the type of files present on the simulation"""
 
+        tabs = self.dlg.tabs
+        tabs.blockSignals(True)
+
         output_directory = self.dlg.flo2d_out_folder.filePath()
 
         # Return immediately when folder is empty or invalid
@@ -1345,6 +1348,10 @@ class FLO2DMapCrafter:
                     self.dlg.see_nodes_results_btn.setEnabled(True)
 
             self._update_summary_fields()
+
+            # Always land in the Summary tab after project folder selection
+            self.dlg.tabs.setCurrentIndex(0)
+            tabs.blockSignals(False)
 
     def run_map_creator(self):
         """
