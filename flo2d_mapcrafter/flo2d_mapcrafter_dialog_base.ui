@@ -432,13 +432,33 @@
              </widget>
             </item>
             <item row="6" column="0">
+             <widget class="QLabel" name="lblSimDur">
+              <property name="text">
+               <string>Simulation Duration:</string>
+              </property>
+             </widget>
+            </item>
+            <item row="6" column="1">
+             <widget class="QLineEdit" name="sumSimDur">
+              <property name="maximumSize">
+               <size>
+                <width>250</width>
+                <height>24</height>
+               </size>
+              </property>
+              <property name="readOnly">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item row="7" column="0">
              <widget class="QLabel" name="lblCoordSystem">
               <property name="text">
                <string>Coord. Ref. System:</string>
               </property>
              </widget>
             </item>
-            <item row="6" column="1">
+            <item row="7" column="1">
              <widget class="QLineEdit" name="sumEPSG">
               <property name="maximumSize">
                <size>
