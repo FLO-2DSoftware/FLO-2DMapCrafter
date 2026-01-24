@@ -546,7 +546,7 @@ class FLO2DMapCrafter:
         if not summary_path or not os.path.isfile(summary_path):
             return None
 
-        pat = re.compile(r"COMPUTER\s+RUN\s+TIME\s*:\s*([0-9]+(?:\.[0-9]+)?)\s*HRS", re.IGNORECASE)
+        pat = re.compile(r"COMPUTER\s+RUN\s+TIME(?:\s+IS)?\s*:\s*([0-9]+(?:\.[0-9]+)?)\s*HRS", re.IGNORECASE)
 
         try:
             with open(summary_path, "r", errors="ignore") as f:
@@ -837,6 +837,7 @@ class FLO2DMapCrafter:
             n_elems = txt(g.sumNElems)
             sim_type = txt(g.sumSimType)
             sim_date = txt(g.sumSimDate)
+            sim_dur = txt(g.sumSimDur)
             epsg_code = txt(g.sumEPSG)
 
             # Simulation Summary table rows
@@ -870,6 +871,7 @@ class FLO2DMapCrafter:
                 f"  No. of Elements:     {n_elems or '—'}",
                 f"  Simulation Type:     {sim_type or '—'}",
                 f"  Simulation Date:     {sim_date or '—'}",
+                f"  Simaltion Duration:  {sim_dur or '—'}",
                 f"  Coord. Ref. System:  {epsg_code or '—'}",
                 ""
             ]
