@@ -489,6 +489,8 @@ class FLO2DMapCrafter:
         """
         Find the line like:
             THIS OUTPUT FILE WAS TERMINATED ON:   5/15/2025  AT:   8:14:28
+            or
+            THIS OUTPUT FILE WAS TERMINATED ON:   9/ 1/2020  AT:  22:14: 4
         and return a readable timestamp, e.g. '2025-05-15 08:14:28'.
         If parsing fails, return the raw 'date [time]' substring.
         """
@@ -496,8 +498,9 @@ class FLO2DMapCrafter:
             return None
 
         pat = re.compile(
-            r"TERMINATED\s+ON:\s*([0-9]{1,2}[/-][0-9]{1,2}[/-][0-9]{2,4})"
-            r"(?:\s+AT:\s*([0-9]{1,2}:[0-9]{2}:[0-9]{2}(?:\s*[APMapm]{2})?))?",
+            r"TERMINATED\s+ON:\s*"
+            r"([0-9]{1,2}\s*[/-]\s*[0-9]{1,2}\s*[/-]\s*[0-9]{2,4})"
+            r"(?:\s+AT:\s*([0-9]{1,2}\s*:\s*[0-9]{1,2}\s*:\s*[0-9]{1,2}(?:\s*[APMapm]{2})?))?",
             re.IGNORECASE
         )
         try:
@@ -510,6 +513,9 @@ class FLO2DMapCrafter:
                         continue
                     date_str = m.group(1).strip()
                     time_str = (m.group(2) or "").strip()
+
+                    date_str = re.sub(r"\s+", "", date_str)
+                    time_str = re.sub(r"\s+", "", time_str)
 
                     # Try to normalize to ISO-ish 'YYYY-MM-DD HH:MM:SS'
                     # Accept MM/DD/YYYY or MM-DD-YYYY (or 2-digit year)
