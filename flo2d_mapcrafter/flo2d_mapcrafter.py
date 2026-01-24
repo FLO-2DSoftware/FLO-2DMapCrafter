@@ -762,7 +762,7 @@ class FLO2DMapCrafter:
             # 4) If there’s no SIMULATION SUMMARY section, use placeholder
             if not sim_table_rows:
                 self._show_sim_summary_placeholder(
-                    tbl, "— No 'Simulation Summary' information found in SUMMARY.OUT —"
+                    tbl, "— Simulation Summary not generated (Batch Run) —"
                 )
                 return
 
