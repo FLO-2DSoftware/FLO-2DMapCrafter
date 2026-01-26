@@ -547,7 +547,7 @@ class FLO2DMapCrafter:
             return None
         return None
 
-    # Project Summary: Simulation Duration
+    # Project Summary: Computer Run Time
     def detect_computer_run_time(self, summary_path: str):
         if not summary_path or not os.path.isfile(summary_path):
             return None
@@ -715,7 +715,7 @@ class FLO2DMapCrafter:
             self.dlg.sumNElems.setText("—")
             self.dlg.sumSimType.setText("—")
             self.dlg.sumSimDate.setText("—")
-            self.dlg.sumSimDur.setText("—")
+            self.dlg.sumCompRunTime.setText("—")
             self.dlg.sumEPSG.setText("—")
 
             if hasattr(self.dlg, "sumCompleteness") and self.dlg.sumCompleteness:
@@ -796,7 +796,7 @@ class FLO2DMapCrafter:
         nelems = self._detect_elements_from_summary(summary_path)
         # simtype = self._detect_simulation_type(base, cont_path, summary_path)
         simdate = self._detect_simulation_date_from_summary(summary_path)
-        sim_duration = self.detect_computer_run_time(summary_path)
+        comp_run_time = self.detect_computer_run_time(summary_path)
         epsg = self._detect_epsg_code()
         simtype = getattr(self, "_sim_type", None)
 
@@ -806,7 +806,7 @@ class FLO2DMapCrafter:
         self.dlg.sumNElems.setText(nelems or "—")
         self.dlg.sumSimType.setText(simtype or "—")
         self.dlg.sumSimDate.setText(simdate or "—")
-        self.dlg.sumSimDur.setText(sim_duration or "—")
+        self.dlg.sumCompRunTime.setText(comp_run_time or "—")
         self.dlg.sumEPSG.setText(epsg or "—")
 
         # Simulation Summary (3-column table)
@@ -935,7 +935,7 @@ class FLO2DMapCrafter:
             n_elems = txt(g.sumNElems)
             sim_type = txt(g.sumSimType)
             sim_date = txt(g.sumSimDate)
-            sim_dur = txt(g.sumSimDur)
+            comp_run_time = txt(g.sumCompRunTime)
             epsg_code = txt(g.sumEPSG)
 
             # Simulation Summary table rows
@@ -969,7 +969,7 @@ class FLO2DMapCrafter:
                 f"  No. of Elements:     {n_elems or '—'}",
                 f"  Simulation Type:     {sim_type or '—'}",
                 f"  Simulation Date:     {sim_date or '—'}",
-                f"  Simaltion Duration:  {sim_dur or '—'}",
+                f"  Computer Run time:  {comp_run_time or '—'}",
                 f"  Coord. Ref. System:  {epsg_code or '—'}",
                 ""
             ]
@@ -996,7 +996,7 @@ class FLO2DMapCrafter:
             )
 
     def _load_swmm_model(self, inp_file, rpt_file):
-        """Load and cache SWMM model. Re-parse only if .rpt file changed."""
+        """Load and cache SWMM model. Reparse only if .rpt file changed."""
         rpt_mtime = os.path.getmtime(rpt_file) if os.path.isfile(rpt_file) else None
         model = getattr(self, "_swmm_model", None)
         if (model is None) or (getattr(model, "_rpt_mtime", None) != rpt_mtime):

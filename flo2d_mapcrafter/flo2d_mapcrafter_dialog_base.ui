@@ -432,14 +432,14 @@
              </widget>
             </item>
             <item row="6" column="0">
-             <widget class="QLabel" name="lblSimDur">
+             <widget class="QLabel" name="lblCompRunTime">
               <property name="text">
-               <string>Simulation Duration:</string>
+               <string>Computer Run Time:</string>
               </property>
              </widget>
             </item>
             <item row="6" column="1">
-             <widget class="QLineEdit" name="sumSimDur">
+             <widget class="QLineEdit" name="sumCompRunTime">
               <property name="maximumSize">
                <size>
                 <width>250</width>
