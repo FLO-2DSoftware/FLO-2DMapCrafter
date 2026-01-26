@@ -718,12 +718,76 @@ class FLO2DMapCrafter:
             self.dlg.sumSimDur.setText("—")
             self.dlg.sumEPSG.setText("—")
 
+            if hasattr(self.dlg, "sumCompleteness") and self.dlg.sumCompleteness:
+                self.dlg.sumCompleteness.setText("—")
+
             if hasattr(self.dlg, "sumSimSummaryTable") and self.dlg.sumSimSummaryTable:
                 self._prime_sim_summary_table()
+
             return
 
         cont_path = self._find_cont_dat(base)
         summary_path = self._find_summary_out(base)
+
+        # Simulation completeness
+        if hasattr(self.dlg, "sumCompleteness") and self.dlg.sumCompleteness:
+            yy = None
+            xx = None
+
+            # Read yy from CONT.DAT
+            try:
+                if cont_path and os.path.isfile(cont_path):
+                    with open(cont_path, "r", errors="ignore") as f:
+                        first_line = f.readline()
+                    toks = first_line.split()
+                    if len(toks) >= 1:
+                        yy = float(toks[0])
+            except Exception:
+                yy = None
+
+            # Read xx from SUMMARY.OUT
+            try:
+                if summary_path and os.path.isfile(summary_path):
+
+                    row_pat = re.compile(r"^\s*([0-9]+(?:\.[0-9]+)?)\s+")
+                    hour_pat = re.compile(r"\b(HOUR|HOURS|HR|HRS)\b", re.IGNORECASE)
+
+                    in_sim_time_table = False
+                    sim_time_seen_recently = 0
+
+                    with open(summary_path, "r", errors="ignore") as f:
+                        for line in f:
+                            u = line.upper()
+
+                            # detect start of simulation time section
+                            if "SIMULATION TIME" in u:
+                                sim_time_seen_recently = 6  # allow header to span next few lines
+                                continue
+
+                            if sim_time_seen_recently > 0:
+                                sim_time_seen_recently -= 1
+                                if hour_pat.search(line):
+                                    in_sim_time_table = True
+                                continue
+
+                            if not in_sim_time_table:
+                                continue
+
+                            # stop at mass balance
+                            if "MASS BALANCE" in u:
+                                break
+
+                            # pick numeric rows (first column is simulation time)
+                            m = row_pat.search(line)
+                            if m:
+                                xx = float(m.group(1))
+            except Exception:
+                xx = None
+
+            if yy is not None and xx is not None:
+                self.dlg.sumCompleteness.setText(f"{xx:.2f} of {yy:.2f} hours complete")
+            else:
+                self.dlg.sumCompleteness.setText("—")
 
         # Fill values
         units = self._detect_units_from_cont(cont_path)
@@ -754,11 +818,10 @@ class FLO2DMapCrafter:
                 self._show_sim_summary_placeholder(tbl, "— SUMMARY.OUT not found in the selected folder —")
                 return
 
-            # 2) Parse rows + completion flag
             sim_table_rows = self._extract_simulation_summary_table(summary_path)
             is_complete = self._is_simulation_complete(summary_path)
 
-            # Determine Batch Mode and Build Stream (NO HELPERS; inline)
+            # Determine Batch Mode and Build Stream
             batch_mode = False
             try:
                 if cont_path and os.path.isfile(cont_path):
@@ -808,8 +871,6 @@ class FLO2DMapCrafter:
                 tbl.setItem(r, 0, QTableWidgetItem(summary_txt))
                 tbl.setItem(r, 1, QTableWidgetItem(status_txt))
                 tbl.setItem(r, 2, QTableWidgetItem(action_txt))
-
-
 
     def _export_summary_to_rpt(self):
         """
