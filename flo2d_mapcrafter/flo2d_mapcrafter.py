@@ -745,40 +745,71 @@ class FLO2DMapCrafter:
         self.dlg.sumSimDur.setText(sim_duration or "—")
         self.dlg.sumEPSG.setText(epsg or "—")
 
-        # --- Simulation Summary (3-column table) ---
+        # Simulation Summary (3-column table)
         if hasattr(self.dlg, "sumSimSummaryTable") and self.dlg.sumSimSummaryTable:
             tbl = self.dlg.sumSimSummaryTable
 
-            # 1) SUMMARY.OUT missing, use placeholder
+            # SUMMARY.OUT missing, use placeholder
             if not summary_path:
-                self._show_sim_summary_placeholder(
-                    tbl, "— SUMMARY.OUT not found in the selected folder —"
-                )
+                self._show_sim_summary_placeholder(tbl, "— SUMMARY.OUT not found in the selected folder —")
                 return
 
             # 2) Parse rows + completion flag
             sim_table_rows = self._extract_simulation_summary_table(summary_path)
             is_complete = self._is_simulation_complete(summary_path)
 
-            # 3) If the run looks incomplete, use placeholder
+            # Determine Batch Mode and Build Stream (NO HELPERS; inline)
+            batch_mode = False
+            try:
+                if cont_path and os.path.isfile(cont_path):
+                    with open(cont_path, "r", errors="ignore") as f:
+                        first_line = f.readline()
+                    toks = first_line.split()
+                    # Batch mode
+                    if len(toks) >= 3:
+                        batch_mode = (toks[2].strip() == "1")
+            except Exception:
+                batch_mode = False
+
+            # Parse Build No.
+            major_build = None
+            try:
+                if build:
+                    major_build = int(str(build).strip().split(".")[0])
+            except Exception:
+                major_build = None
+
+            # Incomplete simulation
             if not is_complete:
                 self._show_sim_summary_placeholder(tbl, "— Simulation Incomplete —")
                 return
 
-            # 4) If there’s no SIMULATION SUMMARY section, use placeholder
             if not sim_table_rows:
-                self._show_sim_summary_placeholder(
-                    tbl, "— Simulation Summary not generated (Batch Run) —"
-                )
+
+                # Build19 or earlier
+                if (major_build is not None) and (major_build <= 19):
+                    self._show_sim_summary_placeholder(tbl, "— Simulation Summary not available for Build19 or earlier —")
+                    return
+
+                # Build > 19 and Batch mode selected
+                if (major_build is not None) and (major_build > 19) and batch_mode:
+                    self._show_sim_summary_placeholder(tbl, "— Simulation Summary not generated (Batch Run) —")
+                    return
+
+                # General fallback
+                self._show_sim_summary_placeholder(tbl, "— Simulation Summary not generated —")
                 return
 
-            # 5) Otherwise build the real table
+            # Otherwise populate table
             self._reset_sim_summary_table(tbl)
             tbl.setRowCount(len(sim_table_rows))
+
             for r, (summary_txt, status_txt, action_txt) in enumerate(sim_table_rows):
                 tbl.setItem(r, 0, QTableWidgetItem(summary_txt))
                 tbl.setItem(r, 1, QTableWidgetItem(status_txt))
                 tbl.setItem(r, 2, QTableWidgetItem(action_txt))
+
+
 
     def _export_summary_to_rpt(self):
         """
