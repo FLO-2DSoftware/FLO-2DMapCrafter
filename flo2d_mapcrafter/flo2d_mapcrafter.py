@@ -937,6 +937,7 @@ class FLO2DMapCrafter:
             sim_date = txt(g.sumSimDate)
             comp_run_time = txt(g.sumCompRunTime)
             epsg_code = txt(g.sumEPSG)
+            sim_completeness = txt(g.sumCompleteness)
 
             # Simulation Summary table rows
             rows = []
@@ -971,6 +972,7 @@ class FLO2DMapCrafter:
                 f"  Simulation Date:     {sim_date or '—'}",
                 f"  Computer Run time:  {comp_run_time or '—'}",
                 f"  Coord. Ref. System:  {epsg_code or '—'}",
+                f"  Simulation Completeness: {sim_completeness or '—'}",
                 ""
             ]
             table = [line3(*hdr)]
