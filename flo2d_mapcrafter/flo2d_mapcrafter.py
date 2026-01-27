@@ -1451,7 +1451,7 @@ class FLO2DMapCrafter:
 
             self._update_summary_fields()
 
-            # Always land in the Summary tab after project folder selection
+        # Always land in the Summary tab after project folder selection
         self.dlg.tabs.setCurrentIndex(0)
         tabs.blockSignals(False)
 
