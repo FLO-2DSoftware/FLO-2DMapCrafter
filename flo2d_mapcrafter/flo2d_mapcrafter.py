@@ -489,6 +489,8 @@ class FLO2DMapCrafter:
         """
         Find the line like:
             THIS OUTPUT FILE WAS TERMINATED ON:   5/15/2025  AT:   8:14:28
+            or
+            THIS OUTPUT FILE WAS TERMINATED ON:   9/ 1/2020  AT:  22:14: 4
         and return a readable timestamp, e.g. '2025-05-15 08:14:28'.
         If parsing fails, return the raw 'date [time]' substring.
         """
@@ -496,8 +498,9 @@ class FLO2DMapCrafter:
             return None
 
         pat = re.compile(
-            r"TERMINATED\s+ON:\s*([0-9]{1,2}[/-][0-9]{1,2}[/-][0-9]{2,4})"
-            r"(?:\s+AT:\s*([0-9]{1,2}:[0-9]{2}:[0-9]{2}(?:\s*[APMapm]{2})?))?",
+            r"TERMINATED\s+ON:\s*"
+            r"([0-9]{1,2}\s*[/-]\s*[0-9]{1,2}\s*[/-]\s*[0-9]{2,4})"
+            r"(?:\s+AT:\s*([0-9]{1,2}\s*:\s*[0-9]{1,2}\s*:\s*[0-9]{1,2}(?:\s*[APMapm]{2})?))?",
             re.IGNORECASE
         )
         try:
@@ -510,6 +513,9 @@ class FLO2DMapCrafter:
                         continue
                     date_str = m.group(1).strip()
                     time_str = (m.group(2) or "").strip()
+
+                    date_str = re.sub(r"\s+", "", date_str)
+                    time_str = re.sub(r"\s+", "", time_str)
 
                     # Try to normalize to ISO-ish 'YYYY-MM-DD HH:MM:SS'
                     # Accept MM/DD/YYYY or MM-DD-YYYY (or 2-digit year)
@@ -541,12 +547,12 @@ class FLO2DMapCrafter:
             return None
         return None
 
-    # Project Summary: Simulation Duration
+    # Project Summary: Computer Run Time
     def detect_computer_run_time(self, summary_path: str):
         if not summary_path or not os.path.isfile(summary_path):
             return None
 
-        pat = re.compile(r"COMPUTER\s+RUN\s+TIME\s*:\s*([0-9]+(?:\.[0-9]+)?)\s*HRS", re.IGNORECASE)
+        pat = re.compile(r"COMPUTER\s+RUN\s+TIME(?:\s+IS)?\s*:\s*([0-9]+(?:\.[0-9]+)?)\s*HRS", re.IGNORECASE)
 
         try:
             with open(summary_path, "r", errors="ignore") as f:
@@ -709,15 +715,79 @@ class FLO2DMapCrafter:
             self.dlg.sumNElems.setText("—")
             self.dlg.sumSimType.setText("—")
             self.dlg.sumSimDate.setText("—")
-            self.dlg.sumSimDur.setText("—")
+            self.dlg.sumCompRunTime.setText("—")
             self.dlg.sumEPSG.setText("—")
+
+            if hasattr(self.dlg, "sumCompleteness") and self.dlg.sumCompleteness:
+                self.dlg.sumCompleteness.setText("—")
 
             if hasattr(self.dlg, "sumSimSummaryTable") and self.dlg.sumSimSummaryTable:
                 self._prime_sim_summary_table()
+
             return
 
         cont_path = self._find_cont_dat(base)
         summary_path = self._find_summary_out(base)
+
+        # Simulation completeness
+        if hasattr(self.dlg, "sumCompleteness") and self.dlg.sumCompleteness:
+            yy = None
+            xx = None
+
+            # Read yy from CONT.DAT
+            try:
+                if cont_path and os.path.isfile(cont_path):
+                    with open(cont_path, "r", errors="ignore") as f:
+                        first_line = f.readline()
+                    toks = first_line.split()
+                    if len(toks) >= 1:
+                        yy = float(toks[0])
+            except Exception:
+                yy = None
+
+            # Read xx from SUMMARY.OUT
+            try:
+                if summary_path and os.path.isfile(summary_path):
+
+                    row_pat = re.compile(r"^\s*([0-9]+(?:\.[0-9]+)?)\s+")
+                    hour_pat = re.compile(r"\b(HOUR|HOURS|HR|HRS)\b", re.IGNORECASE)
+
+                    in_sim_time_table = False
+                    sim_time_seen_recently = 0
+
+                    with open(summary_path, "r", errors="ignore") as f:
+                        for line in f:
+                            u = line.upper()
+
+                            # detect start of simulation time section
+                            if "SIMULATION TIME" in u:
+                                sim_time_seen_recently = 6  # allow header to span next few lines
+                                continue
+
+                            if sim_time_seen_recently > 0:
+                                sim_time_seen_recently -= 1
+                                if hour_pat.search(line):
+                                    in_sim_time_table = True
+                                continue
+
+                            if not in_sim_time_table:
+                                continue
+
+                            # stop at mass balance
+                            if "MASS BALANCE" in u:
+                                break
+
+                            # pick numeric rows (first column is simulation time)
+                            m = row_pat.search(line)
+                            if m:
+                                xx = float(m.group(1))
+            except Exception:
+                xx = None
+
+            if yy is not None and xx is not None:
+                self.dlg.sumCompleteness.setText(f"{xx:.2f} of {yy:.2f} hours complete")
+            else:
+                self.dlg.sumCompleteness.setText("—")
 
         # Fill values
         units = self._detect_units_from_cont(cont_path)
@@ -726,7 +796,7 @@ class FLO2DMapCrafter:
         nelems = self._detect_elements_from_summary(summary_path)
         # simtype = self._detect_simulation_type(base, cont_path, summary_path)
         simdate = self._detect_simulation_date_from_summary(summary_path)
-        sim_duration = self.detect_computer_run_time(summary_path)
+        comp_run_time = self.detect_computer_run_time(summary_path)
         epsg = self._detect_epsg_code()
         simtype = getattr(self, "_sim_type", None)
 
@@ -736,39 +806,67 @@ class FLO2DMapCrafter:
         self.dlg.sumNElems.setText(nelems or "—")
         self.dlg.sumSimType.setText(simtype or "—")
         self.dlg.sumSimDate.setText(simdate or "—")
-        self.dlg.sumSimDur.setText(sim_duration or "—")
+        self.dlg.sumCompRunTime.setText(comp_run_time or "—")
         self.dlg.sumEPSG.setText(epsg or "—")
 
-        # --- Simulation Summary (3-column table) ---
+        # Simulation Summary (3-column table)
         if hasattr(self.dlg, "sumSimSummaryTable") and self.dlg.sumSimSummaryTable:
             tbl = self.dlg.sumSimSummaryTable
 
-            # 1) SUMMARY.OUT missing, use placeholder
+            # SUMMARY.OUT missing, use placeholder
             if not summary_path:
-                self._show_sim_summary_placeholder(
-                    tbl, "— SUMMARY.OUT not found in the selected folder —"
-                )
+                self._show_sim_summary_placeholder(tbl, "— SUMMARY.OUT not found in the selected folder —")
                 return
 
-            # 2) Parse rows + completion flag
             sim_table_rows = self._extract_simulation_summary_table(summary_path)
             is_complete = self._is_simulation_complete(summary_path)
 
-            # 3) If the run looks incomplete, use placeholder
+            # Determine Batch Mode and Build Stream
+            batch_mode = False
+            try:
+                if cont_path and os.path.isfile(cont_path):
+                    with open(cont_path, "r", errors="ignore") as f:
+                        first_line = f.readline()
+                    toks = first_line.split()
+                    # Batch mode
+                    if len(toks) >= 3:
+                        batch_mode = (toks[2].strip() == "1")
+            except Exception:
+                batch_mode = False
+
+            # Parse Build No.
+            major_build = None
+            try:
+                if build:
+                    major_build = int(str(build).strip().split(".")[0])
+            except Exception:
+                major_build = None
+
+            # Incomplete simulation
             if not is_complete:
                 self._show_sim_summary_placeholder(tbl, "— Simulation Incomplete —")
                 return
 
-            # 4) If there’s no SIMULATION SUMMARY section, use placeholder
             if not sim_table_rows:
-                self._show_sim_summary_placeholder(
-                    tbl, "— No 'Simulation Summary' information found in SUMMARY.OUT —"
-                )
+
+                # Build19 or earlier
+                if (major_build is not None) and (major_build <= 19):
+                    self._show_sim_summary_placeholder(tbl, "— Simulation Summary not available for Build19 or earlier —")
+                    return
+
+                # Build > 19 and Batch mode selected
+                if (major_build is not None) and (major_build > 19) and batch_mode:
+                    self._show_sim_summary_placeholder(tbl, "— Simulation Summary not generated (Batch Run) —")
+                    return
+
+                # General fallback
+                self._show_sim_summary_placeholder(tbl, "— Simulation Summary not generated —")
                 return
 
-            # 5) Otherwise build the real table
+            # Otherwise populate table
             self._reset_sim_summary_table(tbl)
             tbl.setRowCount(len(sim_table_rows))
+
             for r, (summary_txt, status_txt, action_txt) in enumerate(sim_table_rows):
                 tbl.setItem(r, 0, QTableWidgetItem(summary_txt))
                 tbl.setItem(r, 1, QTableWidgetItem(status_txt))
@@ -837,7 +935,9 @@ class FLO2DMapCrafter:
             n_elems = txt(g.sumNElems)
             sim_type = txt(g.sumSimType)
             sim_date = txt(g.sumSimDate)
+            comp_run_time = txt(g.sumCompRunTime)
             epsg_code = txt(g.sumEPSG)
+            sim_completeness = txt(g.sumCompleteness)
 
             # Simulation Summary table rows
             rows = []
@@ -870,7 +970,9 @@ class FLO2DMapCrafter:
                 f"  No. of Elements:     {n_elems or '—'}",
                 f"  Simulation Type:     {sim_type or '—'}",
                 f"  Simulation Date:     {sim_date or '—'}",
+                f"  Computer Run time:  {comp_run_time or '—'}",
                 f"  Coord. Ref. System:  {epsg_code or '—'}",
+                f"  Simulation Completeness: {sim_completeness or '—'}",
                 ""
             ]
             table = [line3(*hdr)]
@@ -896,7 +998,7 @@ class FLO2DMapCrafter:
             )
 
     def _load_swmm_model(self, inp_file, rpt_file):
-        """Load and cache SWMM model. Re-parse only if .rpt file changed."""
+        """Load and cache SWMM model. Reparse only if .rpt file changed."""
         rpt_mtime = os.path.getmtime(rpt_file) if os.path.isfile(rpt_file) else None
         model = getattr(self, "_swmm_model", None)
         if (model is None) or (getattr(model, "_rpt_mtime", None) != rpt_mtime):
@@ -1349,9 +1451,9 @@ class FLO2DMapCrafter:
 
             self._update_summary_fields()
 
-            # Always land in the Summary tab after project folder selection
-            self.dlg.tabs.setCurrentIndex(0)
-            tabs.blockSignals(False)
+        # Always land in the Summary tab after project folder selection
+        self.dlg.tabs.setCurrentIndex(0)
+        tabs.blockSignals(False)
 
     def run_map_creator(self):
         """
