@@ -74,13 +74,13 @@ class FLO2DMapCrafter:
         self.toler_value = None
         self.iface = iface
         self.dlg = FLO2DMapCrafterDialog()
-        self._prime_sim_summary_table()
+        self.prime_sim_summary_table()
         self.actions = []
         self.menu = self.tr("&FLO-2D MapCrafter ")
 
         self._swmm_model = None  # Cache for parsed SWMM model.
         self._sim_type = None  # Cache for simulation type
-        self._update_summary_fields()
+        self.update_summary_fields()
         # initialize plugin directory
         self.plugin_dir = os.path.dirname(__file__)
         # initialize locale
@@ -112,7 +112,7 @@ class FLO2DMapCrafter:
         self.dlg.cancelButton.clicked.connect(self.closeDialog)
 
         # Export project Summary Button
-        self.dlg.sumExportRptBtn.clicked.connect(self._export_summary_to_rpt)
+        self.dlg.sumExportRptBtn.clicked.connect(self.export_summary_to_rpt)
 
         # Check all available maps
         self.dlg.check_cw_cb.stateChanged.connect(self.check_cw)
@@ -332,264 +332,16 @@ class FLO2DMapCrafter:
 
         self.dlg.close()
 
-    # ---------------------------------------------------------------------------------------------------------#
-    #                                             Helpers                                                      #
-    # ---------------------------------------------------------------------------------------------------------#
-    def _is_simulation_complete(self, summary_path: str) -> bool:
-        if not summary_path or not os.path.isfile(summary_path):
-            return False
-        pat = re.compile(
-            r"GRID\s+ELEMENT\s+SIZE\s*:?",
-            re.IGNORECASE
-        )
-        try:
-            with open(summary_path, "r", errors="ignore") as f:
-                for line in f:
-                    if pat.search(line):
-                        return True
-        except Exception:
-            return False
-        return False
+    # =============================================================
+        # SUMMARY TAB (Start)
+    # =============================================================
 
-    # -----------------------------------#
-    # Project Summary: Units Helper      #
-    # -----------------------------------#
-    def _export_folder(self):
-        """Return the path from the FLO-2D Export Folder widget."""
+    # Define path to the FLO-2D Export Folder
+    def export_folder(self):
         w = getattr(self.dlg, "flo2d_out_folder", None) or getattr(self.dlg, "flo2dExportFolder", None)
         return w.filePath() if w else ""
 
-    def _find_cont_dat(self, base):
-        # Look for CONT.DAT in base folder.
-        if not base:
-            return None
-        for name in ("CONT.DAT", "cont.dat"):
-            p = os.path.join(base, name)
-            if os.path.isfile(p):
-                return p
-        return None
-
-    def _detect_units_from_cont(self, cont_path: str):
-        """Return 'English (Imperial)' or 'SI (Metric)' from CONT.DAT line 1, token 4."""
-        if not cont_path or not os.path.isfile(cont_path):
-            return None
-        try:
-            with open(cont_path, "r", errors="ignore") as f:
-                first_line = f.readline()
-            if not first_line:
-                return None
-
-            # Split on any whitespace; token #4 (index 3) is the units flag.
-            toks = first_line.split()
-            if len(toks) >= 4 and toks[3].isdigit():
-                return "SI (Metric)" if toks[3] == "1" else "English (Imperial)"
-            return None
-        except Exception:
-            return None
-
-    # -----------------------------------#
-    # Project Summary: Build No. Helper #
-    # -----------------------------------#
-
-    def _find_summary_out(self, base):
-        if not base:
-            return None
-        for name in ("SUMMARY.OUT", "summary.out"):
-            p = os.path.join(base, name)
-            if os.path.isfile(p):
-                return p
-        return None
-
-    def _detect_build_from_summary(self, summary_path):
-        """
-        Parse 'Build No.' from SUMMARY.OUT.
-        Finds the line containing 'SUMMARY.OUT FILE' and then reads the *next* line,
-        which should contain 'Build No.' text. Returns the build number string.
-        """
-        if not summary_path or not os.path.isfile(summary_path):
-            return None
-        try:
-            with open(summary_path, "r", errors="ignore") as f:
-                lines = f.readlines()
-        except Exception:
-            return None
-
-        for idx, line in enumerate(lines):
-            if "SUMMARY.OUT FILE" in line.upper():
-                if idx + 1 < len(lines):
-                    next_line = lines[idx + 1]
-                    # Extract build number from that line
-                    m = re.search(r"Build\s*No\.?\s*([0-9][0-9\.\-]+)", next_line, flags=re.IGNORECASE)
-                    if m:
-                        return m.group(1).strip()
-                    # Fallback: return whole line stripped if regex fails
-                    return next_line.strip()
-        return None
-
-    # ------------------------------------#
-    # Project Summary: Grid (Cell) Size  #
-    # ------------------------------------#
-    def _detect_cellsize_from_summary(self, summary_path: str):
-        """
-        Return grid cell size with units (e.g., '30.0 FT' or '10.0 M')
-        by reading the 'GRID ELEMENT SIZE:' line in SUMMARY.OUT.
-        """
-        if not summary_path or not os.path.isfile(summary_path):
-            return None
-        try:
-            with open(summary_path, "r", errors="ignore") as f:
-                for line in f:
-                    if "GRID ELEMENT SIZE" in line.upper():
-                        # Accept variations in spacing/case, capture number + unit token
-                        m = re.search(
-                            r"GRID\s+ELEMENT\s+SIZE\s*:\s*([0-9]+(?:\.[0-9]+)?)\s*([A-Za-z]+)",
-                            line, flags=re.IGNORECASE
-                        )
-                        if m:
-                            val = m.group(1)
-                            unit = m.group(2).upper()  # FT, M, etc.
-                            return f"{val} {unit}"
-                        # Fallback: whole line trimmed if regex fails
-                        return line.strip()
-        except Exception:
-            return None
-        return None
-
-    # ------------------------------------#
-    # Project Summary: No. of Elements   #
-    # ------------------------------------#
-
-    def _detect_elements_from_summary(self, summary_path: str):
-        """
-        Return the total number of grid elements as a string (e.g., '54,306')
-        by parsing the 'TOTAL NUMBER OF GRID ELEMENTS:' line in SUMMARY.OUT.
-        """
-        if not summary_path or not os.path.isfile(summary_path):
-            return None
-        try:
-            pat = re.compile(r"TOTAL\s+NUMBER\s+OF\s+GRID\s+ELEMENTS\s*:\s*([0-9,]+)",
-                             flags=re.IGNORECASE)
-            with open(summary_path, "r", errors="ignore") as f:
-                for line in f:
-                    m = pat.search(line)
-                    if m:
-                        digits = m.group(1).replace(",", "").strip()
-                        if digits.isdigit():
-                            return f"{int(digits):,}"
-                        return m.group(1).strip()
-        except Exception:
-            return None
-        return None
-
-    # ----------------------------------------#
-    # Project Summary: Simulation Date        #
-    # ----------------------------------------#
-
-    def _detect_simulation_date_from_summary(self, summary_path: str):
-        """
-        Find the line like:
-            THIS OUTPUT FILE WAS TERMINATED ON:   5/15/2025  AT:   8:14:28
-            or
-            THIS OUTPUT FILE WAS TERMINATED ON:   9/ 1/2020  AT:  22:14: 4
-        and return a readable timestamp, e.g. '2025-05-15 08:14:28'.
-        If parsing fails, return the raw 'date [time]' substring.
-        """
-        if not summary_path or not os.path.isfile(summary_path):
-            return None
-
-        pat = re.compile(
-            r"TERMINATED\s+ON:\s*"
-            r"([0-9]{1,2}\s*[/-]\s*[0-9]{1,2}\s*[/-]\s*[0-9]{2,4})"
-            r"(?:\s+AT:\s*([0-9]{1,2}\s*:\s*[0-9]{1,2}\s*:\s*[0-9]{1,2}(?:\s*[APMapm]{2})?))?",
-            re.IGNORECASE
-        )
-        try:
-            with open(summary_path, "r", errors="ignore") as f:
-                for line in f:
-                    if "TERMINATED ON" not in line.upper():
-                        continue
-                    m = pat.search(line)
-                    if not m:
-                        continue
-                    date_str = m.group(1).strip()
-                    time_str = (m.group(2) or "").strip()
-
-                    date_str = re.sub(r"\s+", "", date_str)
-                    time_str = re.sub(r"\s+", "", time_str)
-
-                    # Try to normalize to ISO-ish 'YYYY-MM-DD HH:MM:SS'
-                    # Accept MM/DD/YYYY or MM-DD-YYYY (or 2-digit year)
-                    for fmt in ("%m/%d/%Y", "%m/%d/%y", "%m-%d-%Y", "%m-%d-%y"):
-                        try:
-                            d = datetime.strptime(date_str, fmt)
-                            break
-                        except ValueError:
-                            d = None
-                    if d is None:
-                        # fallback: return raw substring
-                        return (date_str + (" " + time_str if time_str else "")).strip()
-
-                    if time_str:
-                        # Try 24h first, then 12h with AM/PM
-                        for tfmt in ("%H:%M:%S", "%I:%M:%S %p", "%I:%M:%S%p"):
-                            try:
-                                t = datetime.strptime(time_str.upper().replace(".", ""), tfmt)
-                                # merge date+time
-                                merged = d.replace(hour=t.hour, minute=t.minute, second=t.second)
-                                return merged.strftime("%Y-%m-%d %H:%M:%S")
-                            except ValueError:
-                                pass
-                        # if time unparseable, return date + raw time
-                        return f"{d.strftime('%Y-%m-%d')} {time_str}"
-                    else:
-                        return d.strftime("%Y-%m-%d")
-        except Exception:
-            return None
-        return None
-
-    # Project Summary: Computer Run Time
-    def detect_computer_run_time(self, summary_path: str):
-        if not summary_path or not os.path.isfile(summary_path):
-            return None
-
-        pat = re.compile(r"COMPUTER\s+RUN\s+TIME(?:\s+IS)?\s*:\s*([0-9]+(?:\.[0-9]+)?)\s*HRS", re.IGNORECASE)
-
-        try:
-            with open(summary_path, "r", errors="ignore") as f:
-                for line in f:
-                    m = pat.search(line)
-                    if not m:
-                        continue
-                    hours = float(m.group(1))
-                    total_seconds = int(round(hours * 3600))
-
-                    hh = total_seconds //3600
-                    mm = (total_seconds % 3600) //60
-                    ss = total_seconds % 60
-
-                    return f"{hh:02d}:{mm:02d}:{ss:02d}"
-        except Exception:
-            return None
-
-        return None
-
-    # --------------------------------------------#
-    # Project Summary: Coordinate System (EPSG)  #
-    # --------------------------------------------#
-
-    def _detect_epsg_code(self):
-        """
-        Return the project's EPSG code (e.g., 'EPSG:32637').
-        """
-        try:
-            crs = QgsProject.instance().crs()
-            if crs.isValid():
-                return crs.authid()
-        except Exception:
-            pass
-        return None
-
-    def _reset_sim_summary_table(self, tbl):
+    def reset_sim_summary_table(self, tbl):
         """Hard reset the 3-column Summary table to a clean, consistent state."""
         tbl.setUpdatesEnabled(False)
         try:
@@ -617,8 +369,8 @@ class FLO2DMapCrafter:
         finally:
             tbl.setUpdatesEnabled(True)
 
-    def _show_sim_summary_placeholder(self, tbl, message: str):
-        self._reset_sim_summary_table(tbl)
+    def show_sim_summary_placeholder(self, tbl, message: str):
+        self.reset_sim_summary_table(tbl)
         tbl.setRowCount(1)
         item = QTableWidgetItem(message)
         f = item.font();
@@ -629,105 +381,73 @@ class FLO2DMapCrafter:
         tbl.setItem(0, 0, item)
         tbl.setSpan(0, 0, 1, 3)  # this span will be cleared next rebuild
 
-    def _extract_simulation_summary_table(self, summary_path: str) -> List[Tuple[str, str, str]]:
-        """
-        Parse the three columns under the SIMULATION SUMMARY section of SUMMARY.OUT.
-        Returns a list of (summary, status, action).
-        Robust to variable spacing; stops at blank line or next section.
-        """
-        rows: List[Tuple[str, str, str]] = []
-        if not summary_path:
-            return rows
-
-        try:
-            with open(summary_path, "r", errors="ignore") as f:
-                lines = f.readlines()
-        except Exception:
-            return rows
-
-        # 1) Find the section start: the line that has 'SIMULATION SUMMARY'
-        start = None
-        for i, line in enumerate(lines):
-            if re.search(r"\bSIMULATION SUMMARY\b", line, re.IGNORECASE):
-                start = i
-                break
-        if start is None:
-            return rows
-
-        # 2) Skip blanks to find the header row that contains both STATUS and ACTION
-        i = start + 1
-        while i < len(lines) and not lines[i].strip():
-            i += 1
-
-        # header row
-        if i < len(lines) and re.search(r"\bSTATUS\b", lines[i], re.IGNORECASE) and re.search(r"\bACTION\b", lines[i],
-                                                                                              re.IGNORECASE):
-            i += 1  # move to first data row
-
-        # 3) Read data rows until a blank spacer or another header-like line
-        while i < len(lines):
-            raw = lines[i].rstrip("\n")
-            i += 1
-
-            if not raw.strip():
-                break
-
-            if re.search(r"\b(UNITS|BUILD|GRID SIZE|NO\.? OF ELEMENTS|SIMULATION TYPE|COORD\.?|FLO-2D|SUMMARY)\b", raw,
-                         re.IGNORECASE):
-                break
-
-            # split into up to 3 columns by 2+ spaces
-            parts = re.split(r"\s{2,}", raw.strip(), maxsplit=2)
-            if len(parts) == 3:
-                s, status, action = parts
-            elif len(parts) == 2:
-                s, status = parts
-                action = ""
-            else:
-                # single token: treat as continuation of previous row's action if present
-                if rows:
-                    prev = list(rows[-1])
-                    prev[2] = (prev[2] + " " + parts[0]).strip()
-                    rows[-1] = tuple(prev)
-                continue
-
-            rows.append((s, status, action))
-        return rows
-
     # Prime the Simulation Summary table headers before data exists
-    def _prime_sim_summary_table(self):
+    def prime_sim_summary_table(self):
         tbl = getattr(self.dlg, "sumSimSummaryTable", None)
         if not tbl:
             return
         # keep it a good height even when empty
         tbl.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.MinimumExpanding)
         tbl.setMinimumHeight(220)
-        self._reset_sim_summary_table(tbl)
+        self.reset_sim_summary_table(tbl)
 
-    def _update_summary_fields(self):
-        base = self._export_folder()
+    def update_summary_fields(self):
+        # Define base (export) folder
+        base = self.export_folder()
 
-        # If no export folder chosen yet reset all summary fields to "—"
+        # If no export folder chosen yet reset all summary fields to "----"
         if not base or not os.path.isdir(base):
-            self.dlg.sumUnits.setText("—")
-            self.dlg.sumBuild.setText("—")
-            self.dlg.sumCellSize.setText("—")
-            self.dlg.sumNElems.setText("—")
-            self.dlg.sumSimType.setText("—")
-            self.dlg.sumSimDate.setText("—")
-            self.dlg.sumCompRunTime.setText("—")
-            self.dlg.sumEPSG.setText("—")
-
+            self.dlg.sumUnits.setText("----")
+            self.dlg.sumBuild.setText("----")
+            self.dlg.sumCellSize.setText("----")
+            self.dlg.sumNElems.setText("----")
+            self.dlg.sumSimType.setText("----")
+            self.dlg.sumSimDate.setText("----")
+            self.dlg.sumCompRunTime.setText("----")
+            self.dlg.sumEPSG.setText("----")
             if hasattr(self.dlg, "sumCompleteness") and self.dlg.sumCompleteness:
-                self.dlg.sumCompleteness.setText("—")
-
+                self.dlg.sumCompleteness.setText("----")
             if hasattr(self.dlg, "sumSimSummaryTable") and self.dlg.sumSimSummaryTable:
-                self._prime_sim_summary_table()
-
+                self.prime_sim_summary_table()
             return
 
-        cont_path = self._find_cont_dat(base)
-        summary_path = self._find_summary_out(base)
+        # Path to CONT.DAT file
+        cont_path = None
+        if base:
+            for name in ("CONT.DAT", "cont.dat"):
+                p = os.path.join(base, name)
+                if os.path.isfile(p):
+                    cont_path = p
+                    break
+
+        # Read CONT.DAT tokens (line 1) once
+        cont_toks = []
+        if cont_path and os.path.isfile(cont_path):
+            try:
+                with open(cont_path, "r", errors="ignore") as f:
+                    first_line = f.readline()
+                if first_line:
+                    cont_toks = first_line.split()
+            except Exception:
+                cont_toks = []
+
+        # Path to SUMMARY.OUT file
+        summary_path = None
+        if base:
+            for name in ("SUMMARY.OUT", "summary.out"):
+                p = os.path.join(base, name)
+                if os.path.isfile(p):
+                    summary_path = p
+                    break
+
+        # Read SUMMARY.OUT once
+        summary_lines = []
+        if summary_path and os.path.isfile(summary_path):
+            try:
+                with open(summary_path, "r", errors="ignore") as f:
+                    summary_lines = f.readlines()
+            except Exception:
+                summary_lines = []
 
         # Simulation completeness
         if hasattr(self.dlg, "sumCompleteness") and self.dlg.sumCompleteness:
@@ -736,103 +456,204 @@ class FLO2DMapCrafter:
 
             # Read yy from CONT.DAT
             try:
-                if cont_path and os.path.isfile(cont_path):
-                    with open(cont_path, "r", errors="ignore") as f:
-                        first_line = f.readline()
-                    toks = first_line.split()
-                    if len(toks) >= 1:
-                        yy = float(toks[0])
+                if len(cont_toks) >= 1:
+                    yy = float(cont_toks[0])
             except Exception:
                 yy = None
 
             # Read xx from SUMMARY.OUT
-            try:
-                if summary_path and os.path.isfile(summary_path):
+            row_pat = re.compile(r"^\s*([0-9]+(?:\.[0-9]+)?)\s+")
+            hour_pat = re.compile(r"\b(HOUR|HOURS|HR|HRS)\b", re.IGNORECASE)
+            in_sim_time_table = False
+            sim_time_seen_recently = 0
+            for line in summary_lines:
+                u = line.upper()
 
-                    row_pat = re.compile(r"^\s*([0-9]+(?:\.[0-9]+)?)\s+")
-                    hour_pat = re.compile(r"\b(HOUR|HOURS|HR|HRS)\b", re.IGNORECASE)
+                # detect start of simulation time section
+                if "SIMULATION TIME" in u:
+                    sim_time_seen_recently = 6  # allow header to span next few lines
+                    continue
 
-                    in_sim_time_table = False
-                    sim_time_seen_recently = 0
+                if sim_time_seen_recently > 0:
+                    sim_time_seen_recently -= 1
+                    if hour_pat.search(line):
+                        in_sim_time_table = True
+                    continue
 
-                    with open(summary_path, "r", errors="ignore") as f:
-                        for line in f:
-                            u = line.upper()
+                if not in_sim_time_table:
+                    continue
 
-                            # detect start of simulation time section
-                            if "SIMULATION TIME" in u:
-                                sim_time_seen_recently = 6  # allow header to span next few lines
-                                continue
+                # stop at mass balance
+                if "MASS BALANCE" in u:
+                    break
 
-                            if sim_time_seen_recently > 0:
-                                sim_time_seen_recently -= 1
-                                if hour_pat.search(line):
-                                    in_sim_time_table = True
-                                continue
-
-                            if not in_sim_time_table:
-                                continue
-
-                            # stop at mass balance
-                            if "MASS BALANCE" in u:
-                                break
-
-                            # pick numeric rows (first column is simulation time)
-                            m = row_pat.search(line)
-                            if m:
-                                xx = float(m.group(1))
-            except Exception:
-                xx = None
+                # pick numeric rows (first column is simulation time)
+                m = row_pat.search(line)
+                if m:
+                    xx = float(m.group(1))
 
             if yy is not None and xx is not None:
                 self.dlg.sumCompleteness.setText(f"{xx:.2f} of {yy:.2f} hours complete")
             else:
-                self.dlg.sumCompleteness.setText("—")
+                self.dlg.sumCompleteness.setText("----")
 
-        # Fill values
-        units = self._detect_units_from_cont(cont_path)
-        build = self._detect_build_from_summary(summary_path)
-        cell = self._detect_cellsize_from_summary(summary_path)
-        nelems = self._detect_elements_from_summary(summary_path)
-        # simtype = self._detect_simulation_type(base, cont_path, summary_path)
-        simdate = self._detect_simulation_date_from_summary(summary_path)
-        comp_run_time = self.detect_computer_run_time(summary_path)
-        epsg = self._detect_epsg_code()
+        # Project Summary: Units
+        units = None
+        if len(cont_toks) >= 4 and cont_toks[3].isdigit():
+            units = "SI (Metric)" if cont_toks[3] == "1" else "English (Imperial)"
+
+        # Project Summary: Build No.
+        build = None
+        pat_build = re.compile(r"PRO\s+MODEL\s*-\s*BUILD\s+NO\.?\s+([0-9]+(?:\.[0-9]+){1,4})", re.IGNORECASE)
+        for line in summary_lines:
+            m = pat_build.search(line)
+            if m:
+                build = m.group(1).strip()
+                break
+
+        # Project Summary: Grid (Cell) Size
+        cell = None
+        pat_cell = re.compile(r"GRID\s+ELEMENT\s+SIZE\s*:\s*([0-9]+(?:\.[0-9]+)?)\s*([A-Za-z]+)", re.IGNORECASE)
+        for line in summary_lines:
+            m = pat_cell.search(line)
+            if m:
+                cell = f"{m.group(1)} {m.group(2).upper()}"
+                break
+
+        # Project Summary: No. of Elements
+        nelems = None
+        pat_elem = re.compile(r"TOTAL\s+NUMBER\s+OF\s+GRID\s+ELEMENTS\s*:\s*([0-9,]+)", flags=re.IGNORECASE)
+        for line in summary_lines:
+            m = pat_elem.search(line)
+            if m:
+                digits = m.group(1).replace(",", "").strip()
+                if digits.isdigit():
+                    nelems = f"{int(digits):,}"
+                else:
+                    nelems = m.group(1).strip()
+                break
+
+        # Project Summary: Simulation Date
+        simdate = None
+        pat_simdate = re.compile(
+            r"TERMINATED\s+ON:\s*"
+            r"([0-9]{1,2}\s*[/-]\s*[0-9]{1,2}\s*[/-]\s*[0-9]{2,4})"
+            r"(?:\s+AT:\s*([0-9]{1,2}\s*:\s*[0-9]{1,2}\s*:\s*[0-9]{1,2}(?:\s*[APMapm]{2})?))?",
+            re.IGNORECASE
+        )
+        for line in summary_lines:
+            if "TERMINATED ON" not in line.upper():
+                continue
+
+            m = pat_simdate.search(line)
+            if not m:
+                continue
+
+            date_str = m.group(1).strip()
+            time_str = (m.group(2) or "").strip()
+
+            # remove embedded spaces like "9/ 1/2020" or "22:14: 4"
+            date_str = re.sub(r"\s+", "", date_str)
+            time_str = re.sub(r"\s+", "", time_str)
+
+            # Parse date part
+            d = None
+            for fmt in ("%m/%d/%Y", "%m/%d/%y", "%m-%d-%Y", "%m-%d-%y"):
+                try:
+                    d = datetime.strptime(date_str, fmt)
+                    break
+                except ValueError:
+                    pass
+            if d is None:
+                # fallback: return raw substring
+                simdate = (date_str + (" " + time_str if time_str else "")).strip()
+                break
+
+            if time_str:
+                # pass time part (try 24h then 12h AM/PM)
+                t = None
+                for tfmt in ("%H:%M:%S", "%I:%M:%S %p", "%I:%M:%S%p"):
+                    try:
+                        t = datetime.strptime(time_str.upper().replace(".", ""), tfmt)
+                        break
+                    except ValueError:
+                        pass
+
+                if t is not None:
+                    # merge date+time
+                    merged = d.replace(hour=t.hour, minute=t.minute, second=t.second)
+                    simdate = merged.strftime("%Y-%m-%d %H:%M:%S")
+                else:
+                    # if time unparseable, return date + raw time
+                    simdate = f"{d.strftime('%Y-%m-%d')} {time_str}"
+            else:
+                simdate = d.strftime("%Y-%m-%d")
+            break
+
+        # Project Summary: Computer Run Time
+        comp_run_time = None
+        pat_comp_run_time = re.compile(r"COMPUTER\s+RUN\s+TIME(?:\s+IS)?\s*:\s*([0-9]+(?:\.[0-9]+)?)\s*HRS", re.IGNORECASE)
+        for line in summary_lines:
+            m = pat_comp_run_time.search(line)
+            if not m:
+                continue
+            hours = float(m.group(1))
+            total_seconds = int(round(hours * 3600))
+
+            hh = total_seconds // 3600
+            mm = (total_seconds % 3600) // 60
+            ss = total_seconds % 60
+
+            comp_run_time = f"{hh:02d}:{mm:02d}:{ss:02d}"
+            break
+
+        # Project Summary: Coordinate System (EPSG)
+        epsg = None
+        try:
+            crs = QgsProject.instance().crs()
+            if crs.isValid():
+                epsg = crs.authid()
+        except Exception:
+            epsg = None
+
+        # Project Summary: Simulation Type
         simtype = getattr(self, "_sim_type", None)
 
-        self.dlg.sumUnits.setText(units or "—")
-        self.dlg.sumBuild.setText(build or "—")
-        self.dlg.sumCellSize.setText(cell or "—")
-        self.dlg.sumNElems.setText(nelems or "—")
-        self.dlg.sumSimType.setText(simtype or "—")
-        self.dlg.sumSimDate.setText(simdate or "—")
-        self.dlg.sumCompRunTime.setText(comp_run_time or "—")
-        self.dlg.sumEPSG.setText(epsg or "—")
+        # Fill values
+        self.dlg.sumUnits.setText(units or "----")
+        self.dlg.sumBuild.setText(build or "----")
+        self.dlg.sumCellSize.setText(cell or "----")
+        self.dlg.sumNElems.setText(nelems or "----")
+        self.dlg.sumSimType.setText(simtype or "----")
+        self.dlg.sumSimDate.setText(simdate or "----")
+        self.dlg.sumCompRunTime.setText(comp_run_time or "----")
+        self.dlg.sumEPSG.setText(epsg or "----")
 
-        # Simulation Summary (3-column table)
+        # Simulation Summary table
         if hasattr(self.dlg, "sumSimSummaryTable") and self.dlg.sumSimSummaryTable:
             tbl = self.dlg.sumSimSummaryTable
 
             # SUMMARY.OUT missing, use placeholder
             if not summary_path:
-                self._show_sim_summary_placeholder(tbl, "— SUMMARY.OUT not found in the selected folder —")
+                self.show_sim_summary_placeholder(tbl, "---- SUMMARY.OUT not found in the selected folder ----")
                 return
 
-            sim_table_rows = self._extract_simulation_summary_table(summary_path)
-            is_complete = self._is_simulation_complete(summary_path)
+            # Determine if simulation is complete
+            is_complete = False
+            pat_is_complete = re.compile(r"GRID\s+ELEMENT\s+SIZE\s*:?", re.IGNORECASE)
+            for line in summary_lines:
+                if pat_is_complete.search(line):
+                    is_complete = True
+                    break
+
+            if not is_complete:
+                self.show_sim_summary_placeholder(tbl, "---- Simulation Incomplete ----")
+                return
 
             # Determine Batch Mode and Build Stream
             batch_mode = False
-            try:
-                if cont_path and os.path.isfile(cont_path):
-                    with open(cont_path, "r", errors="ignore") as f:
-                        first_line = f.readline()
-                    toks = first_line.split()
-                    # Batch mode
-                    if len(toks) >= 3:
-                        batch_mode = (toks[2].strip() == "1")
-            except Exception:
-                batch_mode = False
+            if len(cont_toks) >= 3:
+                batch_mode = (cont_toks[2].strip() == "1")
 
             # Parse Build No.
             major_build = None
@@ -842,29 +663,80 @@ class FLO2DMapCrafter:
             except Exception:
                 major_build = None
 
-            # Incomplete simulation
-            if not is_complete:
-                self._show_sim_summary_placeholder(tbl, "— Simulation Incomplete —")
-                return
+            # Project Summary: Simulation Summary Table
+            sim_table_rows = []
+            if summary_lines:
+                # 1) Find section start: "SIMULATION SUMMARY"
+                start = None
+                for i, line in enumerate(summary_lines):
+                    if re.search(r"\bSIMULATION SUMMARY\b", line, re.IGNORECASE):
+                        start = i
+                        break
 
+                if start is not None:
+                    i = start + 1
+
+                    # 2) Skip blanks to header row
+                    while i < len(summary_lines) and not summary_lines[i].strip():
+                        i += 1
+
+                    # skip header row
+                    if (
+                            i < len(summary_lines)
+                            and re.search(r"\bSTATUS\b", summary_lines[i], re.IGNORECASE)
+                            and re.search(r"\bACTION\b", summary_lines[i], re.IGNORECASE)
+                    ):
+                        i += 1  # move to first data row
+
+                    # 3) Read data rows until blank spacer or another major header
+                    while i < len(summary_lines):
+                        raw = summary_lines[i].rstrip("\n")
+                        i += 1
+
+                        if not raw.strip():
+                            break
+
+                        # stop if reached a new main section
+                        if re.search(r"\b(UNITS|BUILD|GRID SIZE|NO\.? OF ELEMENTS|SIMULATION TYPE|COORD\.?|FLO-2D|SUMMARY)\b", raw, re.IGNORECASE):
+                            break
+
+                        # split into up to 3 columns by 2+ spaces
+                        parts = re.split(r"\s{2,}", raw.strip(), maxsplit=2)
+
+                        if len(parts) == 3:
+                            s, status, action = parts
+                        elif len(parts) == 2:
+                            s, status = parts
+                            action = ""
+                        else:
+                            # 1-column continuation: append to previous action if present
+                            if sim_table_rows:
+                                prev_s, prev_status, prev_action = sim_table_rows[-1]
+                                prev_action = (prev_action + " " + parts[0]).strip()
+                                sim_table_rows[-1] = (prev_s, prev_status, prev_action)
+                            continue
+
+                        sim_table_rows.append((s, status, action))
+
+            # Handle empty table cases
             if not sim_table_rows:
 
                 # Build19 or earlier
-                if (major_build is not None) and (major_build <= 19):
-                    self._show_sim_summary_placeholder(tbl, "— Simulation Summary not available for Build19 or earlier —")
+                if major_build is not None and major_build <= 19:
+                    self.show_sim_summary_placeholder(tbl, "---- Simulation Summary not available for Build19 or earlier ----")
                     return
 
                 # Build > 19 and Batch mode selected
-                if (major_build is not None) and (major_build > 19) and batch_mode:
-                    self._show_sim_summary_placeholder(tbl, "— Simulation Summary not generated (Batch Run) —")
+                if major_build is not None and major_build > 19 and batch_mode:
+                    self.show_sim_summary_placeholder(tbl, "---- Simulation Summary not generated (Batch Run) ----")
                     return
 
                 # General fallback
-                self._show_sim_summary_placeholder(tbl, "— Simulation Summary not generated —")
+                self.show_sim_summary_placeholder(tbl, "---- Simulation Summary not generated ----")
                 return
 
             # Otherwise populate table
-            self._reset_sim_summary_table(tbl)
+            self.reset_sim_summary_table(tbl)
             tbl.setRowCount(len(sim_table_rows))
 
             for r, (summary_txt, status_txt, action_txt) in enumerate(sim_table_rows):
@@ -872,14 +744,14 @@ class FLO2DMapCrafter:
                 tbl.setItem(r, 1, QTableWidgetItem(status_txt))
                 tbl.setItem(r, 2, QTableWidgetItem(action_txt))
 
-    def _export_summary_to_rpt(self):
+    def export_summary_to_rpt(self):
         """
         Export the 'Summary' tab contents to report_proj.rpt.
         If a file with the same name already exists, ask the user to Overwrite or Cancel.
         """
         try:
             # Ensure UI is up to date
-            self._update_summary_fields()
+            self.update_summary_fields()
 
             # Prefer MapCrafter Output Folder; fallback to export folder
             out_dir = ""
@@ -888,7 +760,7 @@ class FLO2DMapCrafter:
             except Exception:
                 pass
             if not out_dir:
-                out_dir = (self._export_folder() or "").strip()
+                out_dir = (self.export_folder() or "").strip()
 
             if not out_dir:
                 self.iface.messageBar().pushMessage(
@@ -958,21 +830,21 @@ class FLO2DMapCrafter:
 
             now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             header = [
-                "FLO-2D MapCrafter — Project Summary",
+                "FLO-2D MapCrafter ---- Project Summary",
                 f"Generated: {now}",
                 ""
             ]
             meta = [
                 "Project metadata:",
-                f"  Units:               {units or '—'}",
-                f"  Build No.:           {build_no or '—'}",
-                f"  Grid Size:           {cell_size or '—'}",
-                f"  No. of Elements:     {n_elems or '—'}",
-                f"  Simulation Type:     {sim_type or '—'}",
-                f"  Simulation Date:     {sim_date or '—'}",
-                f"  Computer Run time:  {comp_run_time or '—'}",
-                f"  Coord. Ref. System:  {epsg_code or '—'}",
-                f"  Simulation Completeness: {sim_completeness or '—'}",
+                f"  Units:               {units or '----'}",
+                f"  Build No.:           {build_no or '----'}",
+                f"  Grid Size:           {cell_size or '----'}",
+                f"  No. of Elements:     {n_elems or '----'}",
+                f"  Simulation Type:     {sim_type or '----'}",
+                f"  Simulation Date:     {sim_date or '----'}",
+                f"  Computer Run time:  {comp_run_time or '----'}",
+                f"  Coord. Ref. System:  {epsg_code or '----'}",
+                f"  Simulation Completeness: {sim_completeness or '----'}",
                 ""
             ]
             table = [line3(*hdr)]
@@ -996,6 +868,10 @@ class FLO2DMapCrafter:
             self.iface.messageBar().pushMessage(
                 f"Export failed: {e}", level=Qgis.Critical, duration=6
             )
+
+    # =============================================================
+        # SUMMARY TAB (End)
+    # =============================================================
 
     def _load_swmm_model(self, inp_file, rpt_file):
         """Load and cache SWMM model. Reparse only if .rpt file changed."""
@@ -1083,7 +959,7 @@ class FLO2DMapCrafter:
             self.toler_value = float(lines[0].split()[0])
 
         # --- Refresh the Summary tab with the NEW sim type ---
-        self._update_summary_fields()
+        self.update_summary_fields()
 
         # In future version, calculate the Cell size from the DEPTH.OUT file
         if "DEPTH.OUT" in files_in_directory and "CONT.DAT" in files_in_directory:
@@ -1449,7 +1325,7 @@ class FLO2DMapCrafter:
                 if has_files(nodes_dir) or has_files(links_dir):
                     self.dlg.see_nodes_results_btn.setEnabled(True)
 
-            self._update_summary_fields()
+            self.update_summary_fields()
 
         # Always land in the Summary tab after project folder selection
         self.dlg.tabs.setCurrentIndex(0)
