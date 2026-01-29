@@ -332,17 +332,13 @@ class FLO2DMapCrafter:
 
         self.dlg.close()
 
-    # =============================================================
-        # SUMMARY TAB (Start)
-    # =============================================================
-
     # Define path to the FLO-2D Export Folder
     def export_folder(self):
         w = getattr(self.dlg, "flo2d_out_folder", None) or getattr(self.dlg, "flo2dExportFolder", None)
         return w.filePath() if w else ""
 
     def reset_sim_summary_table(self, tbl):
-        """Hard reset the 3-column Summary table to a clean, consistent state."""
+        """Hard reset the 3-column Summary table."""
         tbl.setUpdatesEnabled(False)
         try:
             tbl.setSortingEnabled(False)
@@ -450,52 +446,50 @@ class FLO2DMapCrafter:
                 summary_lines = []
 
         # Simulation completeness
-        if hasattr(self.dlg, "sumCompleteness") and self.dlg.sumCompleteness:
+        simulation_completeness = None
+        yy = None
+        xx = None
+
+        # Read yy from CONT.DAT
+        try:
+            if len(cont_toks) >= 1:
+                yy = float(cont_toks[0])
+        except Exception:
             yy = None
-            xx = None
 
-            # Read yy from CONT.DAT
-            try:
-                if len(cont_toks) >= 1:
-                    yy = float(cont_toks[0])
-            except Exception:
-                yy = None
+        # Read xx from SUMMARY.OUT
+        row_pat = re.compile(r"^\s*([0-9]+(?:\.[0-9]+)?)\s+")
+        hour_pat = re.compile(r"\b(HOUR|HOURS|HR|HRS)\b", re.IGNORECASE)
+        in_sim_time_table = False
+        sim_time_seen_recently = 0
+        for line in summary_lines:
+            u = line.upper()
 
-            # Read xx from SUMMARY.OUT
-            row_pat = re.compile(r"^\s*([0-9]+(?:\.[0-9]+)?)\s+")
-            hour_pat = re.compile(r"\b(HOUR|HOURS|HR|HRS)\b", re.IGNORECASE)
-            in_sim_time_table = False
-            sim_time_seen_recently = 0
-            for line in summary_lines:
-                u = line.upper()
+            # detect start of simulation time section
+            if "SIMULATION TIME" in u:
+                sim_time_seen_recently = 6  # allow header to span next few lines
+                continue
 
-                # detect start of simulation time section
-                if "SIMULATION TIME" in u:
-                    sim_time_seen_recently = 6  # allow header to span next few lines
-                    continue
+            if sim_time_seen_recently > 0:
+                sim_time_seen_recently -= 1
+                if hour_pat.search(line):
+                    in_sim_time_table = True
+                continue
 
-                if sim_time_seen_recently > 0:
-                    sim_time_seen_recently -= 1
-                    if hour_pat.search(line):
-                        in_sim_time_table = True
-                    continue
+            if not in_sim_time_table:
+                continue
 
-                if not in_sim_time_table:
-                    continue
+            # stop at mass balance
+            if "MASS BALANCE" in u:
+                break
 
-                # stop at mass balance
-                if "MASS BALANCE" in u:
-                    break
+            # pick numeric rows (first column is simulation time)
+            m = row_pat.search(line)
+            if m:
+                xx = float(m.group(1))
 
-                # pick numeric rows (first column is simulation time)
-                m = row_pat.search(line)
-                if m:
-                    xx = float(m.group(1))
-
-            if yy is not None and xx is not None:
-                self.dlg.sumCompleteness.setText(f"{xx:.2f} of {yy:.2f} hours complete")
-            else:
-                self.dlg.sumCompleteness.setText("----")
+        if yy is not None and xx is not None:
+            simulation_completeness = (f"{xx:.2f} of {yy:.2f} hours complete")
 
         # Project Summary: Units
         units = None
@@ -628,6 +622,8 @@ class FLO2DMapCrafter:
         self.dlg.sumSimDate.setText(simdate or "----")
         self.dlg.sumCompRunTime.setText(comp_run_time or "----")
         self.dlg.sumEPSG.setText(epsg or "----")
+        if hasattr(self.dlg, "sumCompleteness") and self.dlg.sumCompleteness:
+            self.dlg.sumCompleteness.setText(simulation_completeness or "----")
 
         # Simulation Summary table
         if hasattr(self.dlg, "sumSimSummaryTable") and self.dlg.sumSimSummaryTable:
@@ -868,10 +864,6 @@ class FLO2DMapCrafter:
             self.iface.messageBar().pushMessage(
                 f"Export failed: {e}", level=Qgis.Critical, duration=6
             )
-
-    # =============================================================
-        # SUMMARY TAB (End)
-    # =============================================================
 
     def _load_swmm_model(self, inp_file, rpt_file):
         """Load and cache SWMM model. Reparse only if .rpt file changed."""
