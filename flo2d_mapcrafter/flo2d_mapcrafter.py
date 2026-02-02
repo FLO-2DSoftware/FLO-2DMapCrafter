@@ -1227,6 +1227,16 @@ class FLO2DMapCrafter:
         hazard_maps = HazardMaps(self.iface, self.units_switch, self.toler_value)
         hazard_maps_dict = hazard_maps.check_hazard_files(output_directory)
 
+        # ---- PIER parameters (collect once, from dialog) ----
+        pier_params = {
+            "pier_width": self.dlg.pier_width_dsb.value(),
+            "k1": self.dlg.k1_dsb.value(),
+            "k2": self.dlg.k2_dsb.value(),
+            "k3": self.dlg.k3_dsb.value(),
+            "k4": self.dlg.k4_dsb.value(),
+            "use_timdep": self.dlg.use_timdep_hdf5_cb.isChecked(),
+        }
+
         hazard_rbs = {
             "ARR": self.dlg.fh_australian_cb,
             "Austrian": self.dlg.fh_austrian_cb,
@@ -1241,6 +1251,7 @@ class FLO2DMapCrafter:
                 self.dlg.usbrc_hm_cb,
             ],
             "FEMA": self.dlg.fema_hm_cb,
+            "PIER": self.dlg.create_pier_scour_cb,
         }
 
         for key, value in hazard_maps_dict.items():
@@ -1256,7 +1267,10 @@ class FLO2DMapCrafter:
                         cb.setEnabled(False)
                 else:
                     hazard_rbs[key].setEnabled(False)
+        # Pier scour is computed, not file-dependent
+        self.dlg.create_pier_scour_cb.setEnabled(True)
 
+                    
         # Add MapCrafter to the output folder
         map_output_dir = output_directory + r"\MapCrafter"
         self.dlg.mapper_out_folder.setFilePath(map_output_dir)
@@ -1372,8 +1386,8 @@ class FLO2DMapCrafter:
             else:
                 mapping_group = root.insertGroup(0, mapping_group_name)
 
-            """        
-            FLOOD MAPS        
+            """
+            FLOOD MAPS
             """
 
             if mud_switch == "0" and sed_switch == "0":
@@ -1545,6 +1559,16 @@ class FLO2DMapCrafter:
             HYDRODYNAMIC RISK MAPS
             """
 
+            # ---- PIER parameters (always define in this scope) ----
+            pier_params = {
+                "pier_width": self.dlg.pier_width_dsb.value(),
+                "k1": self.dlg.k1_dsb.value(),
+                "k2": self.dlg.k2_dsb.value(),
+                "k3": self.dlg.k3_dsb.value(),
+                "k4": self.dlg.k4_dsb.value(),
+                "use_timdep": self.dlg.use_timdep_hdf5_cb.isChecked(),
+            }
+
             hazard_rbs = {
                 "ARR": self.dlg.fh_australian_cb.isChecked(),
                 "Austrian": self.dlg.fh_austrian_cb.isChecked(),
@@ -1560,7 +1584,8 @@ class FLO2DMapCrafter:
                     self.dlg.usbra_hm_cb.isChecked(),
                     self.dlg.usbrc_hm_cb.isChecked(),
                 ],
-                "FEMA": self.dlg.fema_hm_cb.isChecked()
+                "FEMA": self.dlg.fema_hm_cb.isChecked(),
+                "PIER": self.dlg.create_pier_scour_cb.isChecked(),
             }
 
             at_least_one_checked = any(
@@ -1569,7 +1594,13 @@ class FLO2DMapCrafter:
             if at_least_one_checked:
                 hazard_maps = HazardMaps(self.iface, self.units_switch, self.toler_value)
                 hazard_maps.create_maps(
-                    hazard_rbs, flo2d_results_dir, map_output_dir, mapping_group, self.crs, project_id
+                    hazard_rbs, 
+                    flo2d_results_dir, 
+                    map_output_dir, 
+                    mapping_group, 
+                    self.crs, 
+                    project_id,
+                    pier_params
                 )
 
             # remove empty groups
@@ -1772,6 +1803,16 @@ class FLO2DMapCrafter:
             layer.loadNamedStyle(style_directory + r"/hydro_risk.qml")
         elif style == 3:
             layer.loadNamedStyle(style_directory + r"/time.qml")
+        elif style == 15:
+            if self.units_switch == "1":  # metric
+                layer.loadNamedStyle(
+                    os.path.join(style_directory, "pier_scour_m.qml")
+                )
+            else:  # imperial
+                layer.loadNamedStyle(
+                    os.path.join(style_directory, "pier_scour.qml")
+                )
+
         # Other styles
         else:
             stats = provider.bandStatistics(1, QgsRasterBandStats.All, extent, 0)
@@ -2144,6 +2185,7 @@ class FLO2DMapCrafter:
             self.dlg.usbra_hm_cb,
             self.dlg.usbrc_hm_cb,
             self.dlg.fema_hm_cb,
+            self.dlg.create_pier_scour_cb,
         ]
 
         if self.dlg.check_hm_cb.isChecked():
@@ -2307,6 +2349,7 @@ class FLO2DMapCrafter:
             self.dlg.uk_hm_cgb,
             self.dlg.usbr_hm_cgb,
             self.dlg.fema_hz_cgb,
+            self.dlg.pier_scour_cgb,
         ]
         storm_drain_grps = [
             self.dlg.nodes_cgb,
@@ -2393,6 +2436,7 @@ class FLO2DMapCrafter:
             self.dlg.uk_hm_cgb,
             self.dlg.usbr_hm_cgb,
             self.dlg.fema_hz_cgb,
+            self.dlg.pier_scour_cgb,
         ]
         storm_drain_grps = [
             self.dlg.nodes_cgb,
