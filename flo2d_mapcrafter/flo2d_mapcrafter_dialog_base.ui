@@ -543,8 +543,8 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>406</width>
-            <height>568</height>
+            <width>781</width>
+            <height>518</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_99">
@@ -1087,8 +1087,8 @@ p, li { white-space: pre-wrap; }
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>406</width>
-            <height>649</height>
+            <width>781</width>
+            <height>518</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_100">
@@ -1755,8 +1755,8 @@ p, li { white-space: pre-wrap; }
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>406</width>
-            <height>649</height>
+            <width>781</width>
+            <height>518</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_101">
@@ -2303,8 +2303,8 @@ p, li { white-space: pre-wrap; }
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>554</width>
-            <height>857</height>
+            <width>781</width>
+            <height>518</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_102">
@@ -3543,8 +3543,8 @@ p, li { white-space: pre-wrap; }
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>250</width>
-            <height>408</height>
+            <width>781</width>
+            <height>518</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_111">
@@ -3964,8 +3964,8 @@ p, li { white-space: pre-wrap; }
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>291</width>
-            <height>304</height>
+            <width>781</width>
+            <height>518</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_104">
