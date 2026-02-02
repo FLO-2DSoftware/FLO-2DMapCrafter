@@ -283,7 +283,6 @@ def set_raster_style(layer, style, toler_value, units_switch=None):
         ]
         set_renderer(layer, color_list, myRasterShader, min, max)
 
-    # Time variables TODO: Improve this in next versions
     elif style == 3:
         layer.loadNamedStyle(style_directory + r"\time.qml")
 
