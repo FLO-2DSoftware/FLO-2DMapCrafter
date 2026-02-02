@@ -7,10 +7,13 @@ FLO-2D MapCrafter is a QGIS plugin designed to transform FLO-2D output files int
 
 For more information on FLO-2D MapCrafter, check the [FLO-2D MapCrafter Wiki](https://github.com/FLO-2DSoftware/FLO-2DMapCrafter/wiki).
 
-## Dependancies
+## Dependencies
 
-FLO-2D MapCrafter uses the python module swmmio.  Please see the metadata to track the swmmio version.  Use the OSGEO4W shell with this command to install swmmio.
-pip install swmmio --upgrade
+FLO-2D MapCrafter uses the python module swmmio.  Please see the metadata to track the swmmio version.  
+
+Use the OSGEO4W shell with this command to install swmmio.
+
+``pip install swmmio 0.7.0``
 
 ## Features
 
@@ -41,12 +44,16 @@ Layouts
 ## Versions
 
 - 0.1.0 First release version
+- 0.2.0 Add storm drain plots
+- 0.3.0 Improve speed remove dependencies
+- 0.4.0 Add modified bed elevations
+- 0.5.0  Add pier scour code
 
 ## Download
 
 GitHub Repository
 
-QGIS Plugin Repository (soon)
+FLO-2D Plugin Repository  
 
 ## Bugs
 

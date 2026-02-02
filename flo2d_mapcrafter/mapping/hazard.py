@@ -683,34 +683,28 @@ class HazardMaps:
                     values.append((x, y, float(s)))
                     if len(cellSize_data) < 2:
                         cellSize_data.append((x, y))
-        if len(cellSize_data) < 2:
-            raise ValueError("Pier scour map contains no valid cells.")
-
+        
         # cell size
         dx = abs(cellSize_data[1][0] - cellSize_data[0][0])
         dy = abs(cellSize_data[1][1] - cellSize_data[0][1])
-    
-        if dx == 0:
-            dx = 9999
-        if dy == 0:
-            dy = 9999
         cellSize = min(dx, dy)
-    
-       # raster extent    
-        min_x = min(p[0] for p in values)
-        max_x = max(p[0] for p in values)
-        min_y = min(p[1] for p in values)
-        max_y = max(p[1] for p in values)
-    
-        num_cols = int((max_x - min_x) / cellSize) + 1
-        num_rows = int((max_y - min_y) / cellSize) + 1
-    
+
+        # extent from centers → convert to edges
+        min_x = min(p[0] for p in values) - cellSize / 2
+        max_x = max(p[0] for p in values) + cellSize / 2
+        min_y = min(p[1] for p in values) - cellSize / 2
+        max_y = max(p[1] for p in values) + cellSize / 2
+
+        num_cols = int((max_x - min_x) / cellSize)
+        num_rows = int((max_y - min_y) / cellSize)
+
         raster_data = np.full((num_rows, num_cols), -9999, dtype=np.float32)
-    
+
         for x, y, v in values:
             col = int((x - min_x) / cellSize)
             row = int((max_y - y) / cellSize)
             raster_data[row, col] = v
+
     
         # create raster file
         driver = gdal.GetDriverByName("GTiff")
