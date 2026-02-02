@@ -2,7 +2,7 @@
 name=FLO-2D MapCrafter
 qgisMinimumVersion=3.0
 description=This plugin creates maps and plots from FLO-2D output files.
-version=0.4.0
+version=0.5.0
 author=FLO-2D Software, Inc.
 email=contact@flo-2d.com
 
@@ -14,6 +14,8 @@ repository=https://github.com/FLO-2DSoftware/FLO-2DMapCrafter
 hasProcessingProvider=no
 
 changelog=
+    <p>0.5.0
+        - Add pier scour processed code for HEC-18 CSU method
     <p>0.4.0
         - Included the Final Bed Difference + Mudflow Cessation Depth
         - Added TOL value as minimum value for several maps
