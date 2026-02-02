@@ -647,10 +647,7 @@ class HazardMaps:
         values = []
         cellSize_data = []
     
-        # ------------------------------------------------------------------
         # Compute scour magnitude per grid element
-        # ------------------------------------------------------------------
-    
         if pier_params.get("use_timdep", False):
             # --- TIMDEP path: max scour over time ---
             scour = self._scour_from_timdep(
@@ -686,18 +683,10 @@ class HazardMaps:
                     values.append((x, y, float(s)))
                     if len(cellSize_data) < 2:
                         cellSize_data.append((x, y))
-    
-        # ------------------------------------------------------------------
-        # Sanity check
-        # ------------------------------------------------------------------
-    
         if len(cellSize_data) < 2:
             raise ValueError("Pier scour map contains no valid cells.")
-    
-        # ------------------------------------------------------------------
-        # Infer cell size
-        # ------------------------------------------------------------------
-    
+
+        # cell size
         dx = abs(cellSize_data[1][0] - cellSize_data[0][0])
         dy = abs(cellSize_data[1][1] - cellSize_data[0][1])
     
@@ -705,13 +694,9 @@ class HazardMaps:
             dx = 9999
         if dy == 0:
             dy = 9999
-    
         cellSize = min(dx, dy)
     
-        # ------------------------------------------------------------------
-        # Raster extent
-        # ------------------------------------------------------------------
-    
+       # raster extent    
         min_x = min(p[0] for p in values)
         max_x = max(p[0] for p in values)
         min_y = min(p[1] for p in values)
@@ -727,10 +712,7 @@ class HazardMaps:
             row = int((max_y - y) / cellSize)
             raster_data[row, col] = v
     
-        # ------------------------------------------------------------------
-        # Write GeoTIFF
-        # ------------------------------------------------------------------
-    
+        # create raster file
         driver = gdal.GetDriverByName("GTiff")
         raster = driver.Create(hydro_risk, num_cols, num_rows, 1, gdal.GDT_Float32)
     
@@ -753,7 +735,6 @@ class HazardMaps:
     
         layer_name = os.path.splitext(os.path.basename(hydro_risk))[0]
         return QgsRasterLayer(hydro_risk, layer_name)
-
 
 
     def compute_scour(self, depth, velocity, a, k1, k2, k3, k4):
