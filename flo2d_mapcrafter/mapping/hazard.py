@@ -687,7 +687,11 @@ class HazardMaps:
         # cell size
         dx = abs(cellSize_data[1][0] - cellSize_data[0][0])
         dy = abs(cellSize_data[1][1] - cellSize_data[0][1])
-        cellSize = min(dx, dy)
+
+        cellSize = dx if dx > 0 else dy
+
+        if cellSize == 0:
+            raise ValueError("Failed to determine FLO-2D grid cell size.")
 
         # extent from centers → convert to edges
         min_x = min(p[0] for p in values) - cellSize / 2
