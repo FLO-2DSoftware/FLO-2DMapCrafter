@@ -673,6 +673,9 @@ class HazardMaps:
                 os.path.join(results_dir, "DEPFP.OUT")
             )
     
+            all_xy = [(x, y) for (_, x, y, _) in depth_data]
+
+            
             scour = self._scour_from_max_fields(
                 results_dir,
                 pier_params
@@ -685,8 +688,8 @@ class HazardMaps:
                         cellSize_data.append((x, y))
         
         # cell size
-        dx = abs(cellSize_data[1][0] - cellSize_data[0][0])
-        dy = abs(cellSize_data[1][1] - cellSize_data[0][1])
+        dx = abs(all_xy[1][0] - all_xy[0][0])
+        dy = abs(all_xy[1][1] - all_xy[0][1])
 
         cellSize = dx if dx > 0 else dy
 
@@ -694,10 +697,11 @@ class HazardMaps:
             raise ValueError("Failed to determine FLO-2D grid cell size.")
 
         # extent from centers → convert to edges
-        min_x = min(p[0] for p in values)
-        max_x = max(p[0] for p in values)
-        min_y = min(p[1] for p in values)
-        max_y = max(p[1] for p in values)
+        
+        min_x = min(p[0] for p in all_xy)
+        max_x = max(p[0] for p in all_xy)
+        min_y = min(p[1] for p in all_xy)
+        max_y = max(p[1] for p in all_xy)
 
         num_cols = int((max_x - min_x) / cellSize) + 1
         num_rows = int((max_y - min_y) / cellSize) + 1
