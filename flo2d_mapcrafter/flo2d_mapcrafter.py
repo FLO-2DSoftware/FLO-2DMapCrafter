@@ -1257,7 +1257,7 @@ class FLO2DMapCrafter:
         for key, value in hazard_maps_dict.items():
             if key not in hazard_rbs:
                 continue
-            
+
             if value:
                 if isinstance(hazard_rbs[key], list):
                     for cb in hazard_rbs[key]:
@@ -1270,7 +1270,7 @@ class FLO2DMapCrafter:
                         cb.setEnabled(False)
                 else:
                     hazard_rbs[key].setEnabled(False)
-        
+
         # Pier scour file dependency is slightly different than the dictionary method
         has_timdep = hazard_maps_dict.get("PIER_TIMDEP", False)
 
