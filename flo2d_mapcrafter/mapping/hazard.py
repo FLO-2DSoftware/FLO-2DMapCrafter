@@ -694,13 +694,13 @@ class HazardMaps:
             raise ValueError("Failed to determine FLO-2D grid cell size.")
 
         # extent from centers → convert to edges
-        min_x = min(p[0] for p in values) - cellSize / 2
-        max_x = max(p[0] for p in values) + cellSize / 2
-        min_y = min(p[1] for p in values) - cellSize / 2
-        max_y = max(p[1] for p in values) + cellSize / 2
+        min_x = min(p[0] for p in values)
+        max_x = max(p[0] for p in values)
+        min_y = min(p[1] for p in values)
+        max_y = max(p[1] for p in values)
 
-        num_cols = int((max_x - min_x) / cellSize)
-        num_rows = int((max_y - min_y) / cellSize)
+        num_cols = int((max_x - min_x) / cellSize) + 1
+        num_rows = int((max_y - min_y) / cellSize) + 1
 
         raster_data = np.full((num_rows, num_cols), -9999, dtype=np.float32)
 
