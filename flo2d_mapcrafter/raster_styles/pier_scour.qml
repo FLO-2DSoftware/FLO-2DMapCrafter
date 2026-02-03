@@ -10,10 +10,10 @@
         <colorrampshader colorRampType="DISCRETE" classificationMode="Continuous">
           <item value="0.0" label="No scour" color="#1f4e79" alpha="0"/>
           <item value="0.5" label="Minor scour (&lt; 0.5 ft)" color="#7fb3d5"/>
-          <item value="2.0" label="Moderate scour (0.5 - 2 ft)" color="#f7dc6f"/>
-          <item value="5.0" label="Severe scour (2 - 5 ft)" color="#f39c12"/>
-          <item value="10.0" label="Critical scour (5 - 10 ft)" color="#c0392b"/>
-          <item value="9999" label="(&gt; 10.0 ft)" color="#7b0000"/>
+          <item value="1.0" label="Moderate scour (0.5 - 1 ft)" color="#f7dc6f"/>
+          <item value="2.0" label="Severe scour (1 - 2 ft)" color="#f39c12"/>
+          <item value="5.0" label="Critical scour (2 - 10 ft)" color="#c0392b"/>
+          <item value="9999" label="(&gt; 5 ft)" color="#7b0000"/>
         </colorrampshader>
       </rastershader>
     </rasterrenderer>
