@@ -24,7 +24,10 @@
 import os
 import processing
 import numpy as np
-import h5py
+try:
+    import h5py
+except ImportError:
+    h5py = None
 from osgeo import gdal
 from qgis._core import QgsProject, QgsRasterLayer
 from qgis.PyQt.QtWidgets import QProgressDialog, QApplication
