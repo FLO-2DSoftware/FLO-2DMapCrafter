@@ -79,7 +79,8 @@ class HazardMaps:
             "UK": False,
             "USBR": [False, False, False, False, False],
             "FEMA": False,
-            "PIER": False
+            "PIER": False,
+            "PIER_TIMDEP": False
         }
 
         # Australian Rainfall and Runoff (ARR)
@@ -138,11 +139,18 @@ class HazardMaps:
         if all(value for value in swiss_files.values()):
             hazard_maps["Swiss"] = [True, True]
 
+        # USBR Check if all files are true
         if all(value for value in usbr_files.values()):
             hazard_maps["USBR"] = [True, True, True, True, True]
-            
+
+        # Pier Scour Check if all files are true    
         if all(pier_files_timdep.values()) or all(pier_files_max.values()):
             hazard_maps["PIER"] = True
+
+        # Pier Scour timdep Check if timdep is true
+        if all(pier_files_timdep.values()):
+            hazard_maps["PIER_TIMDEP"] = True
+
 
         return hazard_maps
 

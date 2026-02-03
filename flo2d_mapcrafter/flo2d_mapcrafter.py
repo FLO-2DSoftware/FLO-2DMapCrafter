@@ -1255,6 +1255,9 @@ class FLO2DMapCrafter:
         }
 
         for key, value in hazard_maps_dict.items():
+            if key not in hazard_rbs:
+                continue
+            
             if value:
                 if isinstance(hazard_rbs[key], list):
                     for cb in hazard_rbs[key]:
@@ -1267,10 +1270,15 @@ class FLO2DMapCrafter:
                         cb.setEnabled(False)
                 else:
                     hazard_rbs[key].setEnabled(False)
-        # Pier scour is computed, not file-dependent
-        self.dlg.create_pier_scour_cb.setEnabled(True)
+        
+        # Pier scour file dependency is slightly different than the dictionary method
+        has_timdep = hazard_maps_dict.get("PIER_TIMDEP", False)
 
-                    
+        self.dlg.use_timdep_hdf5_cb.setEnabled(has_timdep)
+
+        if not has_timdep:
+            self.dlg.use_timdep_hdf5_cb.setChecked(False)
+
         # Add MapCrafter to the output folder
         map_output_dir = output_directory + r"\MapCrafter"
         self.dlg.mapper_out_folder.setFilePath(map_output_dir)
