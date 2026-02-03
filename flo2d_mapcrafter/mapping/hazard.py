@@ -648,8 +648,8 @@ class HazardMaps:
         """
     
         values = []
-        cellSize_data = []
-    
+        all_xy = []  # Initialize here so it's available for both paths
+
         # Compute scour magnitude per grid element
         if pier_params.get("use_timdep", False):
             # --- TIMDEP path: max scour over time ---
@@ -657,38 +657,36 @@ class HazardMaps:
                 os.path.dirname(timdep_file),
                 pier_params
             )
-    
+
             # Geometry comes from DEPTH.OUT (grid order guaranteed)
             depth_data = self._read_flo2d_ascii_xyv(depth_file)
-    
+            
+            # Extract all x,y coordinates for cell size calculation
+            all_xy = [(x, y) for (_, x, y, _) in depth_data]
+
             for (_, x, y, _), s in zip(depth_data, scour):
                 if s > 0.0:
                     values.append((x, y, float(s)))
-                    if len(cellSize_data) < 2:
-                        cellSize_data.append((x, y))
-    
+
         else:
             # --- Max-field path: floodplain-only ---
             results_dir = os.path.dirname(depth_file)
-    
+
             # Read geometry from DEPFP.OUT (floodplain only)
             depth_data = self._read_flo2d_ascii_xyv(
                 os.path.join(results_dir, "DEPFP.OUT")
             )
-    
+
             all_xy = [(x, y) for (_, x, y, _) in depth_data]
 
-            
             scour = self._scour_from_max_fields(
                 results_dir,
                 pier_params
             )
-    
+
             for (_, x, y, _), s in zip(depth_data, scour):
                 if s > 0.0:
                     values.append((x, y, float(s)))
-                    if len(cellSize_data) < 2:
-                        cellSize_data.append((x, y))
         
         # cell size
         dx = abs(all_xy[1][0] - all_xy[0][0])
