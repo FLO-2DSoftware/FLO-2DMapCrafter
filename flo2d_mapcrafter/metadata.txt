@@ -14,7 +14,7 @@ repository=https://github.com/FLO-2DSoftware/FLO-2DMapCrafter
 hasProcessingProvider=no
 
 changelog=
-    <p>0.5.0
+    <p>2.5.0
         - Add pier scour processed code for HEC-18 CSU method
     <p>0.4.0
         - Included the Final Bed Difference + Mudflow Cessation Depth
@@ -22,6 +22,7 @@ changelog=
         - Added project summary
         - Added progress bar
         - Fixed cursor issues
+        - Minor note.  Changing the Build number to 2.x.x so that the number align to FLO-2D Gila.
     <p>0.3.0
         - Improved the code to calculate the grid size
         - Removed the shapely library
