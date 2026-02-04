@@ -543,8 +543,8 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>773</width>
-            <height>481</height>
+            <width>781</width>
+            <height>518</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_99">
@@ -1087,8 +1087,8 @@ p, li { white-space: pre-wrap; }
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>773</width>
-            <height>481</height>
+            <width>781</width>
+            <height>518</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_100">
@@ -1755,8 +1755,8 @@ p, li { white-space: pre-wrap; }
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>773</width>
-            <height>481</height>
+            <width>781</width>
+            <height>518</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_101">
@@ -2303,8 +2303,8 @@ p, li { white-space: pre-wrap; }
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>773</width>
-            <height>481</height>
+            <width>781</width>
+            <height>518</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_102">
@@ -3026,8 +3026,8 @@ p, li { white-space: pre-wrap; }
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>773</width>
-            <height>481</height>
+            <width>781</width>
+            <height>518</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_103">
@@ -3285,6 +3285,171 @@ p, li { white-space: pre-wrap; }
                </layout>
               </widget>
              </item>
+             <item row="7" column="0">
+              <widget class="QgsCollapsibleGroupBox" name="pier_scour_cgb">
+               <property name="enabled">
+                <bool>true</bool>
+               </property>
+               <property name="title">
+                <string>HEC-18 CSU Pier Scour Post Processor</string>
+               </property>
+               <property name="collapsed">
+                <bool>true</bool>
+               </property>
+               <layout class="QGridLayout" name="gridLayout_74">
+                <item row="0" column="0" colspan="2">
+                 <widget class="QCheckBox" name="create_pier_scour_cb">
+                  <property name="text">
+                   <string>Create Pier Scour Map</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="2" column="0">
+                 <widget class="QLabel" name="pier_width_lbl">
+                  <property name="text">
+                   <string>Pier Width (a)</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="2" column="1">
+                 <widget class="QDoubleSpinBox" name="pier_width_dsb">
+                  <property name="decimals">
+                   <number>2</number>
+                  </property>
+                  <property name="minimum">
+                   <double>0.100000000000000</double>
+                  </property>
+                  <property name="maximum">
+                   <double>20.000000000000000</double>
+                  </property>
+                  <property name="singleStep">
+                   <double>0.100000000000000</double>
+                  </property>
+                  <property name="value">
+                   <double>0.500000000000000</double>
+                  </property>
+                 </widget>
+                </item>
+                <item row="3" column="0">
+                 <widget class="QLabel" name="k1_lbl">
+                  <property name="text">
+                   <string>K1 – Pier Shape</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="3" column="1">
+                 <widget class="QDoubleSpinBox" name="k1_dsb">
+                  <property name="decimals">
+                   <number>2</number>
+                  </property>
+                  <property name="minimum">
+                   <double>0.700000000000000</double>
+                  </property>
+                  <property name="maximum">
+                   <double>1.500000000000000</double>
+                  </property>
+                  <property name="singleStep">
+                   <double>0.050000000000000</double>
+                  </property>
+                  <property name="value">
+                   <double>1.000000000000000</double>
+                  </property>
+                 </widget>
+                </item>
+                <item row="4" column="0">
+                 <widget class="QLabel" name="k2_lbl">
+                  <property name="text">
+                   <string>K2 – Flow Angle</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="4" column="1">
+                 <widget class="QDoubleSpinBox" name="k2_dsb">
+                  <property name="decimals">
+                   <number>2</number>
+                  </property>
+                  <property name="minimum">
+                   <double>1.000000000000000</double>
+                  </property>
+                  <property name="maximum">
+                   <double>2.000000000000000</double>
+                  </property>
+                  <property name="singleStep">
+                   <double>0.050000000000000</double>
+                  </property>
+                  <property name="value">
+                   <double>1.000000000000000</double>
+                  </property>
+                 </widget>
+                </item>
+                <item row="5" column="0">
+                 <widget class="QLabel" name="k3_lbl">
+                  <property name="text">
+                   <string>K3 – Bed Condition</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="5" column="1">
+                 <widget class="QDoubleSpinBox" name="k3_dsb">
+                  <property name="decimals">
+                   <number>2</number>
+                  </property>
+                  <property name="minimum">
+                   <double>1.000000000000000</double>
+                  </property>
+                  <property name="maximum">
+                   <double>1.200000000000000</double>
+                  </property>
+                  <property name="singleStep">
+                   <double>0.050000000000000</double>
+                  </property>
+                  <property name="value">
+                   <double>1.100000000000000</double>
+                  </property>
+                 </widget>
+                </item>
+                <item row="6" column="0">
+                 <widget class="QLabel" name="k4_lbl">
+                  <property name="text">
+                   <string>K4 – Armoring</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="6" column="1">
+                 <widget class="QDoubleSpinBox" name="k4_dsb">
+                  <property name="decimals">
+                   <number>2</number>
+                  </property>
+                  <property name="minimum">
+                   <double>0.400000000000000</double>
+                  </property>
+                  <property name="maximum">
+                   <double>1.000000000000000</double>
+                  </property>
+                  <property name="singleStep">
+                   <double>0.050000000000000</double>
+                  </property>
+                  <property name="value">
+                   <double>1.000000000000000</double>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="1">
+                 <widget class="QCheckBox" name="use_timdep_hdf5_cb">
+                  <property name="toolTip">
+                   <string>...</string>
+                  </property>
+                  <property name="text">
+                   <string>Use time-dependent HDF5 hydraulics</string>
+                  </property>
+                  <property name="checked">
+                   <bool>false</bool>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </widget>
+             </item>
              <item row="2" column="0">
               <widget class="QgsCollapsibleGroupBox" name="flo_hm_cgb">
                <property name="enabled">
@@ -3378,8 +3543,8 @@ p, li { white-space: pre-wrap; }
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>773</width>
-            <height>481</height>
+            <width>781</width>
+            <height>518</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_111">
@@ -3535,7 +3700,7 @@ p, li { white-space: pre-wrap; }
                 <string>Graphics Plot</string>
                </property>
                <property name="collapsed">
-                <bool>true</bool>
+                <bool>false</bool>
                </property>
                <layout class="QGridLayout" name="gridLayout_120">
                 <item row="0" column="0">
@@ -3799,8 +3964,8 @@ p, li { white-space: pre-wrap; }
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>773</width>
-            <height>481</height>
+            <width>781</width>
+            <height>518</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_104">

@@ -374,7 +374,7 @@ class FloodMaps:
         if raster_processed:
 
             QgsProject.instance().addMapLayer(raster_processed, False)
-            set_raster_style(raster_processed, style, self.toler_value)
+            set_raster_style(raster_processed, style, self.toler_value, units_switch=None)
 
             mapping_group.insertLayer(0, raster_processed)
 

@@ -42,7 +42,6 @@ from osgeo import gdal
 
 import processing
 
-
 def read_ASCII(file_path, output_path, name, crs):
     """Read ASCII file and extract the required fields"""
 
@@ -198,7 +197,7 @@ def set_icon(btn, icon_file):
     btn.setIcon(QIcon(os.path.join(idir, icon_file)))
 
 
-def set_raster_style(layer, style, toler_value):
+def set_raster_style(layer, style, toler_value, units_switch=None):
     """Define the raster styles"""
     colDic = {
         "white": "#ffffff",
@@ -284,7 +283,6 @@ def set_raster_style(layer, style, toler_value):
         ]
         set_renderer(layer, color_list, myRasterShader, min, max)
 
-    # Time variables TODO: Improve this in next versions
     elif style == 3:
         layer.loadNamedStyle(style_directory + r"\time.qml")
 
@@ -390,6 +388,19 @@ def set_raster_style(layer, style, toler_value):
 
         layer.setRenderer(renderer)
         layer.triggerRepaint()
+
+        # Time variables TODO: Improve this in next versions
+
+    # Pier Scour (HEC-18 CSU)
+    elif style == 15:
+        if units_switch == "1":  # metric
+            layer.loadNamedStyle(
+                os.path.join(style_directory, "pier_scour_m.qml")
+            )
+        else:  # imperial
+            layer.loadNamedStyle(
+                os.path.join(style_directory, "pier_scour.qml")
+            )
 
     layer.triggerRepaint()
 

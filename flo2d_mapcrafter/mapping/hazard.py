@@ -24,6 +24,10 @@
 import os
 import processing
 import numpy as np
+try:
+    import h5py
+except ImportError:
+    h5py = None
 from osgeo import gdal
 from qgis._core import QgsProject, QgsRasterLayer
 from qgis.PyQt.QtWidgets import QProgressDialog, QApplication
@@ -41,6 +45,9 @@ class HazardMaps:
         self.iface = iface
         self.units_switch = units_switch
         self.toler_value = toler_value
+
+        # gravitational acceleration
+        self.gravity = 9.80665 if self.units_switch == "1" else 32.174
 
     def _make_progress(self, text: str, maximum: int) -> QProgressDialog:
         dlg = QProgressDialog(text, "Cancel", 0, max(1, int(maximum)), self.iface.mainWindow())
@@ -71,7 +78,9 @@ class HazardMaps:
             "Swiss": [False, False],
             "UK": False,
             "USBR": [False, False, False, False, False],
-            "FEMA": False
+            "FEMA": False,
+            "PIER": False,
+            "PIER_TIMDEP": False
         }
 
         # Australian Rainfall and Runoff (ARR)
@@ -93,6 +102,16 @@ class HazardMaps:
             r"DEPTH.OUT": False,
             r"VELFP.OUT": False,
         }
+        
+        # PIER SCOUR
+        pier_files_timdep = {
+            r"TIMDEP.HDF5": False
+        }
+        
+        pier_files_max = {
+            r"DEPFP.OUT": False,
+            r"VELFP.OUT": False
+        }
 
         files = os.listdir(output_dir)
         for file in files:
@@ -105,21 +124,49 @@ class HazardMaps:
             for key, value in usbr_files.items():
                 if file.startswith(key):
                     usbr_files[key] = True
+            for key in pier_files_timdep:
+                if file.startswith(key):
+                    pier_files_timdep[key] = True
+            for key in pier_files_max:
+                if file.startswith(key):
+                    pier_files_max[key] = True
 
         # ARR Check if all files are true
         if all(value for value in arr_files.values()):
             hazard_maps["ARR"] = True
 
         # SWISS Check if all files are true
-        if all(value for value in arr_files.values()):
+        if all(value for value in swiss_files.values()):
             hazard_maps["Swiss"] = [True, True]
 
+        # USBR Check if all files are true
         if all(value for value in usbr_files.values()):
             hazard_maps["USBR"] = [True, True, True, True, True]
 
+        # Pier Scour Check if all files are true    
+        if all(pier_files_timdep.values()) or all(pier_files_max.values()):
+            hazard_maps["PIER"] = True
+
+        # Pier Scour timdep Check if timdep is true
+        if all(pier_files_timdep.values()):
+            hazard_maps["PIER_TIMDEP"] = True
+
+
         return hazard_maps
 
-    def create_maps(self, hazard_rbs, flo2d_results_dir, map_output_dir, mapping_group, crs, project_id):
+    def create_maps(
+        self, 
+        hazard_rbs, 
+        flo2d_results_dir, 
+        map_output_dir, 
+        mapping_group, 
+        crs, 
+        project_id,
+        pier_params=None
+    ):
+        pier_params = pier_params or {}
+
+
         """
         Function to create the maps
         """
@@ -132,6 +179,8 @@ class HazardMaps:
         total_steps += sum(1 for v in swiss_maps if v)
         usbr_maps = hazard_rbs.get("USBR") or []
         total_steps += sum(1 for v in usbr_maps if v)
+        if hazard_rbs.get("PIER"):
+            total_steps += 1
 
         dlg = self._make_progress("Preparing…", max(1, total_steps))
         try:
@@ -153,6 +202,10 @@ class HazardMaps:
             # USBR
             USBR_group_name = "US Bureau of Reclamation"
             USBR_group = mapping_group.findGroup(USBR_group_name) or mapping_group.insertGroup(0, USBR_group_name)
+            
+            # PIER
+            PIER_group_name = "PIER SCOUR"
+            PIER_group = mapping_group.findGroup(PIER_group_name) or mapping_group.insertGroup(0, PIER_group_name)
 
             # ----------------- ARR -----------------
             if hazard_rbs.get("ARR"):
@@ -238,6 +291,30 @@ class HazardMaps:
                 SWISS_group.insertLayer(0, hydro_risk_raster)
 
                 self._tick(dlg, f"{labels[index]}: done")
+                
+            # ----------------- Pier Scour Maps -----------------
+            if hazard_rbs.get("PIER"):
+                dlg.setLabelText("PIER: computing…"); QApplication.processEvents()
+                name = check_project_id("PIER SCOUR", project_id)
+                name, raster = check_raster_file(name, map_output_dir)
+                depth_file = os.path.join(flo2d_results_dir, "DEPTH.OUT")
+                vel_file = os.path.join(flo2d_results_dir, "VELFP.OUT")
+                timdep_file = os.path.join(flo2d_results_dir, "TIMDEP.HDF5")
+
+                hydro_risk_raster = self.create_pier_scour_map(
+                    raster, 
+                    depth_file, 
+                    vel_file, 
+                    timdep_file, 
+                    crs, 
+                    pier_params
+                )
+
+                QgsProject.instance().addMapLayer(hydro_risk_raster, False)
+                set_raster_style(hydro_risk_raster, 15, self.toler_value, self.units_switch)
+                PIER_group.insertLayer(0, hydro_risk_raster)
+
+                self._tick(dlg, "PIER: done")
 
             # ----------------- collapse new layers -----------------
             allLayers = mapping_group.findLayers()
@@ -421,7 +498,7 @@ class HazardMaps:
         r5_e = f'"{name_hxv}@1" <= {4.0 * uc} AND "{name_depth}@1" < {4.0 * uc} AND "{name_speed}@1" < {4 * uc}'
         r6_e = f'"{name_hxv}@1" > {4.0 * uc} OR "{name_depth}@1" >= {4.0 * uc} OR "{name_speed}@1" >= {4 * uc}'
 
-        # Australian Rainfall and Runoff Classification
+        # Australian Rainfall and Runoff (ARR) Classification
         arr_class = processing.run(
             "qgis:rastercalculator",
             {
@@ -562,3 +639,203 @@ class HazardMaps:
         layer = QgsRasterLayer(hydro_risk, name)
 
         return layer
+
+
+    def create_pier_scour_map(
+        self,
+        hydro_risk,
+        depth_file,
+        vel_file,
+        timdep_file,
+        crs,
+        pier_params
+    ):
+        """
+        Create the HEC-18 CSU Pier Scour map.
+        Uses FLO-2D grid-based outputs and writes a GeoTIFF.
+        """
+    
+        values = []
+        all_xy = []  # Initialize here so it's available for both paths
+
+        # Compute scour magnitude per grid element
+        if pier_params.get("use_timdep", False):
+            # --- TIMDEP path: max scour over time ---
+            scour = self._scour_from_timdep(
+                os.path.dirname(timdep_file),
+                pier_params
+            )
+
+            # Geometry comes from DEPTH.OUT (grid order guaranteed)
+            depth_data = self._read_flo2d_ascii_xyv(depth_file)
+            
+            # Extract all x,y coordinates for cell size calculation
+            all_xy = [(x, y) for (_, x, y, _) in depth_data]
+
+            for (_, x, y, _), s in zip(depth_data, scour):
+                if s > 0.0:
+                    values.append((x, y, float(s)))
+
+        else:
+            # --- Max-field path: floodplain-only ---
+            results_dir = os.path.dirname(depth_file)
+
+            # Read geometry from DEPFP.OUT (floodplain only)
+            depth_data = self._read_flo2d_ascii_xyv(
+                os.path.join(results_dir, "DEPFP.OUT")
+            )
+
+            all_xy = [(x, y) for (_, x, y, _) in depth_data]
+
+            scour = self._scour_from_max_fields(
+                results_dir,
+                pier_params
+            )
+
+            for (_, x, y, _), s in zip(depth_data, scour):
+                if s > 0.0:
+                    values.append((x, y, float(s)))
+        
+        # cell size
+        dx = abs(all_xy[1][0] - all_xy[0][0])
+        dy = abs(all_xy[1][1] - all_xy[0][1])
+
+        cellSize = dx if dx > 0 else dy
+
+        if cellSize == 0:
+            raise ValueError("Failed to determine FLO-2D grid cell size.")
+
+        # extent from centers → convert to edges
+        
+        min_x = min(p[0] for p in all_xy)
+        max_x = max(p[0] for p in all_xy)
+        min_y = min(p[1] for p in all_xy)
+        max_y = max(p[1] for p in all_xy)
+
+        num_cols = int((max_x - min_x) / cellSize) + 1
+        num_rows = int((max_y - min_y) / cellSize) + 1
+
+        raster_data = np.full((num_rows, num_cols), -9999, dtype=np.float32)
+
+        for x, y, v in values:
+            col = int((x - min_x) / cellSize)
+            row = int((max_y - y) / cellSize)
+            raster_data[row, col] = v
+
+    
+        # create raster file
+        driver = gdal.GetDriverByName("GTiff")
+        raster = driver.Create(hydro_risk, num_cols, num_rows, 1, gdal.GDT_Float32)
+    
+        raster.SetGeoTransform((
+            min_x - cellSize / 2,
+            cellSize,
+            0,
+            max_y + cellSize / 2,
+            0,
+            -cellSize
+        ))
+    
+        raster.SetProjection(crs.toWkt())
+    
+        band = raster.GetRasterBand(1)
+        band.SetNoDataValue(-9999)
+        band.WriteArray(raster_data)
+    
+        raster.FlushCache()
+    
+        layer_name = os.path.splitext(os.path.basename(hydro_risk))[0]
+        return QgsRasterLayer(hydro_risk, layer_name)
+
+
+    def compute_scour(self, depth, velocity, a, k1, k2, k3, k4):
+        """
+        Compute HEC-18 CSU Scour
+        """
+
+        depth = np.where(depth > 0.0, depth, np.nan)
+        Fr = velocity / np.sqrt(self.gravity * depth)
+    
+        scour = (
+            2.0 * k1 * k2 * k3 * k4 * a
+            * (depth / a) ** 0.35
+            * (Fr / 0.65) ** 0.43
+        )
+    
+        return np.nan_to_num(scour, nan=0.0)
+
+    def _read_flo2d_ascii_xyv(self, file_path):
+        """
+        Read FLO-2D grid-based ASCII output:
+        cell, x, y, value
+        Returns list of (cell_id, x, y, value)
+        """
+        data = []
+        with open(file_path, "r") as f:
+            for line in f:
+                fields = line.split()
+                if not fields or not fields[0].isdigit():
+                    continue
+                cell = int(fields[0])
+                x = float(fields[1])
+                y = float(fields[2])
+                value = float(fields[3])
+                data.append((cell, x, y, value))
+        return data
+
+    def _scour_from_timdep(self, results_dir, pier_params):
+        """
+        Define scour parameters from TIMDEP.HDF5
+        Depending on whether or not TIMDEP.HDF5 includes the 1D
+        channel, this data may look different than the pier scour
+        from DEPFP.OUT and VELFP.OUT.
+        """
+
+        hdf5_path = os.path.join(results_dir, "TIMDEP.HDF5")
+
+        with h5py.File(hdf5_path, "r") as f:
+            grp = f["TIMDEP NETCDF OUTPUT RESULTS"]
+            depth = grp["FLOW DEPTH"]["Values"][:]
+            vel = grp["Velocity MAG"]["Values"][:]
+
+        scour_t = self.compute_scour(
+            depth,
+            vel,
+            pier_params["pier_width"],
+            pier_params["k1"],
+            pier_params["k2"],
+            pier_params["k3"],
+            pier_params["k4"],
+        )
+
+        return np.max(scour_t, axis=0)
+
+
+    def _scour_from_max_fields(self, results_dir, pier_params):
+        """
+        Compute pier scour using floodplain-only max-field outputs.
+        DEPFP.OUT and VELFP.OUT are used intentionally to exclude 1D channels.
+        """
+    
+        # Read floodplain-only depth and velocity (grid order preserved)
+        depth_data = self._read_flo2d_ascii_xyv(
+            os.path.join(results_dir, "DEPFP.OUT")
+        )
+        vel_data = self._read_flo2d_ascii_xyv(
+            os.path.join(results_dir, "VELFP.OUT")
+        )
+    
+        # Extract numeric arrays (same grid order guaranteed)
+        depth = np.array([v for (_, _, _, v) in depth_data], dtype=float)
+        vel   = np.array([v for (_, _, _, v) in vel_data], dtype=float)
+    
+        return self.compute_scour(
+            depth,
+            vel,
+            pier_params["pier_width"],
+            pier_params["k1"],
+            pier_params["k2"],
+            pier_params["k3"],
+            pier_params["k4"],
+        )
+
