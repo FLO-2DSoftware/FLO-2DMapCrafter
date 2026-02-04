@@ -46,8 +46,8 @@ Layouts
 - 0.1.0 First release version
 - 0.2.0 Add storm drain plots
 - 0.3.0 Improve speed remove dependencies
-- 0.4.0 Add modified bed elevations
-- 0.5.0  Add pier scour code
+- 2.4.0 Add modified bed elevations
+- 2.5.0  Add pier scour code
 
 ## Download
 
