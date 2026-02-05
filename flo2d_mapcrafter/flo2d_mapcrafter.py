@@ -2496,7 +2496,11 @@ class FLO2DMapCrafter:
     def refresh_project_files(self):
         output_directory = self.dlg.flo2d_out_folder.filePath() # Get the currently selected project folder
         if not output_directory or not os.path.isdir(output_directory):
-            QMessageBox.warning(self.dlg, "Refresh failed, please select a valid FLO-2D output folder first.")
+            QMessageBox.warning(
+                self.dlg,
+                "Refresh failed",
+                "Please select a valid FLO-2D output folder first."
+            )
             return
 
         QApplication.setOverrideCursor(Qt.WaitCursor)
@@ -2511,10 +2515,19 @@ class FLO2DMapCrafter:
             # Rebuild the entire UI state from disk
             self.check_files()
 
-            self.iface.messageBar().pushMessage("MapCrafter", "Project refreshed from disk.", level = Qgis.Info, duration=3)
+            self.iface.messageBar().pushMessage(
+                "MapCrafter",
+                "Project refreshed from disk.",
+                level = Qgis.Info,
+                duration=3
+            )
 
         except Exception as e:
-            QMessageBox.critical(self.dlg, "Refresh failed", f"An error occured while refreshing the project:\n\n{e}")
+            QMessageBox.critical(
+                self.dlg,
+                "Refresh failed",
+                f"An error occured while refreshing the project:\n\n{e}"
+            )
         finally:
             QApplication.restoreOverrideCursor()
 
