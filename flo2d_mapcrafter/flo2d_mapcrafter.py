@@ -146,6 +146,9 @@ class FLO2DMapCrafter:
         self.dlg.cg_storm_drain_btn.clicked.connect(self.collapse_all_groups)
         self.dlg.eg_storm_drain_btn.clicked.connect(self.expand_all_groups)
 
+        # Refresh button
+        self.dlg.refresh_btn.clicked.connect(self.refresh_project_files)
+
         set_icon(self.dlg.cg_cw_btn, "collapse_groups.svg")
         set_icon(self.dlg.eg_cw_btn, "expand_groups.svg")
         set_icon(self.dlg.cg_sd_btn, "collapse_groups.svg")
@@ -2488,5 +2491,47 @@ class FLO2DMapCrafter:
             # Use QtWidgets.QCheckBox (matches how the UI is created in QGIS)
             for cb in page.findChildren(QtWidgets.QCheckBox):
                 cb.setChecked(False)
+
+
+    def refresh_project_files(self):
+        output_directory = self.dlg.flo2d_out_folder.filePath() # Get the currently selected project folder
+        if not output_directory or not os.path.isdir(output_directory):
+            QMessageBox.warning(self.dlg, "Refresh failed, please select a valid FLO-2D output folder first.")
+            return
+
+        QApplication.setOverrideCursor(Qt.WaitCursor)
+        # Start protected refresh
+        try:
+            # Clear cached states that depend on output files
+            self._sim_type = None
+            self._swmm_model = None
+            self.units_switch = None
+            self.toler_value = None
+
+            # Rebuild the entire UI state from disk
+            self.check_files()
+
+            self.iface.messageBar().pushMessage("MapCrafter", "Project refreshed from disk.", level = Qgis.Info, duration=3)
+
+        except Exception as e:
+            QMessageBox.critical(self.dlg, "Refresh failed", f"An error occured while refreshing the project:\n\n{e}")
+        finally:
+            QApplication.restoreOverrideCursor()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
