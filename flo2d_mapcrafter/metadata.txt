@@ -14,6 +14,8 @@ repository=https://github.com/FLO-2DSoftware/FLO-2DMapCrafter
 hasProcessingProvider=no
 
 changelog=
+    <p>2.5.1
+        - Added a refresh button
     <p>2.5.0
         - Add pier scour processed code for HEC-18 CSU method
         - Modify version number to align with FLO-2D Gila 2.0.

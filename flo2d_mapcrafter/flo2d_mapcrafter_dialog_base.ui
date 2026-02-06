@@ -76,11 +76,60 @@
       </widget>
      </item>
      <item row="0" column="1" colspan="6">
-      <widget class="QgsFileWidget" name="flo2d_out_folder">
-       <property name="storageMode">
-        <enum>QgsFileWidget::GetDirectory</enum>
-       </property>
-      </widget>
+      <layout class="QHBoxLayout" name="out_folder_hlayout">
+       <item>
+        <widget class="QgsFileWidget" name="flo2d_out_folder">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="storageMode">
+          <enum>QgsFileWidget::GetDirectory</enum>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QToolButton" name="refresh_btn">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>20</width>
+           <height>20</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>20</width>
+           <height>20</height>
+          </size>
+         </property>
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Re-scan output folder and update available files&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+         <property name="icon">
+          <iconset>
+           <normaloff>img/refresh_button.svg</normaloff>img/refresh_button.svg</iconset>
+         </property>
+         <property name="iconSize">
+          <size>
+           <width>20</width>
+           <height>20</height>
+          </size>
+         </property>
+
+        </widget>
+       </item>
+      </layout>
      </item>
      <item row="2" column="1">
       <widget class="QDoubleSpinBox" name="max_vector_scale_sb">
@@ -543,8 +592,8 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>781</width>
-            <height>518</height>
+            <width>773</width>
+            <height>478</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_99">
@@ -1087,8 +1136,8 @@ p, li { white-space: pre-wrap; }
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>781</width>
-            <height>518</height>
+            <width>490</width>
+            <height>769</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_100">
@@ -1755,8 +1804,8 @@ p, li { white-space: pre-wrap; }
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>781</width>
-            <height>518</height>
+            <width>490</width>
+            <height>769</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_101">
@@ -2303,8 +2352,8 @@ p, li { white-space: pre-wrap; }
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>781</width>
-            <height>518</height>
+            <width>669</width>
+            <height>1015</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_102">
@@ -3026,8 +3075,8 @@ p, li { white-space: pre-wrap; }
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>781</width>
-            <height>518</height>
+            <width>502</width>
+            <height>814</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_103">
@@ -3543,8 +3592,8 @@ p, li { white-space: pre-wrap; }
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>781</width>
-            <height>518</height>
+            <width>299</width>
+            <height>477</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_111">
@@ -3700,7 +3749,7 @@ p, li { white-space: pre-wrap; }
                 <string>Graphics Plot</string>
                </property>
                <property name="collapsed">
-                <bool>false</bool>
+                <bool>true</bool>
                </property>
                <layout class="QGridLayout" name="gridLayout_120">
                 <item row="0" column="0">
@@ -3964,8 +4013,8 @@ p, li { white-space: pre-wrap; }
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>781</width>
-            <height>518</height>
+            <width>343</width>
+            <height>364</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_104">
