@@ -1715,6 +1715,11 @@ class FLO2DMapCrafter:
         finally:
             QApplication.restoreOverrideCursor()
 
+        # Keep dialog visible and in place
+        self.dlg.show()
+        self.dlg.raise_()
+        self.dlg.activateWindow()
+
     def see_storm_drain_profile(self):
         """
         Function to show the storm drain profile
@@ -2503,7 +2508,6 @@ class FLO2DMapCrafter:
             )
             return
 
-        QApplication.setOverrideCursor(Qt.WaitCursor)
         # Start protected refresh
         try:
             # Clear cached states that depend on output files
@@ -2512,7 +2516,7 @@ class FLO2DMapCrafter:
             self.units_switch = None
             self.toler_value = None
 
-            # Rebuild the entire UI state from disk
+            # Refresh
             self.check_files()
 
             self.iface.messageBar().pushMessage(
@@ -2526,10 +2530,11 @@ class FLO2DMapCrafter:
             QMessageBox.critical(
                 self.dlg,
                 "Refresh failed",
-                f"An error occured while refreshing the project:\n\n{e}"
+                f"An error occurred while refreshing the project:\n\n{e}"
             )
-        finally:
-            QApplication.restoreOverrideCursor()
+        
+
+
 
 
 
