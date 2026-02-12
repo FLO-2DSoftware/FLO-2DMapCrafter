@@ -1274,7 +1274,7 @@ class FLO2DMapCrafter:
                 else:
                     hazard_rbs[key].setEnabled(False)
 
-        # Pier scour file dependency is slightly different than the dictionary method
+        # Pier scour file dependency is slightly different from the dictionary method
         has_timdep = hazard_maps_dict.get("PIER_TIMDEP", False)
 
         self.dlg.use_timdep_hdf5_cb.setEnabled(has_timdep)
