@@ -126,7 +126,6 @@
            <height>20</height>
           </size>
          </property>
-
         </widget>
        </item>
       </layout>
@@ -593,7 +592,7 @@
             <x>0</x>
             <y>0</y>
             <width>773</width>
-            <height>478</height>
+            <height>481</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_99">
@@ -1136,8 +1135,8 @@ p, li { white-space: pre-wrap; }
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>490</width>
-            <height>769</height>
+            <width>773</width>
+            <height>481</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_100">
@@ -1804,8 +1803,8 @@ p, li { white-space: pre-wrap; }
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>490</width>
-            <height>769</height>
+            <width>773</width>
+            <height>481</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_101">
@@ -2352,8 +2351,8 @@ p, li { white-space: pre-wrap; }
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>669</width>
-            <height>1015</height>
+            <width>773</width>
+            <height>481</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_102">
@@ -3075,8 +3074,8 @@ p, li { white-space: pre-wrap; }
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>502</width>
-            <height>814</height>
+            <width>773</width>
+            <height>481</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_103">
@@ -3085,7 +3084,7 @@ p, li { white-space: pre-wrap; }
              <item row="1" column="0">
               <widget class="QgsCollapsibleGroupBox" name="austrian_hm_cgb">
                <property name="enabled">
-                <bool>false</bool>
+                <bool>true</bool>
                </property>
                <property name="title">
                 <string>Austrian</string>
@@ -3592,8 +3591,8 @@ p, li { white-space: pre-wrap; }
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>299</width>
-            <height>477</height>
+            <width>773</width>
+            <height>481</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_111">
@@ -4013,8 +4012,8 @@ p, li { white-space: pre-wrap; }
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>343</width>
-            <height>364</height>
+            <width>773</width>
+            <height>481</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_104">
