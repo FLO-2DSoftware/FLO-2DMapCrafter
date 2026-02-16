@@ -3320,6 +3320,9 @@ p, li { white-space: pre-wrap; }
                  <layout class="QGridLayout" name="gridLayout_65">
                   <item row="0" column="0">
                    <widget class="QCheckBox" name="fema_hm_cb">
+                    <property name="enabled">
+                     <bool>false</bool>
+                    </property>
                     <property name="toolTipDuration">
                      <number>0</number>
                     </property>
