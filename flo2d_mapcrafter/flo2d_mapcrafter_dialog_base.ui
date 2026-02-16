@@ -3307,7 +3307,7 @@ p, li { white-space: pre-wrap; }
              <item row="6" column="0">
               <widget class="QgsCollapsibleGroupBox" name="fema_hz_cgb">
                <property name="enabled">
-                <bool>false</bool>
+                <bool>true</bool>
                </property>
                <property name="title">
                 <string>US Federal Emergency Management Agency</string>
