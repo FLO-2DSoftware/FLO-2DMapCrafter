@@ -241,6 +241,12 @@ def set_raster_style(layer, style, toler_value, units_switch=None):
         "arr4": "#92d050",
         "arr5": "#ffc000",
         "arr6": "#ff0000",
+
+        "risk_low": "#F6F0A0",          # pale yellow
+        "risk_medium": "#A8D8A0",       # light green
+        "risk_high": "#4F78B7",         # blue
+        "risk_very_high": "#F6A073",    # peach/orange
+        "risk_extreme": "#F04F9B"        # pink/magenta
     }
 
     provider = layer.dataProvider()
@@ -402,8 +408,19 @@ def set_raster_style(layer, style, toler_value, units_switch=None):
                 os.path.join(style_directory, "pier_scour.qml")
             )
 
-    layer.triggerRepaint()
+    # FEMA
+    elif style == 16:
+        min = toler_value
+        color_list = [
+            QColor (colDic["risk_low"]),
+            QColor (colDic["risk_medium"]),
+            QColor (colDic["risk_high"]),
+            QColor (colDic["risk_very_high"]),
+            QColor (colDic["risk_extreme"]),
+        ]
+        set_renderer(layer, color_list, myRasterShader, min, max)
 
+    layer.triggerRepaint()
 
 def remove_layer(layer_name):
     """Function to remove layer name based on name"""
