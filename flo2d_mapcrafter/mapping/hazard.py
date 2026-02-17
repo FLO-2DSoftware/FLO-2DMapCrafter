@@ -159,6 +159,12 @@ class HazardMaps:
             r"VEL_X_DEPTH.OUT": False
         }
 
+        # AUSTRIAN Flood Hazard
+        austrian_files = {
+            r"DEPTH.OUT": False,
+            r"VELFP.OUT": False
+        }
+
         # SWISS FLOOD INTENSITY
         swiss_files = {
             r"DEPTH.OUT": False,
@@ -166,10 +172,22 @@ class HazardMaps:
             r"VELFP.OUT": False
         }
 
+        # UK Hazard Mapping
+        uk_files = {
+            r"DEPTH.OUT": False,
+            r"VELFP.OUT": False
+        }
+
         # US Bureau of Reclamation
         usbr_files = {
             r"DEPTH.OUT": False,
             r"VELFP.OUT": False,
+        }
+
+        # US FEMA
+        fema_files = {
+            r"DEPTH.OUT": False,
+            r"VELFP.OUT": False
         }
 
         # PIER SCOUR
@@ -190,11 +208,20 @@ class HazardMaps:
             if filename in arr_files:
                 arr_files[filename] = True
 
+            if filename in austrian_files:
+                austrian_files[filename] = True
+
             if filename in swiss_files:
                 swiss_files[filename] = True
 
             if filename in usbr_files:
                 usbr_files[filename] = True
+
+            if filename in uk_files:
+                uk_files[filename] = True
+
+            if filename in fema_files:
+                fema_files[filename] = True
 
             if filename in pier_files_timdep:
                 pier_files_timdep[filename] = True
@@ -206,13 +233,25 @@ class HazardMaps:
         if all(value for value in arr_files.values()):
             hazard_maps["ARR"] = True
 
+        # AUSTRIAN Check if all files are true
+        if all(value for value in austrian_files.values()):
+            hazard_maps["Austrian"] = True
+
         # SWISS Check if all files are true
         if all(value for value in swiss_files.values()):
             hazard_maps["Swiss"] = [True, True]
 
+        # UK Check if all files are true
+        if all(value for value in uk_files.values()):
+            hazard_maps["UK"] = True
+
         # USBR Check if all files are true
         if all(value for value in usbr_files.values()):
             hazard_maps["USBR"] = [True, True, True, True, True]
+
+        # FEMA Check if all files are true
+        if all(value for value in fema_files.values()):
+            hazard_maps["FEMA"] = [True]
 
         # Pier Scour Check if all files are true
         if all(pier_files_timdep.values()) or all(pier_files_max.values()):
@@ -233,9 +272,15 @@ class HazardMaps:
         total_steps = 0
         if hazard_rbs.get("ARR"):
             total_steps += 1
+        if hazard_rbs.get("Austrian"):
+            total_steps += 1
         swiss_maps = hazard_rbs.get("Swiss") or []
+        if hazard_rbs.get("UK"):
+            total_steps += 1
         total_steps += sum(1 for v in swiss_maps if v)
         usbr_maps = hazard_rbs.get("USBR") or []
+        if hazard_rbs.get("FEMA"):
+            total_steps += 1
         total_steps += sum(1 for v in usbr_maps if v)
         if hazard_rbs.get("PIER"):
             total_steps += 1
@@ -253,13 +298,25 @@ class HazardMaps:
             ARR_group_name = "Australian Rainfall and Runoff (ARR)"
             ARR_group = mapping_group.findGroup(ARR_group_name) or mapping_group.insertGroup(0, ARR_group_name)
 
+            # AUSTRIAN
+            AUSTRIAN_group_name = "AUSTRIAN"
+            AUSTRIAN_group = mapping_group.findGroup(AUSTRIAN_group_name) or mapping_group.insertGroup(0,AUSTRIAN_group_name)
+
             # SWISS
             SWISS_group_name = "SWISS"
             SWISS_group = mapping_group.findGroup(SWISS_group_name) or mapping_group.insertGroup(0, SWISS_group_name)
 
+            # UK
+            UK_group_name = "UK"
+            UK_group = mapping_group.findGroup(UK_group_name) or mapping_group.insertGroup(0, UK_group_name)
+
             # USBR
             USBR_group_name = "US Bureau of Reclamation"
             USBR_group = mapping_group.findGroup(USBR_group_name) or mapping_group.insertGroup(0, USBR_group_name)
+
+            #  FEMA
+            FEMA_group_name = "FEMA"
+            FEMA_group = mapping_group.findGroup(FEMA_group_name) or mapping_group.insertGroup(0, FEMA_group_name)
 
             # PIER
             PIER_group_name = "PIER SCOUR"
@@ -284,6 +341,44 @@ class HazardMaps:
                 ARR_group.insertLayer(0, hydro_risk_raster)
 
                 self.tick(dlg, "ARR: done")
+
+            # ----------------- AUSTRIAN Hazard Map ----------------- #
+            if hazard_rbs.get("Austrian"):
+                dlg.setLabelText("Austrian: computing...")
+                QApplication.processEvents()
+
+                depth_file = os.path.join(flo2d_results_dir, "DEPTH.OUT")
+                vel_file = os.path.join(flo2d_results_dir, "VELFP.OUT")
+
+                name = check_project_id("AUSTRIAN_HAZARD", project_id)
+                name, raster = check_raster_file(name, map_output_dir)
+
+                hydro_risk_raster = self.create_austrian_map(name, raster, depth_file, vel_file, crs)
+
+                QgsProject.instance().addMapLayer(hydro_risk_raster, False)
+                set_raster_style(hydro_risk_raster, 9, 1)
+                AUSTRIAN_group.insertLayer(0, hydro_risk_raster)
+
+                self.tick(dlg, "AUSTRIAN: done")
+
+            # ----------------- UK Hazard Map ----------------- #
+            if hazard_rbs.get("UK"):
+                dlg.setLabelText("UK Hazard: computing ...")
+                QApplication.processEvents()
+
+                depth_file = os.path.join(flo2d_results_dir, "DEPTH.OUT")
+                vel_file = os.path.join(flo2d_results_dir, 'VELFP.OUT')
+
+                name = check_project_id("UK_FLOOD_HAZARD", project_id)
+                name, raster = check_raster_file(name, map_output_dir)
+
+                hydro_risk_raster = self.create_uk_map(name, raster, depth_file, vel_file, crs)
+
+                QgsProject.instance().addMapLayer(hydro_risk_raster, False)
+                set_raster_style(hydro_risk_raster, 8, 1)
+                mapping_group.insertLayer(0, hydro_risk_raster)
+
+                self.tick(dlg, "UK Hazard: done")
 
             # ----------------- USBR (Houses/Mobile/Vehicles/Adults/Children) -----------------
             usbr_maps = hazard_rbs.get("USBR") or []
@@ -354,6 +449,25 @@ class HazardMaps:
 
                 self.tick(dlg, f"{labels[index]}: done")
 
+            # ------------------ FEMA Hazard Map ----------------- #
+            if hazard_rbs.get("FEMA"):
+                dlg.setLabelText("FEMA: computing...")
+                QApplication.processEvents()
+
+                depth_file = os.path.join(flo2d_results_dir, "DEPTH.OUT")
+                vel_file = os.path.join(flo2d_results_dir, "VELFP.OUT")
+
+                name = check_project_id("FEMA_HAZARD", project_id)
+                name, raster = check_raster_file(name, map_output_dir)
+
+                hydro_risk_raster = self.create_fema_map(name, raster, depth_file, vel_file, crs)
+
+                QgsProject.instance().addMapLayer(hydro_risk_raster, False)
+                set_raster_style(hydro_risk_raster, 16, toler_value=0.0)
+                FEMA_group.insertLayer(0, hydro_risk_raster)
+
+                self.tick(dlg, "FEMA: done")
+
             # ----------------- Pier Scour Maps -----------------
             if hazard_rbs.get("PIER"):
                 dlg.setLabelText("PIER: computing…");
@@ -364,14 +478,7 @@ class HazardMaps:
                 vel_file = os.path.join(flo2d_results_dir, "VELFP.OUT")
                 timdep_file = os.path.join(flo2d_results_dir, "TIMDEP.HDF5")
 
-                hydro_risk_raster = self.create_pier_scour_map(
-                    raster,
-                    depth_file,
-                    vel_file,
-                    timdep_file,
-                    crs,
-                    pier_params
-                )
+                hydro_risk_raster = self.create_pier_scour_map(raster, depth_file, vel_file, timdep_file, crs, pier_params)
 
                 QgsProject.instance().addMapLayer(hydro_risk_raster, False)
                 set_raster_style(hydro_risk_raster, 15, self.toler_value, self.units_switch)
@@ -439,8 +546,7 @@ class HazardMaps:
                             cell_size_data.append((x, y))
 
         cell_size = self.compute_cell_size(cell_size_data)
-        raster_data, geotransform = self.points_to_raster_array(values,
-                                                                cell_size)  # Convert (x, y, value) points into raster array + geotransform
+        raster_data, geotransform = self.points_to_raster_array(values, cell_size)  # Convert (x, y, value) points into raster array + geotransform
         self.write_geotiff(hydro_risk, raster_data, geotransform, crs)  # Write GeoTIFF
         return QgsRasterLayer(hydro_risk, name)
 
@@ -454,11 +560,6 @@ class HazardMaps:
 
         name_hxv = check_project_id("HxV", project_id)
         name, h_x_v = check_raster_file(name_hxv, map_output_dir)
-
-        # Check flood depth and flow speed files
-        # flow_speed = map_output_dir + r"\FLOW_SPEED.tif"
-        # flood_depth = map_output_dir + r"\FLOOD_DEPTH.tif"
-        # h_x_v = map_output_dir + r"\HxV.tif"
 
         if os.path.isfile(flood_depth):
             QgsProject.instance().addMapLayer(QgsRasterLayer(flood_depth, name_depth), True)
@@ -480,13 +581,6 @@ class HazardMaps:
             raster_processed = read_ASCII(vel_x_depth_file, h_x_v, name_hxv, crs)
             if raster_processed:
                 QgsProject.instance().addMapLayer(QgsRasterLayer(h_x_v, name_hxv), True)
-
-        # if os.path.isfile(hydro_risk):
-        #     try:
-        #         remove_layer("ARR_FLOOD_HAZARD")
-        #         os.remove(hydro_risk)
-        #     except OSError as e:
-        #         print(f"Error deleting {hydro_risk}: {str(e)}")
 
         r0_e = f'"{name_hxv}@1" = 0 AND "{name_depth}@1" = 0 AND "{name_speed}@1" = 0'
         r1_e = f'"{name_hxv}@1" <= {0.3 * self.uc} AND "{name_depth}@1" < {0.3 * self.uc} AND "{name_speed}@1" < {2 * self.uc}'
@@ -516,6 +610,105 @@ class HazardMaps:
         name_arr = os.path.splitext(os.path.basename(hydro_risk))[0]
 
         return QgsRasterLayer(arr_class, name_arr)
+
+    def create_austrian_map(self, name, hydro_risk, depth_file, vel_file, crs):
+        """
+        Create Austrian hazard map using total specific energy:
+            E = h + v^2/(2*g)
+        """
+        depth_data = self.read_flo2d_ascii_xyv(depth_file)
+        vel_data = self.read_flo2d_ascii_xyv(vel_file)
+
+        depth_map = {cell: (x, y, d) for (cell, x, y, d) in depth_data}
+        vel_map = {cell: v for (cell, x, y,  v) in vel_data}
+
+        values = []
+        cell_size_data = []
+
+        for cell, (x, y, depth_val) in depth_map.items():
+            velocity_val = vel_map.get(cell, 0.0)
+
+            if depth_val <= 0:
+                continue
+
+            h = float(depth_val) * self.uc
+            v = float(velocity_val) * self.uc
+
+            E = h + (v ** 2) / (2.0 * self.gravity)
+
+            if E > 1.5:
+                cls = 3
+            elif E > 0.5:
+                cls = 2
+            else:
+                cls = 1
+
+            values.append((x, y, cls))
+            if len(cell_size_data) < 2:
+                cell_size_data.append((x, y))
+
+            if not values:
+                all_xy = [(x, y) for (_, x, y, _) in depth_data] if depth_data else [(0, 0), (1, 0)]
+                cell_size = self.compute_cell_size(all_xy)
+                raster_data, geotransform = self.points_to_raster_array([], cell_size)
+                self.write_geotiff(hydro_risk, raster_data, geotransform, crs)
+                return QgsRasterLayer(hydro_risk, name)
+
+        cell_size = self.compute_cell_size(cell_size_data if len(cell_size_data) >= 2 else [(x, y) for (_, x, y, _) in depth_data])
+
+        raster_data, geotransform = self.points_to_raster_array(values, cell_size)
+        self.write_geotiff(hydro_risk, raster_data, geotransform, crs)
+        return QgsRasterLayer(hydro_risk, name)
+
+    def create_uk_map(self, name, hydro_risk, depth_file, vel_file, crs):
+        depth_data = self.read_flo2d_ascii_xyv(depth_file)
+        vel_data = self.read_flo2d_ascii_xyv(vel_file)
+
+        depth_map = {cell: (x, y, d) for (cell, x, y, d) in depth_data}
+        vel_map = {cell: v for (cell, _, _, v) in vel_data}
+
+        values = []
+        cell_size_data = []
+
+        for cell, (x, y, depth) in depth_map.items():
+            velocity = vel_map.get(cell, 0.0)
+
+            if depth <= 0.0:
+                continue
+
+            d = depth * self.uc
+            v = velocity * self.uc
+
+            DF = 0.5 if d <= 0.25 else 1.0 # debris factor
+
+            HR = d * (v + 0.5) + DF
+
+            if HR < 0.75:
+                cls = 1         # Very low hazard
+            elif HR < 1.25:
+                cls = 2         # Danger for some
+            elif HR < 2.0:
+                cls = 3         # Danger for most
+            else:
+                cls = 4         # Danger for all
+
+            values.append((x,y, cls))
+
+            if len(cell_size_data) < 2:
+                cell_size_data.append((x,y))
+
+        # Raster creation
+        if not values:
+            all_xy = [(x,y,) for (_, x, y, _) in depth_data]
+            cell_size = self.compute_cell_size(all_xy)
+            raster_data, geotransform = self.points_to_raster_array([], cell_size)
+        else:
+            cell_size = self.compute_cell_size(cell_size_data)
+            raster_data, geotransform = self.points_to_raster_array(values, cell_size)
+
+        self.write_geotiff(hydro_risk, raster_data, geotransform, crs)
+
+        return QgsRasterLayer(hydro_risk, name)
 
     def create_usbr_map(self, name, hydro_risk, depth_data, vel_data, map_type, crs):
         """Create the USBR hydrodynamic risk map"""
@@ -588,6 +781,55 @@ class HazardMaps:
         raster_data, geotransform = self.points_to_raster_array(values, cell_size)
         self.write_geotiff(hydro_risk, raster_data, geotransform, crs)
         return QgsRasterLayer(hydro_risk, name)
+
+    def create_fema_map(self, name, hydro_risk, depth_file, vel_file, crs):
+        depth_data = self.read_flo2d_ascii_xyv(depth_file)
+        vel_data = self.read_flo2d_ascii_xyv(vel_file)
+
+        depth_map = {cell: (x, y, d) for (cell, x, y, d) in depth_data}
+        vel_map = {cell: v for (cell, x, y, v) in vel_data}
+
+        values = []
+        cell_size_data = []
+
+        for cell, (x, y, depth_val) in depth_map.items():
+            velocity_val = vel_map.get(cell, 0.0)
+
+            if depth_val <= 0.0:
+                continue
+
+            h = float(depth_val) * self.uc
+            v = float(velocity_val) * self.uc
+
+            hazard = h * v
+            if hazard < 0.2:
+                cls = 1     # Low
+            elif hazard < 0.5:
+                cls = 2 # Medium
+            elif hazard < 1.5:
+                cls = 3 # High
+            elif hazard < 2.5:
+                cls = 4 # Very high
+            else:
+                cls = 5 # Extreme
+
+            values.append((x, y, cls))
+            if len(cell_size_data) < 2:
+                cell_size_data.append((x, y))
+
+            if not values:
+                all_xy = [(x, y) for (_, x, y, _) in depth_data] if depth_data else [(0, 0), (1, 0)]
+                cell_size = self.compute_cell_size(all_xy)
+                raster_data, geotransform = self.points_to_raster_array([], cell_size)
+                self.write_geotiff(hydro_risk, raster_data, geotransform, crs)
+                return QgsRasterLayer(hydro_risk, name)
+
+        cell_size = self.compute_cell_size(cell_size_data if len(cell_size_data) >= 2 else [(x, y) for (_, x, y, _) in depth_data])
+
+        raster_data, geotransform = self.points_to_raster_array(values, cell_size)
+        self.write_geotiff(hydro_risk, raster_data, geotransform, crs)
+        return QgsRasterLayer(hydro_risk, name)
+
 
     def create_pier_scour_map(self, hydro_risk, depth_file, vel_file, timdep_file, crs, pier_params):
         """
