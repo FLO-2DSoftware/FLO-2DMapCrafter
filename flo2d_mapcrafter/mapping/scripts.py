@@ -241,7 +241,6 @@ def set_raster_style(layer, style, toler_value, units_switch=None):
         "arr4": "#92d050",
         "arr5": "#ffc000",
         "arr6": "#ff0000",
-
         "risk_low": "#F6F0A0",          # pale yellow
         "risk_medium": "#A8D8A0",       # light green
         "risk_high": "#4F78B7",         # blue
