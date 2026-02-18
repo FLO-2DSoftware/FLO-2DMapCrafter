@@ -279,14 +279,13 @@ def set_raster_style(layer, style, toler_value, units_switch=None):
     elif style == 2:
         shader = QgsColorRampShader()
         shader.setColorRampType(QgsColorRampShader.Discrete)
-
         items = [
-            QgsColorRampShader.ColorRampItem(1, QColor(colDic["arr1"]), "Low"),
-            QgsColorRampShader.ColorRampItem(2, QColor(colDic["arr2"]), "Medium"),
-            QgsColorRampShader.ColorRampItem(3, QColor(colDic["arr3"]), "High"),
-            QgsColorRampShader.ColorRampItem(4, QColor(colDic["arr4"]), "Very High"),
-            QgsColorRampShader.ColorRampItem(5, QColor(colDic["arr5"]), "Extreme"),
-            QgsColorRampShader.ColorRampItem(6, QColor(colDic["arr6"]), "Extreme"),
+            QgsColorRampShader.ColorRampItem(1, QColor(colDic["arr1"]), "Very Low Hazard"),
+            QgsColorRampShader.ColorRampItem(2, QColor(colDic["arr2"]), "Low Hazard"),
+            QgsColorRampShader.ColorRampItem(3, QColor(colDic["arr3"]), "Moderate Hazard"),
+            QgsColorRampShader.ColorRampItem(4, QColor(colDic["arr4"]), "Significant Hazard"),
+            QgsColorRampShader.ColorRampItem(5, QColor(colDic["arr5"]), "High Hazard"),
+            QgsColorRampShader.ColorRampItem(6, QColor(colDic["arr6"]), "Extreme Hazard"),
         ]
         shader.setColorRampItemList(items)
         raster_shader = QgsRasterShader()
@@ -387,18 +386,14 @@ def set_raster_style(layer, style, toler_value, units_switch=None):
             QgsColorRampShader.ColorRampItem(0.1, QColor(colDic["green"]), str(0.1)),
             QgsColorRampShader.ColorRampItem(max, QColor(colDic["darkblue"]), str(max)),
         ]
-
         ramp_shader = QgsColorRampShader()
         ramp_shader.setColorRampItemList(items)
         ramp_shader.setColorRampType(QgsColorRampShader.Interpolated)
-
         shader = QgsRasterShader()
         shader.setRasterShaderFunction(ramp_shader)
-
         renderer = QgsSingleBandPseudoColorRenderer(layer.dataProvider(), 1, shader)
         renderer.setClassificationMin(min)
         renderer.setClassificationMax(max)
-
         layer.setRenderer(renderer)
         layer.triggerRepaint()
 
@@ -415,13 +410,12 @@ def set_raster_style(layer, style, toler_value, units_switch=None):
     elif style == 16:
         shader = QgsColorRampShader()
         shader.setColorRampType(QgsColorRampShader.Discrete)
-
         items = [
-            QgsColorRampShader.ColorRampItem(1, QColor(colDic["fema_low"]), "Low"),
-            QgsColorRampShader.ColorRampItem(2, QColor(colDic["fema_medium"]), "Medium"),
-            QgsColorRampShader.ColorRampItem(3, QColor(colDic["fema_high"]), "High"),
-            QgsColorRampShader.ColorRampItem(4, QColor(colDic["fema_very_high"]), "Very High"),
-            QgsColorRampShader.ColorRampItem(5, QColor(colDic["fema_extreme"]), "Extreme"),
+            QgsColorRampShader.ColorRampItem(1, QColor(colDic["fema_low"]), "Low Hazard"),
+            QgsColorRampShader.ColorRampItem(2, QColor(colDic["fema_medium"]), "Medium Hazard"),
+            QgsColorRampShader.ColorRampItem(3, QColor(colDic["fema_high"]), "High Hazard"),
+            QgsColorRampShader.ColorRampItem(4, QColor(colDic["fema_very_high"]), "Very High Hazard"),
+            QgsColorRampShader.ColorRampItem(5, QColor(colDic["fema_extreme"]), "Extreme Hazard"),
         ]
         shader.setColorRampItemList(items)
         raster_shader = QgsRasterShader()
@@ -436,7 +430,7 @@ def set_raster_style(layer, style, toler_value, units_switch=None):
         shader = QgsColorRampShader()
         shader.setColorRampType(QgsColorRampShader.Discrete)
         items = [
-            QgsColorRampShader.ColorRampItem(1, QColor(colDic["white"]), "Very Low"),
+            QgsColorRampShader.ColorRampItem(1, QColor(colDic["white"]), "Very Low Hazard"),
             QgsColorRampShader.ColorRampItem(2, QColor(colDic["yellow"]), "Danger for Some"),
             QgsColorRampShader.ColorRampItem(3, QColor(colDic["orange"]), "Danger for Most"),
             QgsColorRampShader.ColorRampItem(4, QColor(colDic["red"]), "Danger for All"),
@@ -469,7 +463,6 @@ def set_raster_style(layer, style, toler_value, units_switch=None):
     elif style == 19:
         shader = QgsColorRampShader()
         shader.setColorRampType(QgsColorRampShader.Discrete)
-
         items = [
             QgsColorRampShader.ColorRampItem(1, QColor(colDic["blue"]), "Low Intensity"),
             QgsColorRampShader.ColorRampItem(2, QColor(colDic["yellow"]), "Moderate Intensity"),
@@ -487,7 +480,6 @@ def set_raster_style(layer, style, toler_value, units_switch=None):
     elif style == 20:
         shader = QgsColorRampShader()
         shader.setColorRampType(QgsColorRampShader.Discrete)
-
         items = [
             QgsColorRampShader.ColorRampItem(1, QColor(colDic["blue"]), "Low Danger"),
             QgsColorRampShader.ColorRampItem(2, QColor(colDic["yellow"]), "Judgement"),
