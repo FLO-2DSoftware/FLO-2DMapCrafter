@@ -314,7 +314,7 @@ class HazardMaps:
             USBR_group_name = "US Bureau of Reclamation"
             USBR_group = mapping_group.findGroup(USBR_group_name) or mapping_group.insertGroup(0, USBR_group_name)
 
-            #  FEMA
+            # FEMA
             FEMA_group_name = "FEMA"
             FEMA_group = mapping_group.findGroup(FEMA_group_name) or mapping_group.insertGroup(0, FEMA_group_name)
 
@@ -356,7 +356,7 @@ class HazardMaps:
                 hydro_risk_raster = self.create_austrian_map(name, raster, depth_file, vel_file, crs)
 
                 QgsProject.instance().addMapLayer(hydro_risk_raster, False)
-                set_raster_style(hydro_risk_raster, 9, 1)
+                set_raster_style(hydro_risk_raster, 18, 1)
                 AUSTRIAN_group.insertLayer(0, hydro_risk_raster)
 
                 self.tick(dlg, "AUSTRIAN: done")
@@ -375,7 +375,7 @@ class HazardMaps:
                 hydro_risk_raster = self.create_uk_map(name, raster, depth_file, vel_file, crs)
 
                 QgsProject.instance().addMapLayer(hydro_risk_raster, False)
-                set_raster_style(hydro_risk_raster, 8, 1)
+                set_raster_style(hydro_risk_raster, 17, 1)
                 mapping_group.insertLayer(0, hydro_risk_raster)
 
                 self.tick(dlg, "UK Hazard: done")
@@ -412,7 +412,7 @@ class HazardMaps:
                     name, raster, depth_data, vel_data, index, crs
                 )
                 QgsProject.instance().addMapLayer(hydro_risk_raster, False)
-                set_raster_style(hydro_risk_raster, 8, 1)
+                set_raster_style(hydro_risk_raster, 20, 1)
                 USBR_group.insertLayer(0, hydro_risk_raster)
 
                 self.tick(dlg, f"{labels[index]}: done")
@@ -444,7 +444,7 @@ class HazardMaps:
                     name, raster, depth_data, vel_data, vel_x_depth_data, index, crs
                 )
                 QgsProject.instance().addMapLayer(hydro_risk_raster, False)
-                set_raster_style(hydro_risk_raster, 8, 1)
+                set_raster_style(hydro_risk_raster, 19, 1)
                 SWISS_group.insertLayer(0, hydro_risk_raster)
 
                 self.tick(dlg, f"{labels[index]}: done")
@@ -463,7 +463,7 @@ class HazardMaps:
                 hydro_risk_raster = self.create_fema_map(name, raster, depth_file, vel_file, crs)
 
                 QgsProject.instance().addMapLayer(hydro_risk_raster, False)
-                set_raster_style(hydro_risk_raster, 16, toler_value=0.0)
+                set_raster_style(hydro_risk_raster, 16, 1)
                 FEMA_group.insertLayer(0, hydro_risk_raster)
 
                 self.tick(dlg, "FEMA: done")
@@ -613,8 +613,9 @@ class HazardMaps:
 
     def create_austrian_map(self, name, hydro_risk, depth_file, vel_file, crs):
         """
-        Create Austrian hazard map using total specific energy:
-            E = h + v^2/(2*g)
+        Two classes:
+            WR (Red Zone): High hazard
+            WG (Yellow Zone): Low hazard
         """
         depth_data = self.read_flo2d_ascii_xyv(depth_file)
         vel_data = self.read_flo2d_ascii_xyv(vel_file)
@@ -636,12 +637,10 @@ class HazardMaps:
 
             E = h + (v ** 2) / (2.0 * self.gravity)
 
-            if E > 1.5:
-                cls = 3
-            elif E > 0.5:
-                cls = 2
+            if (h >= 1.5) or (E >= 1.5):
+                cls = 2 # WR
             else:
-                cls = 1
+                cls = 1 # GW
 
             values.append((x, y, cls))
             if len(cell_size_data) < 2:
@@ -684,7 +683,7 @@ class HazardMaps:
             HR = d * (v + 0.5) + DF
 
             if HR < 0.75:
-                cls = 1         # Very low hazard
+                cls = 1         # Very low hazard (caution)
             elif HR < 1.25:
                 cls = 2         # Danger for some
             elif HR < 2.0:
@@ -693,7 +692,6 @@ class HazardMaps:
                 cls = 4         # Danger for all
 
             values.append((x,y, cls))
-
             if len(cell_size_data) < 2:
                 cell_size_data.append((x,y))
 
