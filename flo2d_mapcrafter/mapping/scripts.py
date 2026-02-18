@@ -159,7 +159,6 @@ def read_ASCII(file_path, output_path, name, crs):
 
     return layer
 
-
 def get_extent(raster, flood_extent_vector, name):
     """Function to get the extent of a raster layer"""
     vectorized = processing.run(
@@ -241,11 +240,13 @@ def set_raster_style(layer, style, toler_value, units_switch=None):
         "arr4": "#92d050",
         "arr5": "#ffc000",
         "arr6": "#ff0000",
-        "risk_low": "#F6F0A0",          # pale yellow
-        "risk_medium": "#A8D8A0",       # light green
-        "risk_high": "#4F78B7",         # blue
-        "risk_very_high": "#F6A073",    # peach/orange
-        "risk_extreme": "#F04F9B"        # pink/magenta
+        "fema_low": "#f6f0A0",
+        "fema_medium": "#a8d8a0",
+        "fema_high": "#4f78b7",
+        "fema_very_high": "#f6a073",
+        "fema_extreme": "#f04f9b",
+        "WG": "#fcfcb6",
+        "WR": "#eda38d"
     }
 
     provider = layer.dataProvider()
@@ -256,7 +257,6 @@ def set_raster_style(layer, style, toler_value, units_switch=None):
 
     stats = provider.bandStatistics(1)
     min = stats.minimumValue
-
     max = stats.maximumValue
     range = max - min
     add = range / 2
@@ -277,16 +277,24 @@ def set_raster_style(layer, style, toler_value, units_switch=None):
 
     # Hydrodynamic Risk ARR
     elif style == 2:
-        color_list = [
-            QColor().fromRgb(255, 0, 0, 0),
-            QColor(colDic["arr1"]),
-            QColor(colDic["arr2"]),
-            QColor(colDic["arr3"]),
-            QColor(colDic["arr4"]),
-            QColor(colDic["arr5"]),
-            QColor(colDic["arr6"]),
+        shader = QgsColorRampShader()
+        shader.setColorRampType(QgsColorRampShader.Discrete)
+
+        items = [
+            QgsColorRampShader.ColorRampItem(1, QColor(colDic["arr1"]), "Low"),
+            QgsColorRampShader.ColorRampItem(2, QColor(colDic["arr2"]), "Medium"),
+            QgsColorRampShader.ColorRampItem(3, QColor(colDic["arr3"]), "High"),
+            QgsColorRampShader.ColorRampItem(4, QColor(colDic["arr4"]), "Very High"),
+            QgsColorRampShader.ColorRampItem(5, QColor(colDic["arr5"]), "Extreme"),
+            QgsColorRampShader.ColorRampItem(6, QColor(colDic["arr6"]), "Extreme"),
         ]
-        set_renderer(layer, color_list, myRasterShader, min, max)
+        shader.setColorRampItemList(items)
+        raster_shader = QgsRasterShader()
+        raster_shader.setRasterShaderFunction(shader)
+        renderer = QgsSingleBandPseudoColorRenderer(layer.dataProvider(), 1, raster_shader)
+        renderer.setClassificationMin(1)
+        renderer.setClassificationMax(6)
+        layer.setRenderer(renderer)
 
     elif style == 3:
         layer.loadNamedStyle(style_directory + r"\time.qml")
@@ -399,25 +407,99 @@ def set_raster_style(layer, style, toler_value, units_switch=None):
     # Pier Scour (HEC-18 CSU)
     elif style == 15:
         if units_switch == "1":  # metric
-            layer.loadNamedStyle(
-                os.path.join(style_directory, "pier_scour_m.qml")
-            )
+            layer.loadNamedStyle(os.path.join(style_directory, "pier_scour_m.qml"))
         else:  # imperial
-            layer.loadNamedStyle(
-                os.path.join(style_directory, "pier_scour.qml")
-            )
+            layer.loadNamedStyle(os.path.join(style_directory, "pier_scour.qml"))
 
     # FEMA
     elif style == 16:
-        min = toler_value
-        color_list = [
-            QColor (colDic["risk_low"]),
-            QColor (colDic["risk_medium"]),
-            QColor (colDic["risk_high"]),
-            QColor (colDic["risk_very_high"]),
-            QColor (colDic["risk_extreme"]),
+        shader = QgsColorRampShader()
+        shader.setColorRampType(QgsColorRampShader.Discrete)
+
+        items = [
+            QgsColorRampShader.ColorRampItem(1, QColor(colDic["fema_low"]), "Low"),
+            QgsColorRampShader.ColorRampItem(2, QColor(colDic["fema_medium"]), "Medium"),
+            QgsColorRampShader.ColorRampItem(3, QColor(colDic["fema_high"]), "High"),
+            QgsColorRampShader.ColorRampItem(4, QColor(colDic["fema_very_high"]), "Very High"),
+            QgsColorRampShader.ColorRampItem(5, QColor(colDic["fema_extreme"]), "Extreme"),
         ]
-        set_renderer(layer, color_list, myRasterShader, min, max)
+        shader.setColorRampItemList(items)
+        raster_shader = QgsRasterShader()
+        raster_shader.setRasterShaderFunction(shader)
+        renderer = QgsSingleBandPseudoColorRenderer(layer.dataProvider(), 1, raster_shader)
+        renderer.setClassificationMin(1)
+        renderer.setClassificationMax(5)
+        layer.setRenderer(renderer)
+
+    # UK
+    elif style == 17:
+        shader = QgsColorRampShader()
+        shader.setColorRampType(QgsColorRampShader.Discrete)
+        items = [
+            QgsColorRampShader.ColorRampItem(1, QColor(colDic["white"]), "Very Low"),
+            QgsColorRampShader.ColorRampItem(2, QColor(colDic["yellow"]), "Danger for Some"),
+            QgsColorRampShader.ColorRampItem(3, QColor(colDic["orange"]), "Danger for Most"),
+            QgsColorRampShader.ColorRampItem(4, QColor(colDic["red"]), "Danger for All"),
+        ]
+        shader.setColorRampItemList(items)
+        raster_shader = QgsRasterShader()
+        raster_shader.setRasterShaderFunction(shader)
+        renderer = QgsSingleBandPseudoColorRenderer(layer.dataProvider(), 1, raster_shader)
+        renderer.setClassificationMin(1)
+        renderer.setClassificationMax(4)
+        layer.setRenderer(renderer)
+
+    # Austrian
+    elif style == 18:
+        shader = QgsColorRampShader()
+        shader.setColorRampType(QgsColorRampShader.Discrete)
+        items = [
+            QgsColorRampShader.ColorRampItem(1, QColor(colDic["WG"]), "Low Hazard"),
+            QgsColorRampShader.ColorRampItem(2, QColor(colDic["WR"]), "High Hazard"),
+        ]
+        shader.setColorRampItemList(items)
+        raster_shader = QgsRasterShader()
+        raster_shader.setRasterShaderFunction(shader)
+        renderer = QgsSingleBandPseudoColorRenderer(layer.dataProvider(), 1, raster_shader)
+        renderer.setClassificationMin(1)
+        renderer.setClassificationMax(2)
+        layer.setRenderer(renderer)
+
+    # Swiss
+    elif style == 19:
+        shader = QgsColorRampShader()
+        shader.setColorRampType(QgsColorRampShader.Discrete)
+
+        items = [
+            QgsColorRampShader.ColorRampItem(1, QColor(colDic["blue"]), "Low Intensity"),
+            QgsColorRampShader.ColorRampItem(2, QColor(colDic["yellow"]), "Moderate Intensity"),
+            QgsColorRampShader.ColorRampItem(3, QColor(colDic["red"]), "High Intensity"),
+        ]
+        shader.setColorRampItemList(items)
+        raster_shader = QgsRasterShader()
+        raster_shader.setRasterShaderFunction(shader)
+        renderer = QgsSingleBandPseudoColorRenderer(layer.dataProvider(), 1, raster_shader)
+        renderer.setClassificationMin(1)
+        renderer.setClassificationMax(3)
+        layer.setRenderer(renderer)
+
+    # USBR
+    elif style == 20:
+        shader = QgsColorRampShader()
+        shader.setColorRampType(QgsColorRampShader.Discrete)
+
+        items = [
+            QgsColorRampShader.ColorRampItem(1, QColor(colDic["blue"]), "Low Danger"),
+            QgsColorRampShader.ColorRampItem(2, QColor(colDic["yellow"]), "Judgement"),
+            QgsColorRampShader.ColorRampItem(3, QColor(colDic["red"]), "High Danger"),
+        ]
+        shader.setColorRampItemList(items)
+        raster_shader = QgsRasterShader()
+        raster_shader.setRasterShaderFunction(shader)
+        renderer = QgsSingleBandPseudoColorRenderer(layer.dataProvider(), 1, raster_shader)
+        renderer.setClassificationMin(1)
+        renderer.setClassificationMax(3)
+        layer.setRenderer(renderer)
 
     layer.triggerRepaint()
 
@@ -481,14 +563,32 @@ def set_renderer(layer, color_list, raster_shader, min, max):
     """
     Function to set the render to layer
     """ ""
+    # Two classes
+    if len(color_list) == 2:
+        color_ramp = QgsGradientColorRamp(
+            QColor(color_list[0]),
+            QColor(color_list[1]),
+            discrete=True
+        )
     # Three colors -> all layers
-    if len(color_list) == 3:
+    elif len(color_list) == 3:
         color_ramp = QgsGradientColorRamp(
             QColor(color_list[0]),
             QColor(color_list[2]),
             discrete=False,
             stops=[
                 QgsGradientStop(0.5, QColor(color_list[1])),
+            ],
+        )
+    # Four colors
+    elif len(color_list) == 4:
+        color_ramp = QgsGradientColorRamp(
+            QColor(color_list[0]),
+            QColor(color_list[3]),
+            discrete=True,
+            stops=[
+                QgsGradientStop(1/3, QColor(color_list[1])),
+                QgsGradientStop(2/3, QColor(color_list[2])),
             ],
         )
     # Levee Deficit
