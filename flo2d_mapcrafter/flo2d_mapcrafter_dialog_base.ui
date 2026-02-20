@@ -126,7 +126,6 @@
            <height>20</height>
           </size>
          </property>
-
         </widget>
        </item>
       </layout>
@@ -592,8 +591,8 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>773</width>
-            <height>478</height>
+            <width>490</width>
+            <height>673</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_99">
@@ -3075,8 +3074,8 @@ p, li { white-space: pre-wrap; }
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>502</width>
-            <height>814</height>
+            <width>773</width>
+            <height>481</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_103">
@@ -3085,7 +3084,7 @@ p, li { white-space: pre-wrap; }
              <item row="1" column="0">
               <widget class="QgsCollapsibleGroupBox" name="austrian_hm_cgb">
                <property name="enabled">
-                <bool>false</bool>
+                <bool>true</bool>
                </property>
                <property name="title">
                 <string>Austrian</string>
@@ -3169,7 +3168,7 @@ p, li { white-space: pre-wrap; }
              <item row="4" column="0">
               <widget class="QgsCollapsibleGroupBox" name="uk_hm_cgb">
                <property name="enabled">
-                <bool>false</bool>
+                <bool>true</bool>
                </property>
                <property name="title">
                 <string>UK Hazard Mapping</string>
@@ -3308,7 +3307,7 @@ p, li { white-space: pre-wrap; }
              <item row="6" column="0">
               <widget class="QgsCollapsibleGroupBox" name="fema_hz_cgb">
                <property name="enabled">
-                <bool>false</bool>
+                <bool>true</bool>
                </property>
                <property name="title">
                 <string>US Federal Emergency Management Agency</string>
@@ -3321,6 +3320,9 @@ p, li { white-space: pre-wrap; }
                  <layout class="QGridLayout" name="gridLayout_65">
                   <item row="0" column="0">
                    <widget class="QCheckBox" name="fema_hm_cb">
+                    <property name="enabled">
+                     <bool>false</bool>
+                    </property>
                     <property name="toolTipDuration">
                      <number>0</number>
                     </property>

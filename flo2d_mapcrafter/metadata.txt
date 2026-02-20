@@ -14,6 +14,12 @@ repository=https://github.com/FLO-2DSoftware/FLO-2DMapCrafter
 hasProcessingProvider=no
 
 changelog=
+    <p>2.5.2
+        - Enable the following hazard maps:
+            - Austrian
+            - UK Hazard Mapping
+            - US Federal Emergency Management Agency
+        - Make all hazard maps discrete.
     <p>2.5.1
         - Added a refresh button
     <p>2.5.0

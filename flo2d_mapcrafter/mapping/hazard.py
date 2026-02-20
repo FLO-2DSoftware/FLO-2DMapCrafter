@@ -24,6 +24,7 @@
 import os
 import processing
 import numpy as np
+
 try:
     import h5py
 except ImportError:
@@ -35,8 +36,8 @@ from PyQt5.QtCore import Qt
 from flo2d_mapcrafter.mapping.check_data import check_project_id, check_mapping_group, check_raster_file
 from flo2d_mapcrafter.mapping.scripts import read_ASCII, remove_layer, set_raster_style
 
-class HazardMaps:
 
+class HazardMaps:
     def __init__(self, iface, units_switch, toler_value):
         """
         Class constructor
@@ -49,7 +50,10 @@ class HazardMaps:
         # gravitational acceleration
         self.gravity = 9.80665 if self.units_switch == "1" else 32.174
 
-    def _make_progress(self, text: str, maximum: int) -> QProgressDialog:
+        # unit (uc)
+        self.uc = 1.0 if units_switch == "1" else 3.28
+
+    def make_progress(self, text: str, maximum: int) -> QProgressDialog:
         dlg = QProgressDialog(text, "Cancel", 0, max(1, int(maximum)), self.iface.mainWindow())
         dlg.setWindowTitle("QGIS3")
         dlg.setWindowModality(Qt.WindowModal)
@@ -59,18 +63,83 @@ class HazardMaps:
         dlg.setValue(0)
         return dlg
 
-    def _tick(self, dlg: QProgressDialog, label: str):
+    def tick(self, dlg: QProgressDialog, label: str):
         if dlg.wasCanceled():
             raise KeyboardInterrupt
         dlg.setLabelText(label)
         dlg.setValue(dlg.value() + 1)
         QApplication.processEvents()
 
+    def compute_cell_size(self, xy_points):
+        """
+        Compute FLO-2D grid cell size from at least two (x, y) points.
+        """
+        if len(xy_points) < 2:
+            raise ValueError("At least two points required to compute cell size")
+
+        dx = abs(xy_points[1][0] - xy_points[0][0])
+        dy = abs(xy_points[1][1] - xy_points[0][1])
+
+        dx = dx if dx > 0 else 9999
+        dy = dy if dy > 0 else 9999
+
+        return min(dx, dy)
+
+    def points_to_raster_array(self, points, cell_size, nodata=-9999, extent_points=None):
+        """
+        Convert (x, y, value) points to raster array and georeferencing info
+        """
+        if extent_points is None:
+            extent_points = points
+
+        xs = [p[0] for p in extent_points]
+        ys = [p[1] for p in extent_points]
+
+        min_x, max_x = min(xs), max(xs)
+        min_y, max_y = min(ys), max(ys)
+
+        num_cols = int((max_x - min_x) / cell_size) + 1
+        num_rows = int((max_y - min_y) / cell_size) + 1
+
+        raster_data = np.full((num_rows, num_cols), nodata, dtype=np.float32)
+
+        for x, y, v in points:
+            col = int((x - min_x) / cell_size)
+            row = int((max_y - y) / cell_size)
+            raster_data[row, col] = v
+
+        geotransform = (
+            min_x - cell_size / 2,
+            cell_size,
+            0,
+            max_y + cell_size / 2,
+            0,
+            -cell_size,
+        )
+
+        return raster_data, geotransform
+
+    def write_geotiff(self, output_path, raster_data, geotransform, crs, nodata=-9999):
+        """
+        Write a single-band GeoTiff
+        """
+        rows, cols = raster_data.shape
+        driver = gdal.GetDriverByName("GTiff")
+        raster = driver.Create(output_path, cols, rows, 1, gdal.GDT_Float32)
+
+        raster.SetGeoTransform(geotransform)
+        raster.SetProjection(crs.toWkt())
+
+        band = raster.GetRasterBand(1)
+        band.SetNoDataValue(nodata)
+        band.WriteArray(raster_data)
+
+        raster.FlushCache()
+
     def check_hazard_files(self, output_dir):
         """
         Function to check the hazard maps that can be created
         """
-
         hazard_maps = {
             "ARR": False,
             "Austrian": False,
@@ -90,10 +159,22 @@ class HazardMaps:
             r"VEL_X_DEPTH.OUT": False
         }
 
+        # AUSTRIAN Flood Hazard
+        austrian_files = {
+            r"DEPTH.OUT": False,
+            r"VELFP.OUT": False
+        }
+
         # SWISS FLOOD INTENSITY
         swiss_files = {
             r"DEPTH.OUT": False,
             r"VEL_X_DEPTH.OUT": False,
+            r"VELFP.OUT": False
+        }
+
+        # UK Hazard Mapping
+        uk_files = {
+            r"DEPTH.OUT": False,
             r"VELFP.OUT": False
         }
 
@@ -102,48 +183,77 @@ class HazardMaps:
             r"DEPTH.OUT": False,
             r"VELFP.OUT": False,
         }
-        
+
+        # US FEMA
+        fema_files = {
+            r"DEPTH.OUT": False,
+            r"VELFP.OUT": False
+        }
+
         # PIER SCOUR
         pier_files_timdep = {
             r"TIMDEP.HDF5": False
         }
-        
+
         pier_files_max = {
             r"DEPFP.OUT": False,
             r"VELFP.OUT": False
         }
 
         files = os.listdir(output_dir)
+
         for file in files:
-            for key, value in arr_files.items():
-                if file.startswith(key):
-                    arr_files[key] = True
-            for key, value in swiss_files.items():
-                if file.startswith(key):
-                    swiss_files[key] = True
-            for key, value in usbr_files.items():
-                if file.startswith(key):
-                    usbr_files[key] = True
-            for key in pier_files_timdep:
-                if file.startswith(key):
-                    pier_files_timdep[key] = True
-            for key in pier_files_max:
-                if file.startswith(key):
-                    pier_files_max[key] = True
+            filename = os.path.basename(file)
+
+            if filename in arr_files:
+                arr_files[filename] = True
+
+            if filename in austrian_files:
+                austrian_files[filename] = True
+
+            if filename in swiss_files:
+                swiss_files[filename] = True
+
+            if filename in usbr_files:
+                usbr_files[filename] = True
+
+            if filename in uk_files:
+                uk_files[filename] = True
+
+            if filename in fema_files:
+                fema_files[filename] = True
+
+            if filename in pier_files_timdep:
+                pier_files_timdep[filename] = True
+
+            if filename in pier_files_max:
+                pier_files_max[filename] = True
 
         # ARR Check if all files are true
         if all(value for value in arr_files.values()):
             hazard_maps["ARR"] = True
 
+        # AUSTRIAN Check if all files are true
+        if all(value for value in austrian_files.values()):
+            hazard_maps["Austrian"] = True
+
         # SWISS Check if all files are true
         if all(value for value in swiss_files.values()):
             hazard_maps["Swiss"] = [True, True]
+
+        # UK Check if all files are true
+        if all(value for value in uk_files.values()):
+            hazard_maps["UK"] = True
 
         # USBR Check if all files are true
         if all(value for value in usbr_files.values()):
             hazard_maps["USBR"] = [True, True, True, True, True]
 
-        # Pier Scour Check if all files are true    
+        # FEMA Check if all files are true
+        if all(value for value in fema_files.values()):
+            hazard_maps["FEMA"] = [True]
+
+        # Pier Scour Check if all files are true
         if all(pier_files_timdep.values()) or all(pier_files_max.values()):
             hazard_maps["PIER"] = True
 
@@ -151,38 +261,31 @@ class HazardMaps:
         if all(pier_files_timdep.values()):
             hazard_maps["PIER_TIMDEP"] = True
 
-
         return hazard_maps
 
-    def create_maps(
-        self, 
-        hazard_rbs, 
-        flo2d_results_dir, 
-        map_output_dir, 
-        mapping_group, 
-        crs, 
-        project_id,
-        pier_params=None
-    ):
+    def create_maps(self, hazard_rbs, flo2d_results_dir, map_output_dir, mapping_group, crs, project_id, pier_params=None):
         pier_params = pier_params or {}
-
-
         """
         Function to create the maps
         """
-
         # ---- count steps (ARR + Swiss flags + USBR flags) ----
         total_steps = 0
         if hazard_rbs.get("ARR"):
             total_steps += 1
+        if hazard_rbs.get("Austrian"):
+            total_steps += 1
         swiss_maps = hazard_rbs.get("Swiss") or []
+        if hazard_rbs.get("UK"):
+            total_steps += 1
         total_steps += sum(1 for v in swiss_maps if v)
         usbr_maps = hazard_rbs.get("USBR") or []
+        if hazard_rbs.get("FEMA"):
+            total_steps += 1
         total_steps += sum(1 for v in usbr_maps if v)
         if hazard_rbs.get("PIER"):
             total_steps += 1
 
-        dlg = self._make_progress("Preparing…", max(1, total_steps))
+        dlg = self.make_progress("Preparing…", max(1, total_steps))
         try:
             # ----------------- setup / groups -----------------
             mapping_group_name = check_project_id("Hazard Maps", project_id)
@@ -195,21 +298,34 @@ class HazardMaps:
             ARR_group_name = "Australian Rainfall and Runoff (ARR)"
             ARR_group = mapping_group.findGroup(ARR_group_name) or mapping_group.insertGroup(0, ARR_group_name)
 
+            # AUSTRIAN
+            AUSTRIAN_group_name = "AUSTRIAN"
+            AUSTRIAN_group = mapping_group.findGroup(AUSTRIAN_group_name) or mapping_group.insertGroup(0,AUSTRIAN_group_name)
+
             # SWISS
             SWISS_group_name = "SWISS"
             SWISS_group = mapping_group.findGroup(SWISS_group_name) or mapping_group.insertGroup(0, SWISS_group_name)
 
+            # UK
+            UK_group_name = "UK"
+            UK_group = mapping_group.findGroup(UK_group_name) or mapping_group.insertGroup(0, UK_group_name)
+
             # USBR
             USBR_group_name = "US Bureau of Reclamation"
             USBR_group = mapping_group.findGroup(USBR_group_name) or mapping_group.insertGroup(0, USBR_group_name)
-            
+
+            # FEMA
+            FEMA_group_name = "FEMA"
+            FEMA_group = mapping_group.findGroup(FEMA_group_name) or mapping_group.insertGroup(0, FEMA_group_name)
+
             # PIER
             PIER_group_name = "PIER SCOUR"
             PIER_group = mapping_group.findGroup(PIER_group_name) or mapping_group.insertGroup(0, PIER_group_name)
 
             # ----------------- ARR -----------------
             if hazard_rbs.get("ARR"):
-                dlg.setLabelText("ARR: computing…"); QApplication.processEvents()
+                dlg.setLabelText("ARR: computing…");
+                QApplication.processEvents()
                 name = check_project_id("ARR_FLOOD_HAZARD", project_id)
                 name, raster = check_raster_file(name, map_output_dir)
                 depth_file = os.path.join(flo2d_results_dir, "DEPTH.OUT")
@@ -224,7 +340,45 @@ class HazardMaps:
                 set_raster_style(hydro_risk_raster, 2, self.toler_value)
                 ARR_group.insertLayer(0, hydro_risk_raster)
 
-                self._tick(dlg, "ARR: done")
+                self.tick(dlg, "ARR: done")
+
+            # ----------------- AUSTRIAN Hazard Map ----------------- #
+            if hazard_rbs.get("Austrian"):
+                dlg.setLabelText("Austrian: computing...")
+                QApplication.processEvents()
+
+                depth_file = os.path.join(flo2d_results_dir, "DEPTH.OUT")
+                vel_file = os.path.join(flo2d_results_dir, "VELFP.OUT")
+
+                name = check_project_id("AUSTRIAN_HAZARD", project_id)
+                name, raster = check_raster_file(name, map_output_dir)
+
+                hydro_risk_raster = self.create_austrian_map(name, raster, depth_file, vel_file, crs)
+
+                QgsProject.instance().addMapLayer(hydro_risk_raster, False)
+                set_raster_style(hydro_risk_raster, 18, 1)
+                AUSTRIAN_group.insertLayer(0, hydro_risk_raster)
+
+                self.tick(dlg, "AUSTRIAN: done")
+
+            # ----------------- UK Hazard Map ----------------- #
+            if hazard_rbs.get("UK"):
+                dlg.setLabelText("UK Hazard: computing ...")
+                QApplication.processEvents()
+
+                depth_file = os.path.join(flo2d_results_dir, "DEPTH.OUT")
+                vel_file = os.path.join(flo2d_results_dir, 'VELFP.OUT')
+
+                name = check_project_id("UK_FLOOD_HAZARD", project_id)
+                name, raster = check_raster_file(name, map_output_dir)
+
+                hydro_risk_raster = self.create_uk_map(name, raster, depth_file, vel_file, crs)
+
+                QgsProject.instance().addMapLayer(hydro_risk_raster, False)
+                set_raster_style(hydro_risk_raster, 17, 1)
+                mapping_group.insertLayer(0, hydro_risk_raster)
+
+                self.tick(dlg, "UK Hazard: done")
 
             # ----------------- USBR (Houses/Mobile/Vehicles/Adults/Children) -----------------
             usbr_maps = hazard_rbs.get("USBR") or []
@@ -233,10 +387,12 @@ class HazardMaps:
                     continue
 
                 labels = ["USBR – Houses", "USBR – Mobile", "USBR – Vehicle", "USBR – Adults", "USBR – Children"]
-                dlg.setLabelText(f"{labels[index]}: computing…"); QApplication.processEvents()
+                dlg.setLabelText(f"{labels[index]}: computing…");
+                QApplication.processEvents()
 
                 depth_file = os.path.join(flo2d_results_dir, "DEPTH.OUT")
                 vel_file = os.path.join(flo2d_results_dir, "VELFP.OUT")
+
                 vel_data = np.loadtxt(vel_file, skiprows=0)
                 depth_data = np.loadtxt(depth_file, skiprows=0)
 
@@ -256,10 +412,10 @@ class HazardMaps:
                     name, raster, depth_data, vel_data, index, crs
                 )
                 QgsProject.instance().addMapLayer(hydro_risk_raster, False)
-                set_raster_style(hydro_risk_raster, 8, 1)
+                set_raster_style(hydro_risk_raster, 20, 1)
                 USBR_group.insertLayer(0, hydro_risk_raster)
 
-                self._tick(dlg, f"{labels[index]}: done")
+                self.tick(dlg, f"{labels[index]}: done")
 
             # ----------------- SWISS (Flood intensity / Debris intensity) -----------------
             swiss_maps = hazard_rbs.get("Swiss") or []
@@ -268,7 +424,8 @@ class HazardMaps:
                     continue
 
                 labels = ["Swiss Flood Intensity", "Swiss Debris Intensity"]
-                dlg.setLabelText(f"{labels[index]}: computing…"); QApplication.processEvents()
+                dlg.setLabelText(f"{labels[index]}: computing…");
+                QApplication.processEvents()
 
                 depth_file = os.path.join(flo2d_results_dir, "DEPTH.OUT")
                 vel_file = os.path.join(flo2d_results_dir, "VELFP.OUT")
@@ -287,34 +444,47 @@ class HazardMaps:
                     name, raster, depth_data, vel_data, vel_x_depth_data, index, crs
                 )
                 QgsProject.instance().addMapLayer(hydro_risk_raster, False)
-                set_raster_style(hydro_risk_raster, 8, 1)
+                set_raster_style(hydro_risk_raster, 19, 1)
                 SWISS_group.insertLayer(0, hydro_risk_raster)
 
-                self._tick(dlg, f"{labels[index]}: done")
-                
+                self.tick(dlg, f"{labels[index]}: done")
+
+            # ------------------ FEMA Hazard Map ----------------- #
+            if hazard_rbs.get("FEMA"):
+                dlg.setLabelText("FEMA: computing...")
+                QApplication.processEvents()
+
+                depth_file = os.path.join(flo2d_results_dir, "DEPTH.OUT")
+                vel_file = os.path.join(flo2d_results_dir, "VELFP.OUT")
+
+                name = check_project_id("FEMA_HAZARD", project_id)
+                name, raster = check_raster_file(name, map_output_dir)
+
+                hydro_risk_raster = self.create_fema_map(name, raster, depth_file, vel_file, crs)
+
+                QgsProject.instance().addMapLayer(hydro_risk_raster, False)
+                set_raster_style(hydro_risk_raster, 16, 1)
+                FEMA_group.insertLayer(0, hydro_risk_raster)
+
+                self.tick(dlg, "FEMA: done")
+
             # ----------------- Pier Scour Maps -----------------
             if hazard_rbs.get("PIER"):
-                dlg.setLabelText("PIER: computing…"); QApplication.processEvents()
+                dlg.setLabelText("PIER: computing…");
+                QApplication.processEvents()
                 name = check_project_id("PIER SCOUR", project_id)
                 name, raster = check_raster_file(name, map_output_dir)
                 depth_file = os.path.join(flo2d_results_dir, "DEPTH.OUT")
                 vel_file = os.path.join(flo2d_results_dir, "VELFP.OUT")
                 timdep_file = os.path.join(flo2d_results_dir, "TIMDEP.HDF5")
 
-                hydro_risk_raster = self.create_pier_scour_map(
-                    raster, 
-                    depth_file, 
-                    vel_file, 
-                    timdep_file, 
-                    crs, 
-                    pier_params
-                )
+                hydro_risk_raster = self.create_pier_scour_map(raster, depth_file, vel_file, timdep_file, crs, pier_params)
 
                 QgsProject.instance().addMapLayer(hydro_risk_raster, False)
                 set_raster_style(hydro_risk_raster, 15, self.toler_value, self.units_switch)
                 PIER_group.insertLayer(0, hydro_risk_raster)
 
-                self._tick(dlg, "PIER: done")
+                self.tick(dlg, "PIER: done")
 
             # ----------------- collapse new layers -----------------
             allLayers = mapping_group.findLayers()
@@ -329,119 +499,59 @@ class HazardMaps:
         finally:
             dlg.close()
 
-
-
     def create_swiss_map(self, name, hydro_risk, depth_data, vel_data, vel_x_depth_data, map_type, crs):
         """Create the SWISS flood intensity map"""
-
-        # adjust units
-        if self.units_switch == "1":
-            uc = 1
-        else:
-            uc = 3.28
-
         values = []
-        cellSize_data = []
+        cell_size_data = []
 
         # Flood Intensity
         if map_type == 0:
             for (id_v, x, y, depth_x_velocity), (_, _, _, depth) in zip(vel_x_depth_data, depth_data):
                 if depth != 0:
                     # Unit conversion
-                    depth = depth * uc
-                    depth_x_velocity = depth_x_velocity * (uc ** 2)
+                    depth = depth * self.uc
+                    depth_x_velocity = depth_x_velocity * (self.uc ** 2)
                     # low intensity
                     if depth > 2 or depth_x_velocity > 2:
                         values.append((x, y, 3))
-                        if len(cellSize_data) < 2:
-                            cellSize_data.append((x, y))
+                        if len(cell_size_data) < 2:
+                            cell_size_data.append((x, y))
                     # moderate intensity
                     elif 0.5 < depth < 2 or 0.5 < depth_x_velocity < 2:
                         values.append((x, y, 2))
-                        if len(cellSize_data) < 2:
-                            cellSize_data.append((x, y))
+                        if len(cell_size_data) < 2:
+                            cell_size_data.append((x, y))
                     # high intensity
                     else:
                         values.append((x, y, 1))
-                        if len(cellSize_data) < 2:
-                            cellSize_data.append((x, y))
+                        if len(cell_size_data) < 2:
+                            cell_size_data.append((x, y))
 
         # Debris Intensity
         if map_type == 1:
             for (id_v, x, y, depth), (_, _, _, velocity) in zip(depth_data, vel_data):
                 if depth != 0:
                     # Unit conversion
-                    depth = depth * uc
-                    velocity = velocity * uc
+                    depth = depth * self.uc
+                    velocity = velocity * self.uc
                     # high intensity
                     if depth > 1 and velocity > 1:
                         values.append((x, y, 3))
-                        if len(cellSize_data) < 2:
-                            cellSize_data.append((x, y))
+                        if len(cell_size_data) < 2:
+                            cell_size_data.append((x, y))
                     # moderate intensity
                     elif depth < 1 or velocity < 1:
                         values.append((x, y, 2))
-                        if len(cellSize_data) < 2:
-                            cellSize_data.append((x, y))
+                        if len(cell_size_data) < 2:
+                            cell_size_data.append((x, y))
 
-        # Calculate the differences in X and Y coordinates
-        dx = abs(cellSize_data[1][0] - cellSize_data[0][0])
-        dy = abs(cellSize_data[1][1] - cellSize_data[0][1])
+        cell_size = self.compute_cell_size(cell_size_data)
+        raster_data, geotransform = self.points_to_raster_array(values, cell_size)  # Convert (x, y, value) points into raster array + geotransform
+        self.write_geotiff(hydro_risk, raster_data, geotransform, crs)  # Write GeoTIFF
+        return QgsRasterLayer(hydro_risk, name)
 
-        # If the coordinate difference is equal 0, assign a huge number
-        if dx == 0:
-            dx = 9999
-        if dy == 0:
-            dy = 9999
-
-        cellSize = min(dx, dy)
-
-        # Get the extent and number of rows and columns
-        min_x = min(point[0] for point in values)
-        max_x = max(point[0] for point in values)
-        min_y = min(point[1] for point in values)
-        max_y = max(point[1] for point in values)
-        num_cols = int((max_x - min_x) / cellSize) + 1
-        num_rows = int((max_y - min_y) / cellSize) + 1
-
-        # Convert the list of values to an array.
-        raster_data = np.full((num_rows, num_cols), -9999, dtype=np.float32)
-        for point in values:
-            if point[2] != 0:
-                col = int((point[0] - min_x) / cellSize)
-                row = int((max_y - point[1]) / cellSize)
-                raster_data[row, col] = point[2]
-
-        # Initialize the raster
-        driver = gdal.GetDriverByName("GTiff")
-        raster = driver.Create(hydro_risk, num_cols, num_rows, 1, gdal.GDT_Float32)
-        raster.SetGeoTransform(
-            (
-                min_x - cellSize / 2,
-                cellSize,
-                0,
-                max_y + cellSize / 2,
-                0,
-                -cellSize,
-            )
-        )
-        raster.SetProjection(crs.toWkt())
-
-        band = raster.GetRasterBand(1)
-        band.SetNoDataValue(-9999)  # Set a no-data value if needed
-        band.WriteArray(raster_data)
-
-        raster.FlushCache()
-
-        layer = QgsRasterLayer(hydro_risk, name)
-
-        return layer
-
-    def create_arr_map(
-        self, map_output_dir, hydro_risk, depth_file, vel_file, vel_x_depth_file, crs, project_id
-    ):
+    def create_arr_map(self, map_output_dir, hydro_risk, depth_file, vel_file, vel_x_depth_file, crs, project_id):
         """Create the ARR hydrodynamic risk map"""
-
         name_speed = check_project_id("FLOW_SPEED", project_id)
         name, flow_speed = check_raster_file(name_speed, map_output_dir)
 
@@ -450,11 +560,6 @@ class HazardMaps:
 
         name_hxv = check_project_id("HxV", project_id)
         name, h_x_v = check_raster_file(name_hxv, map_output_dir)
-
-        # Check flood depth and flow speed files
-        # flow_speed = map_output_dir + r"\FLOW_SPEED.tif"
-        # flood_depth = map_output_dir + r"\FLOOD_DEPTH.tif"
-        # h_x_v = map_output_dir + r"\HxV.tif"
 
         if os.path.isfile(flood_depth):
             QgsProject.instance().addMapLayer(QgsRasterLayer(flood_depth, name_depth), True)
@@ -477,26 +582,13 @@ class HazardMaps:
             if raster_processed:
                 QgsProject.instance().addMapLayer(QgsRasterLayer(h_x_v, name_hxv), True)
 
-        # if os.path.isfile(hydro_risk):
-        #     try:
-        #         remove_layer("ARR_FLOOD_HAZARD")
-        #         os.remove(hydro_risk)
-        #     except OSError as e:
-        #         print(f"Error deleting {hydro_risk}: {str(e)}")
-
-        # adjust units
-        if self.units_switch == "1":
-            uc = 1
-        else:
-            uc = 3.28
-
         r0_e = f'"{name_hxv}@1" = 0 AND "{name_depth}@1" = 0 AND "{name_speed}@1" = 0'
-        r1_e = f'"{name_hxv}@1" <= {0.3 * uc} AND "{name_depth}@1" < {0.3 * uc} AND "{name_speed}@1" < {2 * uc}'
-        r2_e = f'"{name_hxv}@1" <= {0.6 * uc} AND "{name_depth}@1" < {0.5 * uc} AND "{name_speed}@1" < {2 * uc}'
-        r3_e = f'"{name_hxv}@1" <= {0.6 * uc} AND "{name_depth}@1" < {1.2 * uc} AND "{name_speed}@1" < {2 * uc}'
-        r4_e = f'"{name_hxv}@1" <= {1.0 * uc} AND "{name_depth}@1" < {2.0 * uc} AND "{name_speed}@1" < {2 * uc}'
-        r5_e = f'"{name_hxv}@1" <= {4.0 * uc} AND "{name_depth}@1" < {4.0 * uc} AND "{name_speed}@1" < {4 * uc}'
-        r6_e = f'"{name_hxv}@1" > {4.0 * uc} OR "{name_depth}@1" >= {4.0 * uc} OR "{name_speed}@1" >= {4 * uc}'
+        r1_e = f'"{name_hxv}@1" <= {0.3 * self.uc} AND "{name_depth}@1" < {0.3 * self.uc} AND "{name_speed}@1" < {2 * self.uc}'
+        r2_e = f'"{name_hxv}@1" <= {0.6 * self.uc} AND "{name_depth}@1" < {0.5 * self.uc} AND "{name_speed}@1" < {2 * self.uc}'
+        r3_e = f'"{name_hxv}@1" <= {0.6 * self.uc} AND "{name_depth}@1" < {1.2 * self.uc} AND "{name_speed}@1" < {2 * self.uc}'
+        r4_e = f'"{name_hxv}@1" <= {1.0 * self.uc} AND "{name_depth}@1" < {2.0 * self.uc} AND "{name_speed}@1" < {2 * self.uc}'
+        r5_e = f'"{name_hxv}@1" <= {4.0 * self.uc} AND "{name_depth}@1" < {4.0 * self.uc} AND "{name_speed}@1" < {4 * self.uc}'
+        r6_e = f'"{name_hxv}@1" > {4.0 * self.uc} OR "{name_depth}@1" >= {4.0 * self.uc} OR "{name_speed}@1" >= {4 * self.uc}'
 
         # Australian Rainfall and Runoff (ARR) Classification
         arr_class = processing.run(
@@ -519,9 +611,105 @@ class HazardMaps:
 
         return QgsRasterLayer(arr_class, name_arr)
 
+    def create_austrian_map(self, name, hydro_risk, depth_file, vel_file, crs):
+        """
+        Two classes:
+            WR (Red Zone): High hazard
+            WG (Yellow Zone): Low hazard
+        """
+        depth_data = self.read_flo2d_ascii_xyv(depth_file)
+        vel_data = self.read_flo2d_ascii_xyv(vel_file)
+
+        depth_map = {cell: (x, y, d) for (cell, x, y, d) in depth_data}
+        vel_map = {cell: v for (cell, x, y,  v) in vel_data}
+
+        values = []
+        cell_size_data = []
+
+        for cell, (x, y, depth_val) in depth_map.items():
+            velocity_val = vel_map.get(cell, 0.0)
+
+            if depth_val <= 0:
+                continue
+
+            h = float(depth_val) * self.uc
+            v = float(velocity_val) * self.uc
+
+            E = h + (v ** 2) / (2.0 * self.gravity)
+
+            if (h >= 1.5) or (E >= 1.5):
+                cls = 2 # WR
+            else:
+                cls = 1 # GW
+
+            values.append((x, y, cls))
+            if len(cell_size_data) < 2:
+                cell_size_data.append((x, y))
+
+            if not values:
+                all_xy = [(x, y) for (_, x, y, _) in depth_data] if depth_data else [(0, 0), (1, 0)]
+                cell_size = self.compute_cell_size(all_xy)
+                raster_data, geotransform = self.points_to_raster_array([], cell_size)
+                self.write_geotiff(hydro_risk, raster_data, geotransform, crs)
+                return QgsRasterLayer(hydro_risk, name)
+
+        cell_size = self.compute_cell_size(cell_size_data if len(cell_size_data) >= 2 else [(x, y) for (_, x, y, _) in depth_data])
+
+        raster_data, geotransform = self.points_to_raster_array(values, cell_size)
+        self.write_geotiff(hydro_risk, raster_data, geotransform, crs)
+        return QgsRasterLayer(hydro_risk, name)
+
+    def create_uk_map(self, name, hydro_risk, depth_file, vel_file, crs):
+        depth_data = self.read_flo2d_ascii_xyv(depth_file)
+        vel_data = self.read_flo2d_ascii_xyv(vel_file)
+
+        depth_map = {cell: (x, y, d) for (cell, x, y, d) in depth_data}
+        vel_map = {cell: v for (cell, _, _, v) in vel_data}
+
+        values = []
+        cell_size_data = []
+
+        for cell, (x, y, depth) in depth_map.items():
+            velocity = vel_map.get(cell, 0.0)
+
+            if depth <= 0.0:
+                continue
+
+            d = depth * self.uc
+            v = velocity * self.uc
+
+            DF = 0.5 if d <= 0.25 else 1.0 # debris factor
+
+            HR = d * (v + 0.5) + DF
+
+            if HR < 0.75:
+                cls = 1         # Very low hazard (caution)
+            elif HR < 1.25:
+                cls = 2         # Danger for some
+            elif HR < 2.0:
+                cls = 3         # Danger for most
+            else:
+                cls = 4         # Danger for all
+
+            values.append((x,y, cls))
+            if len(cell_size_data) < 2:
+                cell_size_data.append((x,y))
+
+        # Raster creation
+        if not values:
+            all_xy = [(x,y,) for (_, x, y, _) in depth_data]
+            cell_size = self.compute_cell_size(all_xy)
+            raster_data, geotransform = self.points_to_raster_array([], cell_size)
+        else:
+            cell_size = self.compute_cell_size(cell_size_data)
+            raster_data, geotransform = self.points_to_raster_array(values, cell_size)
+
+        self.write_geotiff(hydro_risk, raster_data, geotransform, crs)
+
+        return QgsRasterLayer(hydro_risk, name)
+
     def create_usbr_map(self, name, hydro_risk, depth_data, vel_data, map_type, crs):
         """Create the USBR hydrodynamic risk map"""
-
         # adjust units
         if self.units_switch == "1":
             uc = 3.28
@@ -529,7 +717,7 @@ class HazardMaps:
             uc = 1
 
         values = []
-        cellSize_data = []
+        cell_size_data = []
         for (id_v, x, y, velocity), (_, _, _, depth) in zip(vel_data, depth_data):
 
             if depth != 0 and velocity != 0:
@@ -562,18 +750,18 @@ class HazardMaps:
                 # low danger
                 if depth < low_curve_value:
                     values.append((x, y, 1))
-                    if len(cellSize_data) < 2:
-                        cellSize_data.append((x, y))
+                    if len(cell_size_data) < 2:
+                        cell_size_data.append((x, y))
                 # high danger
                 elif depth > high_curve_value:
                     values.append((x, y, 3))
-                    if len(cellSize_data) < 2:
-                        cellSize_data.append((x, y))
+                    if len(cell_size_data) < 2:
+                        cell_size_data.append((x, y))
                 # judgment
                 else:
                     values.append((x, y, 2))
-                    if len(cellSize_data) < 2:
-                        cellSize_data.append((x, y))
+                    if len(cell_size_data) < 2:
+                        cell_size_data.append((x, y))
 
                 # Fix maximums:
                 if map_type == 0 and (depth > 10 or velocity > 25):
@@ -587,88 +775,79 @@ class HazardMaps:
                 if map_type == 4 and (depth > 4 or velocity > 8):
                     values.append((x, y, 3))
 
-        # Calculate the differences in X and Y coordinates
-        dx = abs(cellSize_data[1][0] - cellSize_data[0][0])
-        dy = abs(cellSize_data[1][1] - cellSize_data[0][1])
+        cell_size = self.compute_cell_size(cell_size_data)
+        raster_data, geotransform = self.points_to_raster_array(values, cell_size)
+        self.write_geotiff(hydro_risk, raster_data, geotransform, crs)
+        return QgsRasterLayer(hydro_risk, name)
 
-        # If the coordinate difference is equal 0, assign a huge number
-        if dx == 0:
-            dx = 9999
-        if dy == 0:
-            dy = 9999
+    def create_fema_map(self, name, hydro_risk, depth_file, vel_file, crs):
+        depth_data = self.read_flo2d_ascii_xyv(depth_file)
+        vel_data = self.read_flo2d_ascii_xyv(vel_file)
 
-        cellSize = min(dx, dy)
+        depth_map = {cell: (x, y, d) for (cell, x, y, d) in depth_data}
+        vel_map = {cell: v for (cell, x, y, v) in vel_data}
 
-        # Get the extent and number of rows and columns
-        min_x = min(point[0] for point in values)
-        max_x = max(point[0] for point in values)
-        min_y = min(point[1] for point in values)
-        max_y = max(point[1] for point in values)
-        num_cols = int((max_x - min_x) / cellSize) + 1
-        num_rows = int((max_y - min_y) / cellSize) + 1
+        values = []
+        cell_size_data = []
 
-        # Convert the list of values to an array.
-        raster_data = np.full((num_rows, num_cols), -9999, dtype=np.float32)
-        for point in values:
-            if point[2] != 0:
-                col = int((point[0] - min_x) / cellSize)
-                row = int((max_y - point[1]) / cellSize)
-                raster_data[row, col] = point[2]
+        for cell, (x, y, depth_val) in depth_map.items():
+            velocity_val = vel_map.get(cell, 0.0)
 
-        # Initialize the raster
-        driver = gdal.GetDriverByName("GTiff")
-        raster = driver.Create(hydro_risk, num_cols, num_rows, 1, gdal.GDT_Float32)
-        raster.SetGeoTransform(
-            (
-                min_x - cellSize / 2,
-                cellSize,
-                0,
-                max_y + cellSize / 2,
-                0,
-                -cellSize,
-            )
-        )
-        raster.SetProjection(crs.toWkt())
+            if depth_val <= 0.0:
+                continue
 
-        band = raster.GetRasterBand(1)
-        band.SetNoDataValue(-9999)  # Set a no-data value if needed
-        band.WriteArray(raster_data)
+            h = float(depth_val) * self.uc
+            v = float(velocity_val) * self.uc
 
-        raster.FlushCache()
+            hazard = h * v
+            if hazard < 0.2:
+                cls = 1     # Low
+            elif hazard < 0.5:
+                cls = 2 # Medium
+            elif hazard < 1.5:
+                cls = 3 # High
+            elif hazard < 2.5:
+                cls = 4 # Very high
+            else:
+                cls = 5 # Extreme
 
-        layer = QgsRasterLayer(hydro_risk, name)
+            values.append((x, y, cls))
+            if len(cell_size_data) < 2:
+                cell_size_data.append((x, y))
 
-        return layer
+            if not values:
+                all_xy = [(x, y) for (_, x, y, _) in depth_data] if depth_data else [(0, 0), (1, 0)]
+                cell_size = self.compute_cell_size(all_xy)
+                raster_data, geotransform = self.points_to_raster_array([], cell_size)
+                self.write_geotiff(hydro_risk, raster_data, geotransform, crs)
+                return QgsRasterLayer(hydro_risk, name)
+
+        cell_size = self.compute_cell_size(cell_size_data if len(cell_size_data) >= 2 else [(x, y) for (_, x, y, _) in depth_data])
+
+        raster_data, geotransform = self.points_to_raster_array(values, cell_size)
+        self.write_geotiff(hydro_risk, raster_data, geotransform, crs)
+        return QgsRasterLayer(hydro_risk, name)
 
 
-    def create_pier_scour_map(
-        self,
-        hydro_risk,
-        depth_file,
-        vel_file,
-        timdep_file,
-        crs,
-        pier_params
-    ):
+    def create_pier_scour_map(self, hydro_risk, depth_file, vel_file, timdep_file, crs, pier_params):
         """
         Create the HEC-18 CSU Pier Scour map.
         Uses FLO-2D grid-based outputs and writes a GeoTIFF.
         """
-    
         values = []
         all_xy = []  # Initialize here so it's available for both paths
 
         # Compute scour magnitude per grid element
         if pier_params.get("use_timdep", False):
             # --- TIMDEP path: max scour over time ---
-            scour = self._scour_from_timdep(
+            scour = self.scour_from_timdep(
                 os.path.dirname(timdep_file),
                 pier_params
             )
 
             # Geometry comes from DEPTH.OUT (grid order guaranteed)
-            depth_data = self._read_flo2d_ascii_xyv(depth_file)
-            
+            depth_data = self.read_flo2d_ascii_xyv(depth_file)
+
             # Extract all x,y coordinates for cell size calculation
             all_xy = [(x, y) for (_, x, y, _) in depth_data]
 
@@ -681,13 +860,13 @@ class HazardMaps:
             results_dir = os.path.dirname(depth_file)
 
             # Read geometry from DEPFP.OUT (floodplain only)
-            depth_data = self._read_flo2d_ascii_xyv(
+            depth_data = self.read_flo2d_ascii_xyv(
                 os.path.join(results_dir, "DEPFP.OUT")
             )
 
             all_xy = [(x, y) for (_, x, y, _) in depth_data]
 
-            scour = self._scour_from_max_fields(
+            scour = self.scour_from_max_fields(
                 results_dir,
                 pier_params
             )
@@ -695,76 +874,29 @@ class HazardMaps:
             for (_, x, y, _), s in zip(depth_data, scour):
                 if s > 0.0:
                     values.append((x, y, float(s)))
-        
-        # cell size
-        dx = abs(all_xy[1][0] - all_xy[0][0])
-        dy = abs(all_xy[1][1] - all_xy[0][1])
 
-        cellSize = dx if dx > 0 else dy
-
-        if cellSize == 0:
-            raise ValueError("Failed to determine FLO-2D grid cell size.")
-
-        # extent from centers → convert to edges
-        
-        min_x = min(p[0] for p in all_xy)
-        max_x = max(p[0] for p in all_xy)
-        min_y = min(p[1] for p in all_xy)
-        max_y = max(p[1] for p in all_xy)
-
-        num_cols = int((max_x - min_x) / cellSize) + 1
-        num_rows = int((max_y - min_y) / cellSize) + 1
-
-        raster_data = np.full((num_rows, num_cols), -9999, dtype=np.float32)
-
-        for x, y, v in values:
-            col = int((x - min_x) / cellSize)
-            row = int((max_y - y) / cellSize)
-            raster_data[row, col] = v
-
-    
-        # create raster file
-        driver = gdal.GetDriverByName("GTiff")
-        raster = driver.Create(hydro_risk, num_cols, num_rows, 1, gdal.GDT_Float32)
-    
-        raster.SetGeoTransform((
-            min_x - cellSize / 2,
-            cellSize,
-            0,
-            max_y + cellSize / 2,
-            0,
-            -cellSize
-        ))
-    
-        raster.SetProjection(crs.toWkt())
-    
-        band = raster.GetRasterBand(1)
-        band.SetNoDataValue(-9999)
-        band.WriteArray(raster_data)
-    
-        raster.FlushCache()
-    
+        cell_size = self.compute_cell_size(all_xy)
+        raster_data, geotransform = self.points_to_raster_array(values, cell_size, extent_points=all_xy)
+        self.write_geotiff(hydro_risk, raster_data, geotransform, crs)
         layer_name = os.path.splitext(os.path.basename(hydro_risk))[0]
         return QgsRasterLayer(hydro_risk, layer_name)
-
 
     def compute_scour(self, depth, velocity, a, k1, k2, k3, k4):
         """
         Compute HEC-18 CSU Scour
         """
-
         depth = np.where(depth > 0.0, depth, np.nan)
         Fr = velocity / np.sqrt(self.gravity * depth)
-    
+
         scour = (
-            2.0 * k1 * k2 * k3 * k4 * a
-            * (depth / a) ** 0.35
-            * (Fr / 0.65) ** 0.43
+                2.0 * k1 * k2 * k3 * k4 * a
+                * (depth / a) ** 0.35
+                * (Fr / 0.65) ** 0.43
         )
-    
+
         return np.nan_to_num(scour, nan=0.0)
 
-    def _read_flo2d_ascii_xyv(self, file_path):
+    def read_flo2d_ascii_xyv(self, file_path):
         """
         Read FLO-2D grid-based ASCII output:
         cell, x, y, value
@@ -783,14 +915,13 @@ class HazardMaps:
                 data.append((cell, x, y, value))
         return data
 
-    def _scour_from_timdep(self, results_dir, pier_params):
+    def scour_from_timdep(self, results_dir, pier_params):
         """
         Define scour parameters from TIMDEP.HDF5
-        Depending on whether or not TIMDEP.HDF5 includes the 1D
-        channel, this data may look different than the pier scour
+        Depending on whether TIMDEP.HDF5 includes the 1D
+        channel, this data may look different from the pier scour
         from DEPFP.OUT and VELFP.OUT.
         """
-
         hdf5_path = os.path.join(results_dir, "TIMDEP.HDF5")
 
         with h5py.File(hdf5_path, "r") as f:
@@ -810,25 +941,23 @@ class HazardMaps:
 
         return np.max(scour_t, axis=0)
 
-
-    def _scour_from_max_fields(self, results_dir, pier_params):
+    def scour_from_max_fields(self, results_dir, pier_params):
         """
         Compute pier scour using floodplain-only max-field outputs.
         DEPFP.OUT and VELFP.OUT are used intentionally to exclude 1D channels.
         """
-    
         # Read floodplain-only depth and velocity (grid order preserved)
-        depth_data = self._read_flo2d_ascii_xyv(
+        depth_data = self.read_flo2d_ascii_xyv(
             os.path.join(results_dir, "DEPFP.OUT")
         )
-        vel_data = self._read_flo2d_ascii_xyv(
+        vel_data = self.read_flo2d_ascii_xyv(
             os.path.join(results_dir, "VELFP.OUT")
         )
-    
+
         # Extract numeric arrays (same grid order guaranteed)
         depth = np.array([v for (_, _, _, v) in depth_data], dtype=float)
-        vel   = np.array([v for (_, _, _, v) in vel_data], dtype=float)
-    
+        vel = np.array([v for (_, _, _, v) in vel_data], dtype=float)
+
         return self.compute_scour(
             depth,
             vel,
