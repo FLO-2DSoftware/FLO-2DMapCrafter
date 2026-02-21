@@ -591,8 +591,8 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>490</width>
-            <height>673</height>
+            <width>773</width>
+            <height>481</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_99">
@@ -1135,8 +1135,8 @@ p, li { white-space: pre-wrap; }
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>490</width>
-            <height>769</height>
+            <width>773</width>
+            <height>481</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_100">
@@ -1803,8 +1803,8 @@ p, li { white-space: pre-wrap; }
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>490</width>
-            <height>769</height>
+            <width>773</width>
+            <height>481</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_101">
@@ -2351,8 +2351,8 @@ p, li { white-space: pre-wrap; }
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>669</width>
-            <height>1015</height>
+            <width>773</width>
+            <height>481</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_102">
@@ -3100,6 +3100,9 @@ p, li { white-space: pre-wrap; }
                  <layout class="QGridLayout" name="gridLayout_61">
                   <item row="0" column="0">
                    <widget class="QCheckBox" name="fh_austrian_cb">
+                    <property name="toolTip">
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;LOW HAZARD: Comprise all remaining flood-prone areas affected by the medium-probability design event.&lt;/p&gt;&lt;p&gt;HIGH HAZARD: Areas that are endangered by the medium-probability design event to such an extent that their permanent use for settlement and transport purposes is not possible or only possible with disproportionate effort due to the expected damage impacts.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    </property>
                     <property name="toolTipDuration">
                      <number>0</number>
                     </property>
@@ -3181,6 +3184,9 @@ p, li { white-space: pre-wrap; }
                  <layout class="QGridLayout" name="gridLayout_75">
                   <item row="0" column="0">
                    <widget class="QCheckBox" name="fh_uk_cb">
+                    <property name="toolTip">
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;VERY LOW HAZARD: Flood zone with shallow flowing water or deep standing water. Caution.&lt;/p&gt;&lt;p&gt;DANGER FOR SOME: Flood zone with deep or fast flowing water. Includes children, the elderly and the inform.&lt;/p&gt;&lt;p&gt;DANGER FOR MOST: Flood zone with deep fast flowing water. Includes the general public.&lt;/p&gt;&lt;p&gt;DANGER FOR ALL: Flood zone with deep fast flowing water. Includes the emergency services.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    </property>
                     <property name="toolTipDuration">
                      <number>0</number>
                     </property>
@@ -3263,7 +3269,7 @@ p, li { white-space: pre-wrap; }
                   <item row="0" column="0">
                    <widget class="QCheckBox" name="usbrh_hm_cb">
                     <property name="toolTip">
-                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;HIGH DANGER ZONE: Occupants of most houses are in danger from flood water.&lt;/p&gt;&lt;p&gt;JUDGMENT ZONE: Danger level is based upon engineering judgment.&lt;/p&gt;&lt;p&gt;LOW DANGER ZONE: Occupants of most houses are not seriously in danger from flood water.&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;HIGH DANGER ZONE: Occupants of most houses are in danger from flood water.&lt;/p&gt;&lt;p&gt;JUDGMENT ZONE: Danger level is based upon engineering judgment.&lt;/p&gt;&lt;p&gt;LOW DANGER ZONE: Occupants of most houses are not seriously in danger from flood water.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -3321,7 +3327,10 @@ p, li { white-space: pre-wrap; }
                   <item row="0" column="0">
                    <widget class="QCheckBox" name="fema_hm_cb">
                     <property name="enabled">
-                     <bool>false</bool>
+                     <bool>true</bool>
+                    </property>
+                    <property name="toolTip">
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;LOW HAZARD: Areas with minimal flood risk. Flooding is rare but not impossible.&lt;/p&gt;&lt;p&gt;MEDIUM HAZARD: Areas with moderate chance of flooding.&lt;/p&gt;&lt;p&gt;HIGH HAZARD: Areas with high risk of flooding.&lt;/p&gt;&lt;p&gt;VERY HIGH HAZARD: Areas subject to frequent and severe flooding.&lt;/p&gt;&lt;p&gt;EXTREME HAZARD: Areas with extreme and life-threatening flood conditions.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -3594,8 +3603,8 @@ p, li { white-space: pre-wrap; }
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>299</width>
-            <height>477</height>
+            <width>773</width>
+            <height>481</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_111">
@@ -4015,8 +4024,8 @@ p, li { white-space: pre-wrap; }
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>343</width>
-            <height>364</height>
+            <width>773</width>
+            <height>481</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_104">
