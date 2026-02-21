@@ -448,8 +448,8 @@ def set_raster_style(layer, style, toler_value, units_switch=None):
         shader = QgsColorRampShader()
         shader.setColorRampType(QgsColorRampShader.Discrete)
         items = [
-            QgsColorRampShader.ColorRampItem(1, QColor(colDic["WG"]), "Low Hazard"),
-            QgsColorRampShader.ColorRampItem(2, QColor(colDic["WR"]), "High Hazard"),
+            QgsColorRampShader.ColorRampItem(1, QColor(colDic["WG"]), "Yellow Zone"),
+            QgsColorRampShader.ColorRampItem(2, QColor(colDic["WR"]), "Red Zone"),
         ]
         shader.setColorRampItemList(items)
         raster_shader = QgsRasterShader()
