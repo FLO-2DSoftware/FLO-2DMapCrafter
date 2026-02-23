@@ -275,13 +275,13 @@ class HazardMaps:
         if hazard_rbs.get("Austrian"):
             total_steps += 1
         swiss_maps = hazard_rbs.get("Swiss") or []
+        total_steps += sum(1 for v in swiss_maps if v)
         if hazard_rbs.get("UK"):
             total_steps += 1
-        total_steps += sum(1 for v in swiss_maps if v)
         usbr_maps = hazard_rbs.get("USBR") or []
+        total_steps += sum(1 for v in usbr_maps if v)
         if hazard_rbs.get("FEMA"):
             total_steps += 1
-        total_steps += sum(1 for v in usbr_maps if v)
         if hazard_rbs.get("PIER"):
             total_steps += 1
 
@@ -376,7 +376,7 @@ class HazardMaps:
 
                 QgsProject.instance().addMapLayer(hydro_risk_raster, False)
                 set_raster_style(hydro_risk_raster, 17, 1)
-                mapping_group.insertLayer(0, hydro_risk_raster)
+                UK_group.insertLayer(0, hydro_risk_raster)
 
                 self.tick(dlg, "UK Hazard: done")
 
