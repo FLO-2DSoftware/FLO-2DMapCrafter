@@ -591,8 +591,8 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>773</width>
-            <height>481</height>
+            <width>490</width>
+            <height>673</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_99">
@@ -1135,8 +1135,8 @@ p, li { white-space: pre-wrap; }
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>773</width>
-            <height>481</height>
+            <width>490</width>
+            <height>769</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_100">
@@ -1803,8 +1803,8 @@ p, li { white-space: pre-wrap; }
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>773</width>
-            <height>481</height>
+            <width>490</width>
+            <height>769</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_101">
@@ -2351,8 +2351,8 @@ p, li { white-space: pre-wrap; }
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>773</width>
-            <height>481</height>
+            <width>669</width>
+            <height>1015</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_102">
@@ -3133,7 +3133,7 @@ p, li { white-space: pre-wrap; }
                   <item row="0" column="0">
                    <widget class="QCheckBox" name="fi_swiss_cb">
                     <property name="toolTip">
-                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;HIGH INTENSITY: Depth &amp;gt; 2 m or Depth * Velocity &amp;gt; 2 m²/s.&lt;/p&gt;&lt;p&gt;MODERATE INTENSITY: 0.5 &amp;gt; Depth &amp;gt; 2 m or 0.5 &amp;gt; Depth * Velocity &amp;gt; 2 m²/s.&lt;/p&gt;&lt;p&gt;LOW INTENSITY: Depth &amp;lt; 0.5 m or Depth * Velocity &amp;lt; 0.5 m²/s.&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;HIGH HAZARD: Sudden destruction of buildings can occur and all living things are in danger both inside and outside the buildings. Normally, this is a prohibited zone for regular human activities.&lt;/p&gt;&lt;p&gt;MODERATE HAZARD: Persons are exposed to the risk of injury outdoors, inside the buildings the risk being lower. Deterioratiosns of beuildings expected, but not a sudden collapse, if constructions are adapted to the present conditions.&lt;/p&gt;&lt;p&gt;LOW HAZARD: Persons are less exposed. It can record a slight deterioration of buildings, obstacles must be anticipated, substantial damage to buildings are still possible.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -3146,7 +3146,7 @@ p, li { white-space: pre-wrap; }
                   <item row="0" column="1">
                    <widget class="QCheckBox" name="di_swiss_cb">
                     <property name="toolTip">
-                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;HIGH INTENSITY: Depth &amp;gt; 1 m and Velocity &amp;gt; 1 m/s.&lt;/p&gt;&lt;p&gt;MODERATE INTENSITY: Depth &amp;lt; 1 m or Velocity &amp;lt; 1 m/s.&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;HIGH HAZARD: Sudden destruction of buildings can occur and all living things are in danger both inside and outside the buildings. Normally, this is a prohibited zone for regular human activities.&lt;/p&gt;&lt;p&gt;MODERATE HAZARD: Persons are exposed to the risk of injury outdoors, inside the buildings the risk being lower. Deterioratiosns of beuildings expected, but not a sudden collapse, if constructions are adapted to the present conditions.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -3214,7 +3214,7 @@ p, li { white-space: pre-wrap; }
                   <item row="0" column="0">
                    <widget class="QCheckBox" name="fh_australian_cb">
                     <property name="toolTip">
-                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;H1: Generally safe for vehicles, people and buildings.&lt;/p&gt;&lt;p&gt;H2: Unsafe for small vehicles.&lt;/p&gt;&lt;p&gt;H3: Unsafe for vehicles. children and the elderly.&lt;/p&gt;&lt;p&gt;H4: Unsafe for vehicles and people.&lt;/p&gt;&lt;p&gt;H5: Unsafe for vehicles and people. All buildings vulnerable to structural damage. Some less robust buildings subject to failure.&lt;/p&gt;&lt;p&gt;H6: Unsafe for vehicles and people. All building types considered vulnerable to failure.&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;H1: Generally safe for vehicles, people and buildings.&lt;/p&gt;&lt;p&gt;H2: Unsafe for small vehicles.&lt;/p&gt;&lt;p&gt;H3: Unsafe for vehicles. children and the elderly.&lt;/p&gt;&lt;p&gt;H4: Unsafe for vehicles and people.&lt;/p&gt;&lt;p&gt;H5: Unsafe for vehicles and people. All buildings vulnerable to structural damage. Some less robust buildings subject to failure.&lt;/p&gt;&lt;p&gt;H6: Unsafe for vehicles and people. All building types considered vulnerable to failure.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -3243,7 +3243,7 @@ p, li { white-space: pre-wrap; }
                   <item row="0" column="1">
                    <widget class="QCheckBox" name="usbrm_hm_cb">
                     <property name="toolTip">
-                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;HIGH DANGER ZONE: Occupants of almost any size mobile home are in danger from flood water.&lt;/p&gt;&lt;p&gt;JUDGMENT ZONE: Danger level is based upon engineering judgment.&lt;/p&gt;&lt;p&gt;LOW DANGER ZONE: Occupants of almost any size mobile home are not seriously in danger from flood water.&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;HIGH DANGER ZONE: Occupants of almost any size mobile home are in danger from flood water.&lt;/p&gt;&lt;p&gt;JUDGMENT ZONE: Danger level is based upon engineering judgment.&lt;/p&gt;&lt;p&gt;LOW DANGER ZONE: Occupants of almost any size mobile home are not seriously in danger from flood water.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -3256,7 +3256,7 @@ p, li { white-space: pre-wrap; }
                   <item row="0" column="2">
                    <widget class="QCheckBox" name="usbrv_hm_cb">
                     <property name="toolTip">
-                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;HIGH DANGER ZONE: Occupants of almost any size passenger vehicle are in danger from flood water.&lt;/p&gt;&lt;p&gt;JUDGMENT ZONE: Danger level is based upon engineering judgment.&lt;/p&gt;&lt;p&gt;LOW DANGER ZONE: Occupants of almost any size passenger vehicle are not seriously in danger from flood water.&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;HIGH DANGER ZONE: Occupants of almost any size passenger vehicle are in danger from flood water.&lt;/p&gt;&lt;p&gt;JUDGMENT ZONE: Danger level is based upon engineering judgment.&lt;/p&gt;&lt;p&gt;LOW DANGER ZONE: Occupants of almost any size passenger vehicle are not seriously in danger from flood water.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -3282,7 +3282,7 @@ p, li { white-space: pre-wrap; }
                   <item row="1" column="0">
                    <widget class="QCheckBox" name="usbra_hm_cb">
                     <property name="toolTip">
-                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;HIGH DANGER ZONE: Almost any size adult is in danger from flood water.&lt;/p&gt;&lt;p&gt;JUDGMENT ZONE: Danger level is based upon engineering judgment.&lt;/p&gt;&lt;p&gt;LOW DANGER ZONE: Almost any size adult is not seriously threatened by flood water.&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;HIGH DANGER ZONE: Almost any size adult is in danger from flood water.&lt;/p&gt;&lt;p&gt;JUDGMENT ZONE: Danger level is based upon engineering judgment.&lt;/p&gt;&lt;p&gt;LOW DANGER ZONE: Almost any size adult is not seriously threatened by flood water.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -3295,7 +3295,7 @@ p, li { white-space: pre-wrap; }
                   <item row="1" column="1">
                    <widget class="QCheckBox" name="usbrc_hm_cb">
                     <property name="toolTip">
-                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;HIGH DANGER ZONE: Almost any size child is in danger from flood water.&lt;/p&gt;&lt;p&gt;JUDGMENT ZONE: Danger level is based upon engineering judgment.&lt;/p&gt;&lt;p&gt;LOW DANGER ZONE: Almost any size child (excluding infants) is not seriously threatened by flood water.&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;HIGH DANGER ZONE: Almost any size child is in danger from flood water.&lt;/p&gt;&lt;p&gt;JUDGMENT ZONE: Danger level is based upon engineering judgment.&lt;/p&gt;&lt;p&gt;LOW DANGER ZONE: Almost any size child (excluding infants) is not seriously threatened by flood water.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -3603,8 +3603,8 @@ p, li { white-space: pre-wrap; }
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>773</width>
-            <height>481</height>
+            <width>299</width>
+            <height>477</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_111">
@@ -4024,8 +4024,8 @@ p, li { white-space: pre-wrap; }
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>773</width>
-            <height>481</height>
+            <width>343</width>
+            <height>364</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_104">
