@@ -1261,7 +1261,7 @@ class FLO2DMapCrafter:
             if key not in hazard_rbs:
                 continue
 
-            if value:
+            if value and (not isinstance(value, list) or all(value)):
                 if isinstance(hazard_rbs[key], list):
                     for cb in hazard_rbs[key]:
                         cb.setEnabled(True)
