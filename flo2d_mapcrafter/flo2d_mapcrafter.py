@@ -2194,6 +2194,7 @@ class FLO2DMapCrafter:
         hazard_rbs = [
             self.dlg.fh_australian_cb,
             self.dlg.fh_austrian_cb,
+            self.dlg.de_austrian_cb,
             self.dlg.flo_hm_cb,
             self.dlg.fi_swiss_cb,
             self.dlg.di_swiss_cb,
