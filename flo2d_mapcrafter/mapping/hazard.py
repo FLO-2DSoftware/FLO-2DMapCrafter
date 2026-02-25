@@ -142,7 +142,7 @@ class HazardMaps:
         """
         hazard_maps = {
             "ARR": False,
-            "Austrian": False,
+            "Austrian": [False, False],
             "FLO-2D": False,
             "Swiss": [False, False],
             "UK": False,
@@ -235,7 +235,7 @@ class HazardMaps:
 
         # AUSTRIAN Check if all files are true
         if all(value for value in austrian_files.values()):
-            hazard_maps["Austrian"] = True
+            hazard_maps["Austrian"] = [True, True]
 
         # SWISS Check if all files are true
         if all(value for value in swiss_files.values()):
@@ -272,8 +272,8 @@ class HazardMaps:
         total_steps = 0
         if hazard_rbs.get("ARR"):
             total_steps += 1
-        if hazard_rbs.get("Austrian"):
-            total_steps += 1
+        austrian_maps = hazard_rbs.get("Austrian") or []
+        total_steps += sum(1 for v in austrian_maps if v)
         swiss_maps = hazard_rbs.get("Swiss") or []
         total_steps += sum(1 for v in swiss_maps if v)
         if hazard_rbs.get("UK"):
@@ -343,23 +343,30 @@ class HazardMaps:
                 self.tick(dlg, "ARR: done")
 
             # ----------------- AUSTRIAN Hazard Map ----------------- #
-            if hazard_rbs.get("Austrian"):
-                dlg.setLabelText("Austrian: computing...")
+            austrian_maps = hazard_rbs.get("Austrian") or []
+            for index, hazard_type in enumerate(austrian_maps):
+                if not hazard_type:
+                    continue
+
+                labels = ["Austrian Flood Intensity", "Austrian Debris Intensity"]
+                dlg.setLabelText(f"{labels[index]}: computing...");
                 QApplication.processEvents()
 
                 depth_file = os.path.join(flo2d_results_dir, "DEPTH.OUT")
                 vel_file = os.path.join(flo2d_results_dir, "VELFP.OUT")
 
-                name = check_project_id("AUSTRIAN_HAZARD", project_id)
+                if index == 0:
+                    name = check_project_id("AUSTRIAN_FLOOD_INTENSITY", project_id)
+                else:
+                    name = check_project_id("AUSTRIAN_DEBRIS_INTENSITY", project_id)
+
                 name, raster = check_raster_file(name, map_output_dir)
-
-                hydro_risk_raster = self.create_austrian_map(name, raster, depth_file, vel_file, crs)
-
+                hydro_risk_raster = self.create_austrian_map(name, raster, depth_file, vel_file, index, crs)
                 QgsProject.instance().addMapLayer(hydro_risk_raster, False)
                 set_raster_style(hydro_risk_raster, 18, 1)
                 AUSTRIAN_group.insertLayer(0, hydro_risk_raster)
 
-                self.tick(dlg, "AUSTRIAN: done")
+                self.tick(dlg, "{labels[index]}: done")
 
             # ----------------- UK Hazard Map ----------------- #
             if hazard_rbs.get("UK"):
@@ -611,41 +618,62 @@ class HazardMaps:
 
         return QgsRasterLayer(arr_class, name_arr)
 
-    def create_austrian_map(self, name, hydro_risk, depth_file, vel_file, crs):
+    def create_austrian_map(self, name, hydro_risk, depth_file, vel_file, map_type, crs):
         """
         Two classes:
             WR (Red Zone): High hazard
             WG (Yellow Zone): Low hazard
         """
-        depth_data = self.read_flo2d_ascii_xyv(depth_file)
-        vel_data = self.read_flo2d_ascii_xyv(vel_file)
-
-        depth_map = {cell: (x, y, d) for (cell, x, y, d) in depth_data}
-        vel_map = {cell: v for (cell, x, y,  v) in vel_data}
-
         values = []
         cell_size_data = []
 
-        for cell, (x, y, depth_val) in depth_map.items():
-            velocity_val = vel_map.get(cell, 0.0)
+        depth_data = self.read_flo2d_ascii_xyv(depth_file)
+        vel_data = self.read_flo2d_ascii_xyv(vel_file)
+        depth_map = {cell: (x, y, d) for (cell, x, y, d) in depth_data}
+        vel_map = {cell: v for (cell, x, y,  v) in vel_data}
 
-            if depth_val <= 0:
-                continue
+        # Austrian Flood intensity
+        if map_type == 0:
+            for cell, (x, y, depth_val) in depth_map.items():
+                velocity_val = vel_map.get(cell, 0.0)
 
-            h = float(depth_val) * self.uc
-            v = float(velocity_val) * self.uc
+                if depth_val <= 0:
+                    continue
 
-            E = h + (v ** 2) / (2.0 * self.gravity)
+                h = float(depth_val) * self.uc
+                v = float(velocity_val) * self.uc
 
-            if (h >= 1.5) or (E >= 1.5):
-                cls = 2 # WR
-            else:
-                cls = 1 # GW
+                E = h + (v ** 2) / (2.0 * self.gravity)
 
-            values.append((x, y, cls))
-            if len(cell_size_data) < 2:
-                cell_size_data.append((x, y))
+                if (h >= 1.5) or (E >= 1.5):
+                    cls = 2 # WR
+                else:
+                    cls = 1 # GW
 
+                values.append((x, y, cls))
+                if len(cell_size_data) < 2:
+                    cell_size_data.append((x, y))
+
+            # Austrian Debris intensity
+        if map_type == 1:
+            for cell, (x, y, depth_val) in depth_map.items():
+                velocity_val = vel_map.get(cell, 0.0)
+
+                if depth_val <= 0:
+                    continue
+
+                h = float(depth_val) * self.uc
+                v = float(velocity_val) * self.uc
+                E = h + (v ** 2) / (2.0 * self.gravity)
+
+                if (h >= 0.7) or (E >= 0.7):
+                    cls = 2  # WR
+                else:
+                    cls = 1  # GW
+
+                values.append((x, y, cls))
+                if len(cell_size_data) < 2:
+                    cell_size_data.append((x, y))
             if not values:
                 all_xy = [(x, y) for (_, x, y, _) in depth_data] if depth_data else [(0, 0), (1, 0)]
                 cell_size = self.compute_cell_size(all_xy)
