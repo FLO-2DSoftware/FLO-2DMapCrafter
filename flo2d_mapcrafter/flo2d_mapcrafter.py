@@ -1242,7 +1242,7 @@ class FLO2DMapCrafter:
 
         hazard_rbs = {
             "ARR": self.dlg.fh_australian_cb,
-            "Austrian": self.dlg.fh_austrian_cb,
+            "Austrian": [self.dlg.fh_austrian_cb,self.dlg.de_austrian_cb],
             "FLO-2D": self.dlg.flo_hm_cb,
             "Swiss": [self.dlg.fi_swiss_cb, self.dlg.di_swiss_cb],
             "UK": self.dlg.fh_uk_cb,
@@ -1582,7 +1582,10 @@ class FLO2DMapCrafter:
 
             hazard_rbs = {
                 "ARR": self.dlg.fh_australian_cb.isChecked(),
-                "Austrian": self.dlg.fh_austrian_cb.isChecked(),
+                "Austrian": [
+                    self.dlg.fh_austrian_cb.isChecked(),
+                    self.dlg.de_austrian_cb.isChecked(),
+                ],
                 "Swiss": [
                     self.dlg.fi_swiss_cb.isChecked(),
                     self.dlg.di_swiss_cb.isChecked()
