@@ -591,7 +591,7 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>490</width>
+            <width>752</width>
             <height>673</height>
            </rect>
           </property>
@@ -747,7 +747,7 @@
                   <item row="4" column="0">
                    <widget class="QCheckBox" name="fwse_cw_cb">
                     <property name="toolTip">
-                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Final Corrected Water Elevation: FINALDEP.OUT + Final Ground Elevation (ft or m).&lt;/p&gt;&lt;p&gt;FLO-2D Pro Engine corrects the grid elevation automatically at runtime for several conditions.&lt;/p&gt;&lt;p&gt;	1. Outflow elements - an outflow element that has 3 upstream neighbors that are lower elevation will be corrected to 0.1 ft below the lowest elevation.&lt;/p&gt;&lt;p&gt;	2. Channel banks - grid elevations along channel banks will be corrected to the bank elevation defined in CHAN.DAT for prismatic channels or XSEC.DAT for natural channels.&lt;/p&gt;&lt;p&gt;	3. Storm Drains - grid elevations that contain storm drain inlets or manholes will be adjusted to the rim elevation of the storm drain. This is represented by the invert elevation + max depth for the node in SWMM.inp.&lt;/p&gt;&lt;p&gt;Corrections are stored in two files:&lt;/p&gt;&lt;p&gt;	FPREV.NEW for runs without storm drains.&lt;/p&gt;&lt;p&gt;	TOPO_SDElev.RGH for runs with storm drains.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Final Corrected Water Elevation: FINALDEP.OUT + Final Ground Elevation (ft or m).&lt;/p&gt;&lt;p&gt;FLO-2D Pro Engine corrects the grid elevation automatically at runtime for several conditions.&lt;/p&gt;&lt;p&gt;    1. Outflow elements - an outflow element that has 3 upstream neighbors that are lower elevation will be corrected to 0.1 ft below the lowest elevation.&lt;/p&gt;&lt;p&gt;  2. Channel banks - grid elevations along channel banks will be corrected to the bank elevation defined in CHAN.DAT for prismatic channels or XSEC.DAT for natural channels.&lt;/p&gt;&lt;p&gt;  3. Storm Drains - grid elevations that contain storm drain inlets or manholes will be adjusted to the rim elevation of the storm drain. This is represented by the invert elevation + max depth for the node in SWMM.inp.&lt;/p&gt;&lt;p&gt;Corrections are stored in two files:&lt;/p&gt;&lt;p&gt; FPREV.NEW for runs without storm drains.&lt;/p&gt;&lt;p&gt; TOPO_SDElev.RGH for runs with storm drains.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -1135,7 +1135,7 @@ p, li { white-space: pre-wrap; }
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>490</width>
+            <width>752</width>
             <height>769</height>
            </rect>
           </property>
@@ -1803,7 +1803,7 @@ p, li { white-space: pre-wrap; }
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>490</width>
+            <width>752</width>
             <height>769</height>
            </rect>
           </property>
@@ -2351,7 +2351,7 @@ p, li { white-space: pre-wrap; }
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>669</width>
+            <width>752</width>
             <height>1015</height>
            </rect>
           </property>
@@ -3089,9 +3089,6 @@ p, li { white-space: pre-wrap; }
                <property name="title">
                 <string>Austrian</string>
                </property>
-               <property name="flat">
-                <bool>true</bool>
-               </property>
                <property name="collapsed">
                 <bool>true</bool>
                </property>
@@ -3101,13 +3098,21 @@ p, li { white-space: pre-wrap; }
                   <item row="0" column="0">
                    <widget class="QCheckBox" name="fh_austrian_cb">
                     <property name="toolTip">
-                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;LOW HAZARD: Comprise all remaining flood-prone areas affected by the medium-probability design event.&lt;/p&gt;&lt;p&gt;HIGH HAZARD: Areas that are endangered by the medium-probability design event to such an extent that their permanent use for settlement and transport purposes is not possible or only possible with disproportionate effort due to the expected damage impacts.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;LOW HAZARD: Comprise all remaining flood-prone areas affected by the medium-probability design event.&lt;/p&gt;&lt;p&gt;HIGH HAZARD: Areas that are endangered by the medium-probability design event to such an extent that their permanent use for settlement and transport purposes is not possible or only possible with disproportionate effort due to the expected damage impacts.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;
+                     </string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
                     </property>
                     <property name="text">
-                     <string>Flood Hazard Map</string>
+                     <string>Flood Intensity Map</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="1">
+                   <widget class="QCheckBox" name="de_austrian_cb">
+                    <property name="text">
+                     <string>Debris Intensity Map</string>
                     </property>
                    </widget>
                   </item>
@@ -3153,13 +3158,6 @@ p, li { white-space: pre-wrap; }
                     </property>
                     <property name="text">
                      <string>Debris Intensity Map</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="0" column="2">
-                   <widget class="QLabel" name="label_19">
-                    <property name="text">
-                     <string/>
                     </property>
                    </widget>
                   </item>
@@ -3603,8 +3601,8 @@ p, li { white-space: pre-wrap; }
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>299</width>
-            <height>477</height>
+            <width>773</width>
+            <height>481</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_111">
@@ -4024,8 +4022,8 @@ p, li { white-space: pre-wrap; }
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>343</width>
-            <height>364</height>
+            <width>773</width>
+            <height>481</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_104">
