@@ -126,7 +126,6 @@
            <height>20</height>
           </size>
          </property>
-
         </widget>
        </item>
       </layout>
@@ -592,8 +591,8 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>773</width>
-            <height>478</height>
+            <width>752</width>
+            <height>673</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_99">
@@ -748,7 +747,7 @@
                   <item row="4" column="0">
                    <widget class="QCheckBox" name="fwse_cw_cb">
                     <property name="toolTip">
-                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Final Corrected Water Elevation: FINALDEP.OUT + Final Ground Elevation (ft or m).&lt;/p&gt;&lt;p&gt;FLO-2D Pro Engine corrects the grid elevation automatically at runtime for several conditions.&lt;/p&gt;&lt;p&gt;	1. Outflow elements - an outflow element that has 3 upstream neighbors that are lower elevation will be corrected to 0.1 ft below the lowest elevation.&lt;/p&gt;&lt;p&gt;	2. Channel banks - grid elevations along channel banks will be corrected to the bank elevation defined in CHAN.DAT for prismatic channels or XSEC.DAT for natural channels.&lt;/p&gt;&lt;p&gt;	3. Storm Drains - grid elevations that contain storm drain inlets or manholes will be adjusted to the rim elevation of the storm drain. This is represented by the invert elevation + max depth for the node in SWMM.inp.&lt;/p&gt;&lt;p&gt;Corrections are stored in two files:&lt;/p&gt;&lt;p&gt;	FPREV.NEW for runs without storm drains.&lt;/p&gt;&lt;p&gt;	TOPO_SDElev.RGH for runs with storm drains.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Final Corrected Water Elevation: FINALDEP.OUT + Final Ground Elevation (ft or m).&lt;/p&gt;&lt;p&gt;FLO-2D Pro Engine corrects the grid elevation automatically at runtime for several conditions.&lt;/p&gt;&lt;p&gt;    1. Outflow elements - an outflow element that has 3 upstream neighbors that are lower elevation will be corrected to 0.1 ft below the lowest elevation.&lt;/p&gt;&lt;p&gt;  2. Channel banks - grid elevations along channel banks will be corrected to the bank elevation defined in CHAN.DAT for prismatic channels or XSEC.DAT for natural channels.&lt;/p&gt;&lt;p&gt;  3. Storm Drains - grid elevations that contain storm drain inlets or manholes will be adjusted to the rim elevation of the storm drain. This is represented by the invert elevation + max depth for the node in SWMM.inp.&lt;/p&gt;&lt;p&gt;Corrections are stored in two files:&lt;/p&gt;&lt;p&gt; FPREV.NEW for runs without storm drains.&lt;/p&gt;&lt;p&gt; TOPO_SDElev.RGH for runs with storm drains.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -1136,7 +1135,7 @@ p, li { white-space: pre-wrap; }
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>490</width>
+            <width>752</width>
             <height>769</height>
            </rect>
           </property>
@@ -1804,7 +1803,7 @@ p, li { white-space: pre-wrap; }
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>490</width>
+            <width>752</width>
             <height>769</height>
            </rect>
           </property>
@@ -2352,7 +2351,7 @@ p, li { white-space: pre-wrap; }
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>669</width>
+            <width>752</width>
             <height>1015</height>
            </rect>
           </property>
@@ -3075,8 +3074,8 @@ p, li { white-space: pre-wrap; }
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>502</width>
-            <height>814</height>
+            <width>773</width>
+            <height>481</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_103">
@@ -3085,13 +3084,10 @@ p, li { white-space: pre-wrap; }
              <item row="1" column="0">
               <widget class="QgsCollapsibleGroupBox" name="austrian_hm_cgb">
                <property name="enabled">
-                <bool>false</bool>
+                <bool>true</bool>
                </property>
                <property name="title">
                 <string>Austrian</string>
-               </property>
-               <property name="flat">
-                <bool>true</bool>
                </property>
                <property name="collapsed">
                 <bool>true</bool>
@@ -3101,11 +3097,22 @@ p, li { white-space: pre-wrap; }
                  <layout class="QGridLayout" name="gridLayout_61">
                   <item row="0" column="0">
                    <widget class="QCheckBox" name="fh_austrian_cb">
+                    <property name="toolTip">
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;LOW HAZARD: Comprise all remaining flood-prone areas affected by the medium-probability design event.&lt;/p&gt;&lt;p&gt;HIGH HAZARD: Areas that are endangered by the medium-probability design event to such an extent that their permanent use for settlement and transport purposes is not possible or only possible with disproportionate effort due to the expected damage impacts.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;
+                     </string>
+                    </property>
                     <property name="toolTipDuration">
                      <number>0</number>
                     </property>
                     <property name="text">
-                     <string>Flood Hazard Map</string>
+                     <string>Flood Intensity Map</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="1">
+                   <widget class="QCheckBox" name="de_austrian_cb">
+                    <property name="text">
+                     <string>Debris Intensity Map</string>
                     </property>
                    </widget>
                   </item>
@@ -3131,7 +3138,7 @@ p, li { white-space: pre-wrap; }
                   <item row="0" column="0">
                    <widget class="QCheckBox" name="fi_swiss_cb">
                     <property name="toolTip">
-                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;HIGH INTENSITY: Depth &amp;gt; 2 m or Depth * Velocity &amp;gt; 2 m²/s.&lt;/p&gt;&lt;p&gt;MODERATE INTENSITY: 0.5 &amp;gt; Depth &amp;gt; 2 m or 0.5 &amp;gt; Depth * Velocity &amp;gt; 2 m²/s.&lt;/p&gt;&lt;p&gt;LOW INTENSITY: Depth &amp;lt; 0.5 m or Depth * Velocity &amp;lt; 0.5 m²/s.&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;HIGH HAZARD: Sudden destruction of buildings can occur and all living things are in danger both inside and outside the buildings. Normally, this is a prohibited zone for regular human activities.&lt;/p&gt;&lt;p&gt;MODERATE HAZARD: Persons are exposed to the risk of injury outdoors, inside the buildings the risk being lower. Deterioratiosns of beuildings expected, but not a sudden collapse, if constructions are adapted to the present conditions.&lt;/p&gt;&lt;p&gt;LOW HAZARD: Persons are less exposed. It can record a slight deterioration of buildings, obstacles must be anticipated, substantial damage to buildings are still possible.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -3144,20 +3151,13 @@ p, li { white-space: pre-wrap; }
                   <item row="0" column="1">
                    <widget class="QCheckBox" name="di_swiss_cb">
                     <property name="toolTip">
-                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;HIGH INTENSITY: Depth &amp;gt; 1 m and Velocity &amp;gt; 1 m/s.&lt;/p&gt;&lt;p&gt;MODERATE INTENSITY: Depth &amp;lt; 1 m or Velocity &amp;lt; 1 m/s.&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;HIGH HAZARD: Sudden destruction of buildings can occur and all living things are in danger both inside and outside the buildings. Normally, this is a prohibited zone for regular human activities.&lt;/p&gt;&lt;p&gt;MODERATE HAZARD: Persons are exposed to the risk of injury outdoors, inside the buildings the risk being lower. Deterioratiosns of beuildings expected, but not a sudden collapse, if constructions are adapted to the present conditions.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
                     </property>
                     <property name="text">
                      <string>Debris Intensity Map</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="0" column="2">
-                   <widget class="QLabel" name="label_19">
-                    <property name="text">
-                     <string/>
                     </property>
                    </widget>
                   </item>
@@ -3169,7 +3169,7 @@ p, li { white-space: pre-wrap; }
              <item row="4" column="0">
               <widget class="QgsCollapsibleGroupBox" name="uk_hm_cgb">
                <property name="enabled">
-                <bool>false</bool>
+                <bool>true</bool>
                </property>
                <property name="title">
                 <string>UK Hazard Mapping</string>
@@ -3182,6 +3182,9 @@ p, li { white-space: pre-wrap; }
                  <layout class="QGridLayout" name="gridLayout_75">
                   <item row="0" column="0">
                    <widget class="QCheckBox" name="fh_uk_cb">
+                    <property name="toolTip">
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;VERY LOW HAZARD: Flood zone with shallow flowing water or deep standing water. Caution.&lt;/p&gt;&lt;p&gt;DANGER FOR SOME: Flood zone with deep or fast flowing water. Includes children, the elderly and the inform.&lt;/p&gt;&lt;p&gt;DANGER FOR MOST: Flood zone with deep fast flowing water. Includes the general public.&lt;/p&gt;&lt;p&gt;DANGER FOR ALL: Flood zone with deep fast flowing water. Includes the emergency services.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    </property>
                     <property name="toolTipDuration">
                      <number>0</number>
                     </property>
@@ -3209,7 +3212,7 @@ p, li { white-space: pre-wrap; }
                   <item row="0" column="0">
                    <widget class="QCheckBox" name="fh_australian_cb">
                     <property name="toolTip">
-                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;H1: Generally safe for vehicles, people and buildings.&lt;/p&gt;&lt;p&gt;H2: Unsafe for small vehicles.&lt;/p&gt;&lt;p&gt;H3: Unsafe for vehicles. children and the elderly.&lt;/p&gt;&lt;p&gt;H4: Unsafe for vehicles and people.&lt;/p&gt;&lt;p&gt;H5: Unsafe for vehicles and people. All buildings vulnerable to structural damage. Some less robust buildings subject to failure.&lt;/p&gt;&lt;p&gt;H6: Unsafe for vehicles and people. All building types considered vulnerable to failure.&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;H1: Generally safe for vehicles, people and buildings.&lt;/p&gt;&lt;p&gt;H2: Unsafe for small vehicles.&lt;/p&gt;&lt;p&gt;H3: Unsafe for vehicles. children and the elderly.&lt;/p&gt;&lt;p&gt;H4: Unsafe for vehicles and people.&lt;/p&gt;&lt;p&gt;H5: Unsafe for vehicles and people. All buildings vulnerable to structural damage. Some less robust buildings subject to failure.&lt;/p&gt;&lt;p&gt;H6: Unsafe for vehicles and people. All building types considered vulnerable to failure.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -3238,7 +3241,7 @@ p, li { white-space: pre-wrap; }
                   <item row="0" column="1">
                    <widget class="QCheckBox" name="usbrm_hm_cb">
                     <property name="toolTip">
-                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;HIGH DANGER ZONE: Occupants of almost any size mobile home are in danger from flood water.&lt;/p&gt;&lt;p&gt;JUDGMENT ZONE: Danger level is based upon engineering judgment.&lt;/p&gt;&lt;p&gt;LOW DANGER ZONE: Occupants of almost any size mobile home are not seriously in danger from flood water.&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;HIGH DANGER ZONE: Occupants of almost any size mobile home are in danger from flood water.&lt;/p&gt;&lt;p&gt;JUDGMENT ZONE: Danger level is based upon engineering judgment.&lt;/p&gt;&lt;p&gt;LOW DANGER ZONE: Occupants of almost any size mobile home are not seriously in danger from flood water.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -3251,7 +3254,7 @@ p, li { white-space: pre-wrap; }
                   <item row="0" column="2">
                    <widget class="QCheckBox" name="usbrv_hm_cb">
                     <property name="toolTip">
-                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;HIGH DANGER ZONE: Occupants of almost any size passenger vehicle are in danger from flood water.&lt;/p&gt;&lt;p&gt;JUDGMENT ZONE: Danger level is based upon engineering judgment.&lt;/p&gt;&lt;p&gt;LOW DANGER ZONE: Occupants of almost any size passenger vehicle are not seriously in danger from flood water.&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;HIGH DANGER ZONE: Occupants of almost any size passenger vehicle are in danger from flood water.&lt;/p&gt;&lt;p&gt;JUDGMENT ZONE: Danger level is based upon engineering judgment.&lt;/p&gt;&lt;p&gt;LOW DANGER ZONE: Occupants of almost any size passenger vehicle are not seriously in danger from flood water.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -3264,7 +3267,7 @@ p, li { white-space: pre-wrap; }
                   <item row="0" column="0">
                    <widget class="QCheckBox" name="usbrh_hm_cb">
                     <property name="toolTip">
-                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;HIGH DANGER ZONE: Occupants of most houses are in danger from flood water.&lt;/p&gt;&lt;p&gt;JUDGMENT ZONE: Danger level is based upon engineering judgment.&lt;/p&gt;&lt;p&gt;LOW DANGER ZONE: Occupants of most houses are not seriously in danger from flood water.&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;HIGH DANGER ZONE: Occupants of most houses are in danger from flood water.&lt;/p&gt;&lt;p&gt;JUDGMENT ZONE: Danger level is based upon engineering judgment.&lt;/p&gt;&lt;p&gt;LOW DANGER ZONE: Occupants of most houses are not seriously in danger from flood water.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -3277,7 +3280,7 @@ p, li { white-space: pre-wrap; }
                   <item row="1" column="0">
                    <widget class="QCheckBox" name="usbra_hm_cb">
                     <property name="toolTip">
-                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;HIGH DANGER ZONE: Almost any size adult is in danger from flood water.&lt;/p&gt;&lt;p&gt;JUDGMENT ZONE: Danger level is based upon engineering judgment.&lt;/p&gt;&lt;p&gt;LOW DANGER ZONE: Almost any size adult is not seriously threatened by flood water.&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;HIGH DANGER ZONE: Almost any size adult is in danger from flood water.&lt;/p&gt;&lt;p&gt;JUDGMENT ZONE: Danger level is based upon engineering judgment.&lt;/p&gt;&lt;p&gt;LOW DANGER ZONE: Almost any size adult is not seriously threatened by flood water.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -3290,7 +3293,7 @@ p, li { white-space: pre-wrap; }
                   <item row="1" column="1">
                    <widget class="QCheckBox" name="usbrc_hm_cb">
                     <property name="toolTip">
-                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;HIGH DANGER ZONE: Almost any size child is in danger from flood water.&lt;/p&gt;&lt;p&gt;JUDGMENT ZONE: Danger level is based upon engineering judgment.&lt;/p&gt;&lt;p&gt;LOW DANGER ZONE: Almost any size child (excluding infants) is not seriously threatened by flood water.&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;HIGH DANGER ZONE: Almost any size child is in danger from flood water.&lt;/p&gt;&lt;p&gt;JUDGMENT ZONE: Danger level is based upon engineering judgment.&lt;/p&gt;&lt;p&gt;LOW DANGER ZONE: Almost any size child (excluding infants) is not seriously threatened by flood water.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                     </property>
                     <property name="toolTipDuration">
                      <number>0</number>
@@ -3308,7 +3311,7 @@ p, li { white-space: pre-wrap; }
              <item row="6" column="0">
               <widget class="QgsCollapsibleGroupBox" name="fema_hz_cgb">
                <property name="enabled">
-                <bool>false</bool>
+                <bool>true</bool>
                </property>
                <property name="title">
                 <string>US Federal Emergency Management Agency</string>
@@ -3321,6 +3324,12 @@ p, li { white-space: pre-wrap; }
                  <layout class="QGridLayout" name="gridLayout_65">
                   <item row="0" column="0">
                    <widget class="QCheckBox" name="fema_hm_cb">
+                    <property name="enabled">
+                     <bool>true</bool>
+                    </property>
+                    <property name="toolTip">
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;LOW HAZARD: Areas with minimal flood risk. Flooding is rare but not impossible.&lt;/p&gt;&lt;p&gt;MEDIUM HAZARD: Areas with moderate chance of flooding.&lt;/p&gt;&lt;p&gt;HIGH HAZARD: Areas with high risk of flooding.&lt;/p&gt;&lt;p&gt;VERY HIGH HAZARD: Areas subject to frequent and severe flooding.&lt;/p&gt;&lt;p&gt;EXTREME HAZARD: Areas with extreme and life-threatening flood conditions.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    </property>
                     <property name="toolTipDuration">
                      <number>0</number>
                     </property>
@@ -3592,8 +3601,8 @@ p, li { white-space: pre-wrap; }
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>299</width>
-            <height>477</height>
+            <width>773</width>
+            <height>481</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_111">
@@ -4013,8 +4022,8 @@ p, li { white-space: pre-wrap; }
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>343</width>
-            <height>364</height>
+            <width>773</width>
+            <height>481</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_104">

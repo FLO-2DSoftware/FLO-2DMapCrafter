@@ -1242,7 +1242,7 @@ class FLO2DMapCrafter:
 
         hazard_rbs = {
             "ARR": self.dlg.fh_australian_cb,
-            "Austrian": self.dlg.fh_austrian_cb,
+            "Austrian": [self.dlg.fh_austrian_cb,self.dlg.de_austrian_cb],
             "FLO-2D": self.dlg.flo_hm_cb,
             "Swiss": [self.dlg.fi_swiss_cb, self.dlg.di_swiss_cb],
             "UK": self.dlg.fh_uk_cb,
@@ -1261,7 +1261,7 @@ class FLO2DMapCrafter:
             if key not in hazard_rbs:
                 continue
 
-            if value:
+            if value and (not isinstance(value, list) or all(value)):
                 if isinstance(hazard_rbs[key], list):
                     for cb in hazard_rbs[key]:
                         cb.setEnabled(True)
@@ -1274,7 +1274,7 @@ class FLO2DMapCrafter:
                 else:
                     hazard_rbs[key].setEnabled(False)
 
-        # Pier scour file dependency is slightly different than the dictionary method
+        # Pier scour file dependency is slightly different from the dictionary method
         has_timdep = hazard_maps_dict.get("PIER_TIMDEP", False)
 
         self.dlg.use_timdep_hdf5_cb.setEnabled(has_timdep)
@@ -1582,7 +1582,10 @@ class FLO2DMapCrafter:
 
             hazard_rbs = {
                 "ARR": self.dlg.fh_australian_cb.isChecked(),
-                "Austrian": self.dlg.fh_austrian_cb.isChecked(),
+                "Austrian": [
+                    self.dlg.fh_austrian_cb.isChecked(),
+                    self.dlg.de_austrian_cb.isChecked(),
+                ],
                 "Swiss": [
                     self.dlg.fi_swiss_cb.isChecked(),
                     self.dlg.di_swiss_cb.isChecked()
@@ -2191,6 +2194,7 @@ class FLO2DMapCrafter:
         hazard_rbs = [
             self.dlg.fh_australian_cb,
             self.dlg.fh_austrian_cb,
+            self.dlg.de_austrian_cb,
             self.dlg.flo_hm_cb,
             self.dlg.fi_swiss_cb,
             self.dlg.di_swiss_cb,
