@@ -591,8 +591,8 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>752</width>
-            <height>673</height>
+            <width>773</width>
+            <height>481</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_99">
@@ -811,6 +811,19 @@
                     </property>
                     <property name="text">
                      <string>Modified Ground Elevation</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="2">
+                   <widget class="QCheckBox" name="gid_cw_cb">
+                    <property name="toolTip">
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;GRID ID&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    </property>
+                    <property name="toolTipDuration">
+                     <number>0</number>
+                    </property>
+                    <property name="text">
+                     <string>Grid ID</string>
                     </property>
                    </widget>
                   </item>
@@ -1135,8 +1148,8 @@ p, li { white-space: pre-wrap; }
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>752</width>
-            <height>769</height>
+            <width>773</width>
+            <height>481</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_100">
@@ -1506,6 +1519,19 @@ p, li { white-space: pre-wrap; }
                     </property>
                    </widget>
                   </item>
+                  <item row="0" column="2">
+                   <widget class="QCheckBox" name="gid_sd_cb">
+                    <property name="toolTip">
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;GRID ID&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    </property>
+                    <property name="toolTipDuration">
+                     <number>0</number>
+                    </property>
+                    <property name="text">
+                     <string>Grid ID</string>
+                    </property>
+                   </widget>
+                  </item>
                  </layout>
                 </item>
                </layout>
@@ -1803,8 +1829,8 @@ p, li { white-space: pre-wrap; }
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>752</width>
-            <height>769</height>
+            <width>773</width>
+            <height>481</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_101">
@@ -2184,6 +2210,19 @@ p, li { white-space: pre-wrap; }
                     </property>
                    </widget>
                   </item>
+                  <item row="0" column="2">
+                   <widget class="QCheckBox" name="gid_mf_cb">
+                    <property name="toolTip">
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;GRID ID&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    </property>
+                    <property name="toolTipDuration">
+                     <number>0</number>
+                    </property>
+                    <property name="text">
+                     <string>Grid ID</string>
+                    </property>
+                   </widget>
+                  </item>
                  </layout>
                 </item>
                </layout>
@@ -2351,8 +2390,8 @@ p, li { white-space: pre-wrap; }
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>752</width>
-            <height>1015</height>
+            <width>773</width>
+            <height>481</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_102">
@@ -2514,6 +2553,19 @@ p, li { white-space: pre-wrap; }
                     </property>
                     <property name="text">
                      <string>Modified Ground Elevation</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="2">
+                   <widget class="QCheckBox" name="gid_tp_cb">
+                    <property name="toolTip">
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;GRID ID&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    </property>
+                    <property name="toolTipDuration">
+                     <number>0</number>
+                    </property>
+                    <property name="text">
+                     <string>Grid ID</string>
                     </property>
                    </widget>
                   </item>
