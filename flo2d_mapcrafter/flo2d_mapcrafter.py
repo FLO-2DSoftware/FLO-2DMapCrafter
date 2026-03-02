@@ -1722,7 +1722,7 @@ class FLO2DMapCrafter:
 
                 model = self._load_swmm_model(inp_file, rpt_file)
 
-                # Give the cached model to StormDrainPlots so it never re-parses
+                # Give the cached model to StormDrainPlots so it never reparses
                 storm_drain_plots = StormDrainPlots(self.units_switch, self.iface, swmm_model=model)
                 t0 = time.perf_counter()
                 plots = storm_drain_plots.create_plots(storm_drain_rbs, flo2d_results_dir, sd_output_dir)
@@ -1736,7 +1736,7 @@ class FLO2DMapCrafter:
                 t3 = time.perf_counter()
                 QgsMessageLog.logMessage(
                     f"SD timings: create_plots={t1 - t0:.2f}s, plot_graphics={t2 - t1:.2f}s, profile={t3 - t2:.2f}s",
-                    'FLO-2D', Qgis.Info)
+                    'FLO-2D', Qgis.MessageLevel.Info)
 
             QApplication.restoreOverrideCursor()
             msg_box = QMessageBox()
@@ -1744,6 +1744,18 @@ class FLO2DMapCrafter:
             msg_box.setWindowTitle("Mapping complete!")
             msg_box.setText("The selected maps were created!")
             msg_box.exec_()
+
+            master_checkboxes = [
+                self.dlg.check_cw_cb,
+                self.dlg.check_sd_cb,
+                self.dlg.check_mf_cb,
+                self.dlg.check_tp_cb,
+                self.dlg.check_hm_cb,
+                self.dlg.check_storm_drain_chbox
+            ]
+            for cb in master_checkboxes:
+                if cb.isChecked():
+                    cb.setChecked(False)
 
         except Exception as e:
             QApplication.restoreOverrideCursor()
