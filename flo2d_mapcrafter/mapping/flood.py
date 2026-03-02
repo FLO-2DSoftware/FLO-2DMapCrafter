@@ -23,6 +23,7 @@
 """
 
 import os
+from qgis.core import QgsMessageLog, Qgis
 from qgis.PyQt.QtWidgets import QProgressDialog, QApplication
 from PyQt5.QtCore import QMetaType, QVariant, Qt
 from qgis.core import QgsProject, QgsVectorLayer, QgsField, QgsFeature, QgsGeometry, QgsPointXY, \

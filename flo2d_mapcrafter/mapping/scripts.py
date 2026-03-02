@@ -26,6 +26,7 @@ import numpy as np
 import pandas as pd
 from PyQt5.QtCore import QMetaType
 from PyQt5.QtGui import QColor, QIcon
+from qgis.core import QgsFields, QgsWkbTypes
 from qgis.core import (
     QgsProject,
     QgsRasterLayer,
@@ -766,22 +767,46 @@ def final_wse(results_dir, map_output_dir, topo_sd_name="TOPO_SDElev.RGH", topo_
         return None
 
 
-def process_grid_id_polygons(
-    name,
-    file,
-    crs,
-    mapping_group,
-    cell_size,
-    map_output_dir,
-):
+def process_grid_id_polygons(name, file, crs, mapping_group, cell_size, map_output_dir):
+    buffer = []
+
     half = cell_size / 2.0
 
-    vl = QgsVectorLayer(f"Polygon?crs={crs.authid()}", name, "memory")
-    pr = vl.dataProvider()
-    pr.addAttributes([QgsField("GRID_ID", QMetaType.Int)])
-    vl.updateFields()
+    # ---- write shapefile (avoid overwrite) ----
+    base_path = os.path.join(map_output_dir, f"{name}.shp")
+    out_path = base_path
+    i = 1
+    while os.path.exists(out_path):
+        base, ext = os.path.splitext(base_path)
+        out_path = f"{base}({i}){ext}"
+        i += 1
 
-    features = []
+    # Predefine square offsets
+    square_offsets = [
+        (-half, -half),
+        (half, -half),
+        (half, half),
+        (-half, half),
+        (-half, -half),
+    ]
+
+    fields = QgsFields()
+    fields.append(QgsField("GRID_ID", QMetaType.Int))
+
+    options = QgsVectorFileWriter.SaveVectorOptions()
+    options.driverName = "ESRI Shapefile"
+
+    writer = QgsVectorFileWriter.create(
+        out_path,
+        fields,
+        QgsWkbTypes.Polygon,
+        crs,
+        QgsProject.instance().transformContext(),
+        options
+    )
+
+    if writer.hasError() != QgsVectorFileWriter.NoError:
+        raise Exception(writer.errorMessage())
 
     with open(file, "r") as f:
         for line in f:
@@ -793,40 +818,20 @@ def process_grid_id_polygons(
             x = float(parts[1])
             y = float(parts[2])
 
-            pts = [
-                QgsPointXY(x - half, y - half),
-                QgsPointXY(x + half, y - half),
-                QgsPointXY(x + half, y + half),
-                QgsPointXY(x - half, y + half),
-                QgsPointXY(x - half, y - half),
-            ]
+            pts = [QgsPointXY(x + dx, y + dy) for dx, dy in square_offsets]
 
             feat = QgsFeature()
             feat.setGeometry(QgsGeometry.fromPolygonXY([pts]))
             feat.setAttributes([grid_id])
-            features.append(feat)
+            buffer.append(feat)
 
-    pr.addFeatures(features)
-    vl.updateExtents()
+            if len(buffer) == 1000:
+                writer.addFeatures(buffer)
+                buffer.clear()
+    if buffer:
+        writer.addFeatures(buffer)
 
-    # ---- write shapefile (avoid overwrite) ----
-    base_path = os.path.join(map_output_dir, f"{name}.shp")
-    out_path = base_path
-    i = 1
-    while os.path.exists(out_path):
-        base, ext = os.path.splitext(base_path)
-        out_path = f"{base}({i}){ext}"
-        i += 1
-
-    options = QgsVectorFileWriter.SaveVectorOptions()
-    options.driverName = "ESRI Shapefile"
-    options.fileEncoding = "UTF-8"
-    options.layerName = name
-
-    transform_context = QgsProject.instance().transformContext()
-    QgsVectorFileWriter.writeAsVectorFormatV3(
-        vl, out_path, transform_context, options
-    )
+    del writer
 
     # ---- reload + style ----
     saved_layer = QgsVectorLayer(out_path, name, "ogr")
