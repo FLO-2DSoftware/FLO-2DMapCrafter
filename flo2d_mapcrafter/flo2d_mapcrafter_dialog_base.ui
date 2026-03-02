@@ -255,7 +255,7 @@
       <enum>QTabWidget::Rounded</enum>
      </property>
      <property name="currentIndex">
-      <number>3</number>
+      <number>0</number>
      </property>
      <property name="elideMode">
       <enum>Qt::ElideNone</enum>
@@ -591,8 +591,8 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>879</width>
-            <height>453</height>
+            <width>490</width>
+            <height>673</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_99">
@@ -1148,8 +1148,8 @@ p, li { white-space: pre-wrap; }
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>879</width>
-            <height>453</height>
+            <width>490</width>
+            <height>769</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_100">
@@ -2390,8 +2390,8 @@ p, li { white-space: pre-wrap; }
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>879</width>
-            <height>453</height>
+            <width>669</width>
+            <height>1015</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_102">
@@ -3126,8 +3126,8 @@ p, li { white-space: pre-wrap; }
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>879</width>
-            <height>453</height>
+            <width>502</width>
+            <height>814</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_103">
@@ -3653,8 +3653,8 @@ p, li { white-space: pre-wrap; }
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>879</width>
-            <height>453</height>
+            <width>299</width>
+            <height>477</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_111">
@@ -4074,8 +4074,8 @@ p, li { white-space: pre-wrap; }
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>879</width>
-            <height>453</height>
+            <width>343</width>
+            <height>364</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_104">
