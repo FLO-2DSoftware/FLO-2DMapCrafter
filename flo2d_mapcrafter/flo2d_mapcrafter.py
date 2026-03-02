@@ -11,7 +11,7 @@
         copyright            : (C) 2023 by FLO-2D
         email                : contact@flo-2d.com
  ***************************************************************************/
-
+]
 /***************************************************************************
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -21,8 +21,8 @@
  *                                                                         *
  ***************************************************************************/
 """
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QColor
+from PyQt5.QtCore import Qt, QUrl
+from PyQt5.QtGui import QColor, QDesktopServices
 from qgis.PyQt import QtWidgets
 from PyQt5.QtWidgets import QMessageBox, QApplication, QCheckBox, QTableWidgetItem, QHeaderView, QSizePolicy
 from PyQt5.QtXml import QDomDocument
@@ -42,6 +42,7 @@ from qgis._core import (
     QgsMessageLog, QgsProcessingUtils, Qgis,
 )
 from qgis._gui import QgsProjectionSelectionDialog
+
 from .mapping.flood import FloodMaps
 from .mapping.hazard import HazardMaps
 from .mapping.mudflow import MudflowMaps
@@ -167,6 +168,8 @@ class FLO2DMapCrafter:
 
         self._cell_size = None
         self._cell_size_label = None
+
+        self.dlg.help_btn.clicked.connect(self.show_mapcrafter_help)
 
     def tr(self, message):
         """Get the translation for a string using Qt translation API.
@@ -2573,7 +2576,8 @@ class FLO2DMapCrafter:
                 f"An error occurred while refreshing the project:\n\n{e}"
             )
 
-
+    def show_mapcrafter_help(self):
+        QDesktopServices.openUrl(QUrl("https://documentation.flo-2d.com/Build25/flo-2d_mapcrafter/index.html"))
 
 
 
