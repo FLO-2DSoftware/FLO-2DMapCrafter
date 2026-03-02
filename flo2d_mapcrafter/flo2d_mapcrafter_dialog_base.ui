@@ -278,8 +278,8 @@
         <rect>
          <x>9</x>
          <y>6</y>
-         <width>781</width>
-         <height>501</height>
+         <width>891</width>
+         <height>471</height>
         </rect>
        </property>
        <property name="frameShape">
@@ -293,8 +293,8 @@
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>781</width>
-          <height>501</height>
+          <width>891</width>
+          <height>471</height>
          </rect>
         </property>
         <layout class="QVBoxLayout" name="verticalLayout">
@@ -1829,8 +1829,8 @@ p, li { white-space: pre-wrap; }
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>879</width>
-            <height>453</height>
+            <width>490</width>
+            <height>769</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_101">
