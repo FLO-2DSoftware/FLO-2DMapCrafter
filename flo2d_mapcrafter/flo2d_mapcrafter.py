@@ -1370,8 +1370,15 @@ class FLO2DMapCrafter:
         """
         Run method that performs all the real work
         """
-
+        progress = None
         try:
+            progress = QtWidgets.QProgressDialog("Creating maps...", "Cancel", 0, 100, self.dlg)
+            progress.setWindowTitle("FLO-2D MapCrafter")
+            progress.setWindowModality(Qt.WindowModal)
+            progress.setMinimumDuration(0)
+            progress.setAutoClose(True)
+            progress.setAutoReset(True)
+            progress.show()
 
             QApplication.setOverrideCursor(Qt.WaitCursor)
 
@@ -1392,6 +1399,7 @@ class FLO2DMapCrafter:
                 map_output_dir = QgsProcessingUtils.tempFolder()
 
             if not self.check_checkboxes():
+                progress.close()
                 QApplication.restoreOverrideCursor()  # restore cursor
                 return
 
@@ -1739,12 +1747,15 @@ class FLO2DMapCrafter:
                     'FLO-2D', Qgis.MessageLevel.Info)
 
             QApplication.restoreOverrideCursor()
-            msg_box = QMessageBox()
-            msg_box.setIcon(QMessageBox.Information)
-            msg_box.setWindowTitle("Mapping complete!")
-            msg_box.setText("The selected maps were created!")
-            msg_box.exec_()
 
+            msg = QMessageBox(self.dlg)
+            msg.setIcon(QMessageBox.Information)
+            msg.setWindowTitle("Mapping complete!")
+            msg.setText("The selected maps were created!")
+            msg.setWindowModality(Qt.WindowModal)
+            msg.show()
+
+            # Uncheck the "Check all available maps" checkbox after clicking "OK" button on the mapping success window.
             master_checkboxes = [
                 self.dlg.check_cw_cb,
                 self.dlg.check_sd_cb,
@@ -1764,7 +1775,16 @@ class FLO2DMapCrafter:
                 duration=5)
             QgsMessageLog.logMessage(str(e))
 
+            QMessageBox.information(
+                self.dlg,
+                "Mapping Complete!",
+                "Maps created successfully!"
+            )
+
         finally:
+            if progress is not None:
+                progress.close()
+
             QApplication.restoreOverrideCursor()
 
         # Keep dialog visible and in place
