@@ -199,6 +199,21 @@ class MudflowMaps:
                 self.process_maps(name, raster, file, crs, sc_group, 6)
                 self.tick(dlg, "Modified ground elevation")
 
+            # Grid ID
+            if mudflow_rbs.get("GRID_ID", False):
+                if cell_size is None:
+                    raise ValueError("Cell size must be provided for GRID ID maps")
+                name = check_project_id("GRID_ID", project_id)
+                process_grid_id_polygons(
+                    name=name,
+                    file=os.path.join(flo2d_results_dir, "DEPTH.OUT"),
+                    crs=crs,
+                    mapping_group=sc_group,
+                    cell_size=cell_size,
+                    map_output_dir=map_output_dir
+                )
+                self.tick(dlg, "Grid ID")
+
             # Maximum Depth
             if mudflow_rbs.get(r"DEPTH.OUT"):
                 name = check_project_id("MAXIMUM_DEPTH", project_id)
