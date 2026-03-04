@@ -507,7 +507,7 @@ class HazardMaps:
         finally:
             dlg.close()
 
-    def veloc_velfp(self, results_dir, map_output_dir, vel_fp_name="VELFP.OUT", vel_ch_name="VELOC.OUT", vel_out_name="VEL_COMBINE.OUT"):
+    def veloc_velfp(self, results_dir, map_output_dir, vel_fp_name="VELFP.OUT", vel_ch_name="VELOC.OUT", vel_out_name="VEL_COMBINED.OUT"):
         """
         Combine VELFP.OUT and VELOC.OUT using the maximum velocity per cell.
         Writes the combined file into the MapCrafter folder.
