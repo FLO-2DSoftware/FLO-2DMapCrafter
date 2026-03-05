@@ -243,7 +243,7 @@ class FloodMaps:
 
             # Velocity x Depth
             if flood_rbs.get(r"VEL_X_DEPTH.OUT"):
-                name = check_project_id("DEPTH_X_VELOCITY", project_id)
+                name = check_project_id("VELOCITY_X_DEPTH", project_id)
                 name, raster = check_raster_file(name, map_output_dir)
                 file = os.path.join(flo2d_results_dir, "VEL_X_DEPTH.OUT")
                 self.process_maps(name, raster, file, crs, dv_group, 7)
