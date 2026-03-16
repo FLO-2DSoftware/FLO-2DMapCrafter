@@ -20,15 +20,14 @@
  *                                                                         *
  ***************************************************************************/
 """
-import os, processing
-from functools import partial
+import os
 from qgis.PyQt.QtWidgets import QProgressDialog, QApplication
 from PyQt5.QtCore import QMetaType, QVariant, Qt
 from qgis._core import QgsProject, QgsVectorLayer, QgsField, QgsFeature, QgsPointXY, QgsGeometry, QgsVectorFileWriter
 from flo2d_mapcrafter.mapping.check_data import check_project_id, check_mapping_group, check_raster_file, \
     check_vector_file
 from flo2d_mapcrafter.mapping.scripts import read_ASCII, set_raster_style, \
-    set_velocity_vector_style, modified_ground_elev, final_wse
+    set_velocity_vector_style, modified_ground_elev, final_wse, process_grid_id_polygons
 
 class SedimentMaps:
 
@@ -55,7 +54,7 @@ class SedimentMaps:
         return dlg
 
     # Helper 2 for progress bar
-    def _tick(self, dlg: QProgressDialog, label: str):
+    def tick(self, dlg: QProgressDialog, label: str):
         if dlg.wasCanceled():
             raise KeyboardInterrupt
         dlg.setLabelText(label)
@@ -102,7 +101,7 @@ class SedimentMaps:
 
         return sediment_files
 
-    def create_maps(self, sediment_rbs, flo2d_results_dir, map_output_dir, mapping_group, crs, project_id, sim_type=None):
+    def create_maps(self, sediment_rbs, flo2d_results_dir, map_output_dir, mapping_group, crs, project_id, sim_type=None, cell_size=None):
         """
         Function to create the maps
         """
@@ -181,7 +180,7 @@ class SedimentMaps:
                 name, raster = check_raster_file(name, map_output_dir)
                 file = flo2d_results_dir + r"\TOPO.DAT"
                 self.process_maps(name, raster, file, crs, sc_group, 6)
-                self._tick(dlg, "Ground Elevation")
+                self.tick(dlg, "Ground Elevation")
 
             # Modified Ground Elevation
             if sediment_rbs.get(r"TOPO_SDElev.RGH"):
@@ -194,7 +193,22 @@ class SedimentMaps:
                 name, raster = check_raster_file(name, map_output_dir)
                 file = mge_path
                 self.process_maps(name, raster, file, crs, sc_group, 6)
-                self._tick(dlg, "Modified ground elevation")
+                self.tick(dlg, "Modified ground elevation")
+
+            # Grid ID
+            if sediment_rbs.get("GRID_ID", False):
+                if cell_size is None:
+                    raise ValueError("Cell size must be provided for GRID ID maps")
+                name = check_project_id("GRID_ID", project_id)
+                process_grid_id_polygons(
+                    name=name,
+                    file=os.path.join(flo2d_results_dir, "DEPTH.OUT"),
+                    crs=crs,
+                    mapping_group=sc_group,
+                    cell_size=cell_size,
+                    map_output_dir=map_output_dir
+                )
+                self.tick(dlg, "Grid ID")
 
             # Maximum Depth
             if sediment_rbs.get(r"DEPTH.OUT"):
@@ -202,7 +216,7 @@ class SedimentMaps:
                 name, raster = check_raster_file(name, map_output_dir)
                 file = flo2d_results_dir + r"\DEPFP.OUT"
                 self.process_maps(name, raster, file, crs, bv_group, 0)
-                self._tick(dlg, "Maximum Depth")
+                self.tick(dlg, "Maximum Depth")
 
             # Maximum Velocity
             if sediment_rbs.get(r"VELFP.OUT"):
@@ -210,7 +224,7 @@ class SedimentMaps:
                 name, raster = check_raster_file(name, map_output_dir)
                 file = flo2d_results_dir + r"\VELFP.OUT"
                 self.process_maps(name, raster, file, crs, bv_group, 1)
-                self._tick(dlg, "Maximum Velocity")
+                self.tick(dlg, "Maximum Velocity")
 
             # Maximum WSE TODO: Check
             if sediment_rbs.get(r"MAXWSELEV.OUT"):
@@ -218,7 +232,7 @@ class SedimentMaps:
                 name, raster = check_raster_file(name, map_output_dir)
                 file = flo2d_results_dir + r"\MAXWSELEV.OUT"
                 self.process_maps(name, raster, file, crs, bv_group, 6)
-                self._tick(dlg, "Maximum WSE")
+                self.tick(dlg, "Maximum WSE")
 
             # Final Depth
             if sediment_rbs.get(r"FINALDEP.OUT"):
@@ -226,7 +240,7 @@ class SedimentMaps:
                 name, raster = check_raster_file(name, map_output_dir)
                 file = flo2d_results_dir + r"\FINALDEP.OUT"
                 self.process_maps(name, raster, file, crs, bv_group, 0)
-                self._tick(dlg, "Final Depth")
+                self.tick(dlg, "Final Depth")
 
             # Final WSE
             if sediment_rbs.get(r"FINAL_WSE.DAT"):
@@ -237,7 +251,7 @@ class SedimentMaps:
                 name = check_project_id("FINAL_WSE", project_id)
                 name, raster = check_raster_file(name, map_output_dir)
                 self.process_maps(name, raster, wse_path, crs, bv_group, 6)
-                self._tick(dlg, "Final Water Surface Elevation")
+                self.tick(dlg, "Final Water Surface Elevation")
 
             # Final Velocity
             if sediment_rbs.get(r"FINALVEL.OUT"):
@@ -245,15 +259,15 @@ class SedimentMaps:
                 name, raster = check_raster_file(name, map_output_dir)
                 file = flo2d_results_dir + r"\FINALVEL.OUT"
                 self.process_maps(name, raster, file, crs, bv_group, 1)
-                self._tick(dlg, "Final Velocity")
+                self.tick(dlg, "Final Velocity")
 
             # Velocity x Depth
             if sediment_rbs.get(r"VEL_X_DEPTH.OUT"):
-                name = check_project_id("DEPTH_X_VELOCITY", project_id)
+                name = check_project_id("VELOCITY_X_DEPTH", project_id)
                 name, raster = check_raster_file(name, map_output_dir)
                 file = flo2d_results_dir + r"\VEL_X_DEPTH.OUT"
                 self.process_maps(name, raster, file, crs, dv_group, 7)
-                self._tick(dlg, "Velocity x Depth")
+                self.tick(dlg, "Velocity x Depth")
 
             # Velocity_Squared x Depth
             if sediment_rbs.get(r"VEL_SQUARED_X_DEPTH.OUT"):
@@ -261,7 +275,7 @@ class SedimentMaps:
                 name, raster = check_raster_file(name, map_output_dir)
                 file = os.path.join(flo2d_results_dir, "VEL_SQUARED_X_DEPTH.OUT")
                 self.process_maps(name, raster, file, crs, dv_group, 7)
-                self._tick(dlg, "Velocity_Squared x Depth")
+                self.tick(dlg, "Velocity_Squared x Depth")
 
             # Time to one ft
             if sediment_rbs.get(r"TIMEONEFT.OUT"):
@@ -269,7 +283,7 @@ class SedimentMaps:
                 name, raster = check_raster_file(name, map_output_dir)
                 file = flo2d_results_dir + r"\TIMEONEFT.OUT"
                 self.process_maps(name, raster, file, crs, tv_group, 3)
-                self._tick(dlg, "Time to One ft")
+                self.tick(dlg, "Time to One ft")
 
             # Time to two ft
             if sediment_rbs.get(r"TIMETWOFT.OUT"):
@@ -277,7 +291,7 @@ class SedimentMaps:
                 name, raster = check_raster_file(name, map_output_dir)
                 file = flo2d_results_dir + r"\TIMETWOFT.OUT"
                 self.process_maps(name, raster, file, crs, tv_group, 3)
-                self._tick(dlg, "Time to Two ft")
+                self.tick(dlg, "Time to Two ft")
 
             # Time to peak
             if sediment_rbs.get(r"TIMETOPEAK.OUT"):
@@ -285,7 +299,7 @@ class SedimentMaps:
                 name, raster = check_raster_file(name, map_output_dir)
                 file = flo2d_results_dir + r"\TIMETOPEAK.OUT"
                 self.process_maps(name, raster, file, crs, tv_group, 3)
-                self._tick(dlg, "Time to Peak")
+                self.tick(dlg, "Time to Peak")
 
             # Static pressure
             if sediment_rbs.get(r"STATICPRESS.OUT"):
@@ -293,7 +307,7 @@ class SedimentMaps:
                 name, raster = check_raster_file(name, map_output_dir)
                 file = flo2d_results_dir + r"\STATICPRESS.OUT"
                 self.process_maps(name, raster, file, crs, hv_group, 8)
-                self._tick(dlg, "Static Pressure")
+                self.tick(dlg, "Static Pressure")
 
             # Specific Energy
             if sediment_rbs.get(r"SPECENERGY.OUT"):
@@ -301,7 +315,7 @@ class SedimentMaps:
                 name, raster = check_raster_file(name, map_output_dir)
                 file = flo2d_results_dir + r"\SPECENERGY.OUT"
                 self.process_maps(name, raster, file, crs, hv_group, 9)
-                self._tick(dlg, "Specific Energy")
+                self.tick(dlg, "Specific Energy")
 
             # Maximum channel depth
             if sediment_rbs.get(r"DEPCH.OUT"):
@@ -309,7 +323,7 @@ class SedimentMaps:
                 name, raster = check_raster_file(name, map_output_dir)
                 file = flo2d_results_dir + r"\DEPCH.OUT"
                 self.process_maps(name, raster, file, crs, cv_group, 0)
-                self._tick(dlg, "Maximum Energy")
+                self.tick(dlg, "Maximum Energy")
 
             # Final channel depth
             if sediment_rbs.get(r"DEPCHFINAL.OUT"):
@@ -317,7 +331,7 @@ class SedimentMaps:
                 name, raster = check_raster_file(name, map_output_dir)
                 file = flo2d_results_dir + r"\DEPCHFINAL.OUT"
                 self.process_maps(name, raster, file, crs, cv_group, 0)
-                self._tick(dlg, "Final Depth Channel")
+                self.tick(dlg, "Final Depth Channel")
 
             # Maximum channel velocity
             if sediment_rbs.get(r"VELOC.OUT"):
@@ -325,7 +339,7 @@ class SedimentMaps:
                 name, raster = check_raster_file(name, map_output_dir)
                 file = flo2d_results_dir + r"\VELOC.OUT"
                 self.process_maps(name, raster, file, crs, cv_group, 1)
-                self._tick(dlg, "Maximum Depth Velocity")
+                self.tick(dlg, "Maximum Depth Velocity")
 
             # Final channel velocity
             if sediment_rbs.get(r"VELCHFINAL.OUT"):
@@ -333,7 +347,7 @@ class SedimentMaps:
                 name, raster = check_raster_file(name, map_output_dir)
                 file = flo2d_results_dir + r"\VELCHFINAL.OUT"
                 self.process_maps(name, raster, file, crs, cv_group, 1)
-                self._tick(dlg, "Final Channel Velocity")
+                self.tick(dlg, "Final Channel Velocity")
 
             # Levee Deficit
             if sediment_rbs.get(r"LEVEEDEFIC.OUT"):
@@ -341,7 +355,7 @@ class SedimentMaps:
                 name, raster = check_raster_file(name, map_output_dir)
                 file = flo2d_results_dir + r"\LEVEEDEFIC.OUT"
                 self.process_maps(name, raster, file, crs, sv_group, 11)
-                self._tick(dlg, "Levee Deficit")
+                self.tick(dlg, "Levee Deficit")
 
             # Maximum Deposition
             sedfp_maps = sediment_rbs.get(r"SEDFP.OUT")
@@ -350,7 +364,7 @@ class SedimentMaps:
                 name, raster = check_raster_file(name, map_output_dir)
                 file = flo2d_results_dir + r"\SEDFP.OUT"
                 self.process_maps(name, raster, file, crs, sd_group, 12)
-                self._tick(dlg, "Maximum Deposition")
+                self.tick(dlg, "Maximum Deposition")
 
             # Maximum Scour
             if sedfp_maps[1]:
@@ -358,7 +372,7 @@ class SedimentMaps:
                 name, raster = check_raster_file(name, map_output_dir)
                 file = flo2d_results_dir + r"\SEDFP.OUT"
                 self.process_maps(name, raster, file, crs, sd_group, 13)
-                self._tick(dlg, "Maximum Scour")
+                self.tick(dlg, "Maximum Scour")
 
             # Final Bed Difference
             if sedfp_maps[2]:
@@ -366,7 +380,7 @@ class SedimentMaps:
                 name, raster = check_raster_file(name, map_output_dir)
                 file = flo2d_results_dir + r"\SEDFP.OUT"
                 self.process_maps(name, raster, file, crs, sd_group, 14)
-                self._tick(dlg, "Final Bed Difference")
+                self.tick(dlg, "Final Bed Difference")
 
             # Maximum Velocity Vector
             if sediment_rbs.get(r"VELDIREC.OUT"):
@@ -375,7 +389,7 @@ class SedimentMaps:
                 value_file = flo2d_results_dir + r"\VELFP.OUT"
                 direction_file = flo2d_results_dir + r"\VELDIREC.OUT"
                 self.process_vectors(name, vector, value_file, direction_file, crs, bv_group, self.max_vector_scale)
-                self._tick(dlg, "Maximum Velocity Vector")
+                self.tick(dlg, "Maximum Velocity Vector")
 
             # Final Velocity Vector
             if sediment_rbs.get(r"FINALDIR.OUT"):
@@ -384,7 +398,7 @@ class SedimentMaps:
                 value_file = flo2d_results_dir + r"\FINALVEL.OUT"
                 direction_file = flo2d_results_dir + r"\FINALDIR.OUT"
                 self.process_vectors(name, vector, value_file, direction_file, crs, bv_group, self.min_vector_scale)
-                self._tick(dlg, "Final Velocity Vector")
+                self.tick(dlg, "Final Velocity Vector")
 
 
             # Impact Force
@@ -393,7 +407,7 @@ class SedimentMaps:
                 name, raster = check_raster_file(name, map_output_dir)
                 file = flo2d_results_dir + r"\IMPACT.OUT"
                 self.process_maps(name, raster, file, crs, hv_group, 1)
-                self._tick(dlg, "Impact Force")
+                self.tick(dlg, "Impact Force")
 
             # Uncheck and Collapse the layers added
             allLayers = mapping_group.findLayers()

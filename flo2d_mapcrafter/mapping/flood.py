@@ -23,16 +23,16 @@
 """
 
 import os
-import processing
-from functools import partial
+from qgis.core import QgsMessageLog, Qgis
 from qgis.PyQt.QtWidgets import QProgressDialog, QApplication
 from PyQt5.QtCore import QMetaType, QVariant, Qt
-from qgis._core import QgsProject, QgsVectorLayer, QgsField, QgsFeature, QgsGeometry, QgsPointXY, \
-    QgsVectorFileWriter, QgsRasterLayer
+from qgis.core import QgsProject, QgsVectorLayer, QgsField, QgsFeature, QgsGeometry, QgsPointXY, \
+    QgsVectorFileWriter
+
 from flo2d_mapcrafter.mapping.check_data import check_project_id, check_mapping_group, check_raster_file, \
     check_vector_file
 from flo2d_mapcrafter.mapping.scripts import read_ASCII, set_raster_style, \
-    set_velocity_vector_style, modified_ground_elev, final_wse
+    set_velocity_vector_style, modified_ground_elev, final_wse, process_grid_id_polygons
 
 class FloodMaps:
 
@@ -48,7 +48,7 @@ class FloodMaps:
         self.min_vector_scale = vector_scale[1]
         self.toler_value = toler_value
 
-    def _make_progress(self, text: str, maximum: int) -> QProgressDialog:
+    def make_progress(self, text: str, maximum: int) -> QProgressDialog:
         dlg = QProgressDialog(text, "Cancel", 0, max(1, int(maximum)), self.iface.mainWindow())
         dlg.setWindowTitle("QGIS3")
         dlg.setWindowModality(Qt.WindowModal)
@@ -58,18 +58,20 @@ class FloodMaps:
         dlg.setValue(0)
         return dlg
 
-    def _tick(self, dlg: QProgressDialog, label: str):
+    def tick(self, dlg: QProgressDialog, label: str):
         if dlg.wasCanceled():
             raise KeyboardInterrupt
         dlg.setLabelText(label)
         dlg.setValue(dlg.value() + 1)
         QApplication.processEvents()
 
+
+
+
     def check_flood_files(self, output_dir):
         """
         Function to check the flood files and return a dictionary with the available maps
         """
-
         flood_files = {
             r"TOPO.DAT": False,
             r"TOPO_SDElev.RGH": False,
@@ -104,14 +106,14 @@ class FloodMaps:
 
         return flood_files
 
-    def create_maps(self, flood_rbs, flo2d_results_dir, map_output_dir, mapping_group, crs, project_id, sim_type=None):
+    def create_maps(self, flood_rbs, flo2d_results_dir, map_output_dir, mapping_group, crs, project_id, sim_type=None, cell_size=None):
         """
         Function to create the maps
         """
         # ---- how many steps? each checked item is one step ----
         total_steps = sum(1 for _, v in flood_rbs.items() if v)
 
-        dlg = self._make_progress("Preparing…", max(1, total_steps))
+        dlg = self.make_progress("Preparing…", max(1, total_steps))
         try:
             # ----------------- setup / groups -----------------
             mapping_group_name = check_project_id("Flood Maps", project_id)
@@ -156,7 +158,7 @@ class FloodMaps:
                 name, raster = check_raster_file(name, map_output_dir)
                 file = os.path.join(flo2d_results_dir, "TOPO.DAT")
                 self.process_maps(name, raster, file, crs, sc_group, 6)
-                self._tick(dlg, "Ground Elevation")
+                self.tick(dlg, "Ground Elevation")
 
             # Modified Ground Elevation
             if flood_rbs.get(r"TOPO_SDElev.RGH"):
@@ -169,7 +171,22 @@ class FloodMaps:
                 name, raster = check_raster_file(name, map_output_dir)
                 file = mge_path
                 self.process_maps(name, raster, file, crs, sc_group, 6)
-                self._tick(dlg, "Modified ground elevation")
+                self.tick(dlg, "Modified ground elevation")
+
+            # Grid ID
+            if flood_rbs.get("GRID_ID", False):
+                if cell_size is None:
+                    raise ValueError("Cell size must be provided for GRID ID maps")
+                name = check_project_id("GRID_ID", project_id)
+                process_grid_id_polygons(
+                    name=name,
+                    file=os.path.join(flo2d_results_dir, "DEPTH.OUT"),
+                    crs=crs,
+                    mapping_group=sc_group,
+                    cell_size=cell_size,
+                    map_output_dir=map_output_dir
+                )
+                self.tick(dlg, "Grid ID")
 
             # Maximum Depth (prefer DEPFP.OUT, fallback DEPTH.OUT)
             if flood_rbs.get(r"DEPTH.OUT"):
@@ -179,7 +196,7 @@ class FloodMaps:
                 file2 = os.path.join(flo2d_results_dir, "DEPTH.OUT")
                 file = file1 if os.path.exists(file1) else file2
                 self.process_maps(name, raster, file, crs, bv_group, 0)
-                self._tick(dlg, "Maximum Depth")
+                self.tick(dlg, "Maximum Depth")
 
             # Maximum Velocity
             if flood_rbs.get(r"VELFP.OUT"):
@@ -187,7 +204,7 @@ class FloodMaps:
                 name, raster = check_raster_file(name, map_output_dir)
                 file = os.path.join(flo2d_results_dir, "VELFP.OUT")
                 self.process_maps(name, raster, file, crs, bv_group, 1)
-                self._tick(dlg, "Maximum Velocity")
+                self.tick(dlg, "Maximum Velocity")
 
             # Maximum WSE
             if flood_rbs.get(r"MAXWSELEV.OUT"):
@@ -195,7 +212,7 @@ class FloodMaps:
                 name, raster = check_raster_file(name, map_output_dir)
                 file = os.path.join(flo2d_results_dir, "MAXWSELEV.OUT")
                 self.process_maps(name, raster, file, crs, bv_group, 6)
-                self._tick(dlg, "Maximum Water Surface Elevation")
+                self.tick(dlg, "Maximum Water Surface Elevation")
 
             # Final Depth
             if flood_rbs.get(r"FINALDEP.OUT"):
@@ -203,7 +220,7 @@ class FloodMaps:
                 name, raster = check_raster_file(name, map_output_dir)
                 file = os.path.join(flo2d_results_dir, "FINALDEP.OUT")
                 self.process_maps(name, raster, file, crs, bv_group, 0)
-                self._tick(dlg, "Final Depth")
+                self.tick(dlg, "Final Depth")
 
             # Final WSE
             if flood_rbs.get(r"FINAL_WSE.DAT"):
@@ -214,7 +231,7 @@ class FloodMaps:
                 name = check_project_id("FINAL_WSE", project_id)
                 name, raster = check_raster_file(name, map_output_dir)
                 self.process_maps(name, raster, wse_path, crs, bv_group, 6)
-                self._tick(dlg, "Final Water Surface Elevation")
+                self.tick(dlg, "Final Water Surface Elevation")
 
             # Final Velocity
             if flood_rbs.get(r"FINALVEL.OUT"):
@@ -222,15 +239,15 @@ class FloodMaps:
                 name, raster = check_raster_file(name, map_output_dir)
                 file = os.path.join(flo2d_results_dir, "FINALVEL.OUT")
                 self.process_maps(name, raster, file, crs, bv_group, 1)
-                self._tick(dlg, "Final Velocity")
+                self.tick(dlg, "Final Velocity")
 
             # Velocity x Depth
             if flood_rbs.get(r"VEL_X_DEPTH.OUT"):
-                name = check_project_id("DEPTH_X_VELOCITY", project_id)
+                name = check_project_id("VELOCITY_X_DEPTH", project_id)
                 name, raster = check_raster_file(name, map_output_dir)
                 file = os.path.join(flo2d_results_dir, "VEL_X_DEPTH.OUT")
                 self.process_maps(name, raster, file, crs, dv_group, 7)
-                self._tick(dlg, "Velocity x Depth")
+                self.tick(dlg, "Velocity x Depth")
 
             # Velocity_Squared x Depth
             if flood_rbs.get(r"VEL_SQUARED_X_DEPTH.OUT"):
@@ -238,7 +255,7 @@ class FloodMaps:
                 name, raster = check_raster_file(name, map_output_dir)
                 file = os.path.join(flo2d_results_dir, "VEL_SQUARED_X_DEPTH.OUT")
                 self.process_maps(name, raster, file, crs, dv_group, 7)
-                self._tick(dlg, "Velocity_Squared x Depth")
+                self.tick(dlg, "Velocity_Squared x Depth")
 
             # Time to one ft
             if flood_rbs.get(r"TIMEONEFT.OUT"):
@@ -246,7 +263,7 @@ class FloodMaps:
                 name, raster = check_raster_file(name, map_output_dir)
                 file = os.path.join(flo2d_results_dir, "TIMEONEFT.OUT")
                 self.process_maps(name, raster, file, crs, tv_group, 3)
-                self._tick(dlg, "Time to One ft")
+                self.tick(dlg, "Time to One ft")
 
             # Time to two ft
             if flood_rbs.get(r"TIMETWOFT.OUT"):
@@ -254,7 +271,7 @@ class FloodMaps:
                 name, raster = check_raster_file(name, map_output_dir)
                 file = os.path.join(flo2d_results_dir, "TIMETWOFT.OUT")
                 self.process_maps(name, raster, file, crs, tv_group, 3)
-                self._tick(dlg, "Time to Two ft")
+                self.tick(dlg, "Time to Two ft")
 
             # Time to peak
             if flood_rbs.get(r"TIMETOPEAK.OUT"):
@@ -262,7 +279,7 @@ class FloodMaps:
                 name, raster = check_raster_file(name, map_output_dir)
                 file = os.path.join(flo2d_results_dir, "TIMETOPEAK.OUT")
                 self.process_maps(name, raster, file, crs, tv_group, 3)
-                self._tick(dlg, "Time to Peak")
+                self.tick(dlg, "Time to Peak")
 
             # Static pressure
             if flood_rbs.get(r"STATICPRESS.OUT"):
@@ -270,7 +287,7 @@ class FloodMaps:
                 name, raster = check_raster_file(name, map_output_dir)
                 file = os.path.join(flo2d_results_dir, "STATICPRESS.OUT")
                 self.process_maps(name, raster, file, crs, hv_group, 8)
-                self._tick(dlg, "Static Pressure")
+                self.tick(dlg, "Static Pressure")
 
             # Specific Energy
             if flood_rbs.get(r"SPECENERGY.OUT"):
@@ -278,7 +295,7 @@ class FloodMaps:
                 name, raster = check_raster_file(name, map_output_dir)
                 file = os.path.join(flo2d_results_dir, "SPECENERGY.OUT")
                 self.process_maps(name, raster, file, crs, hv_group, 9)
-                self._tick(dlg, "Specific Energy")
+                self.tick(dlg, "Specific Energy")
 
             # Maximum channel depth
             if flood_rbs.get(r"DEPCH.OUT"):
@@ -286,7 +303,7 @@ class FloodMaps:
                 name, raster = check_raster_file(name, map_output_dir)
                 file = os.path.join(flo2d_results_dir, "DEPCH.OUT")
                 self.process_maps(name, raster, file, crs, cv_group, 0)
-                self._tick(dlg, "Maximum Channel Depth")
+                self.tick(dlg, "Maximum Channel Depth")
 
             # Final channel depth
             if flood_rbs.get(r"DEPCHFINAL.OUT"):
@@ -294,7 +311,7 @@ class FloodMaps:
                 name, raster = check_raster_file(name, map_output_dir)
                 file = os.path.join(flo2d_results_dir, "DEPCHFINAL.OUT")
                 self.process_maps(name, raster, file, crs, cv_group, 0)
-                self._tick(dlg, "Final Channel Depth")
+                self.tick(dlg, "Final Channel Depth")
 
             # Maximum channel velocity
             if flood_rbs.get(r"VELOC.OUT"):
@@ -302,7 +319,7 @@ class FloodMaps:
                 name, raster = check_raster_file(name, map_output_dir)
                 file = os.path.join(flo2d_results_dir, "VELOC.OUT")
                 self.process_maps(name, raster, file, crs, cv_group, 1)
-                self._tick(dlg, "Maximum Channel Velocity")
+                self.tick(dlg, "Maximum Channel Velocity")
 
             # Final channel velocity
             if flood_rbs.get(r"VELCHFINAL.OUT"):
@@ -310,7 +327,7 @@ class FloodMaps:
                 name, raster = check_raster_file(name, map_output_dir)
                 file = os.path.join(flo2d_results_dir, "VELCHFINAL.OUT")
                 self.process_maps(name, raster, file, crs, cv_group, 1)
-                self._tick(dlg, "Final Channel Velocity")
+                self.tick(dlg, "Final Channel Velocity")
 
             # Levee Deficit
             if flood_rbs.get(r"LEVEEDEFIC.OUT"):
@@ -318,7 +335,7 @@ class FloodMaps:
                 name, raster = check_raster_file(name, map_output_dir)
                 file = os.path.join(flo2d_results_dir, "LEVEEDEFIC.OUT")
                 self.process_maps(name, raster, file, crs, sv_group, 11)
-                self._tick(dlg, "Levee Deficit")
+                self.tick(dlg, "Levee Deficit")
 
             # Impact Force
             if flood_rbs.get(r"IMPACT.OUT"):
@@ -326,7 +343,7 @@ class FloodMaps:
                 name, raster = check_raster_file(name, map_output_dir)
                 file = os.path.join(flo2d_results_dir, "IMPACT.OUT")
                 self.process_maps(name, raster, file, crs, hv_group, 1)
-                self._tick(dlg, "Impact Force")
+                self.tick(dlg, "Impact Force")
 
             # Maximum Velocity Vector
             if flood_rbs.get(r"VELDIREC.OUT"):
@@ -335,7 +352,7 @@ class FloodMaps:
                 value_file = os.path.join(flo2d_results_dir, "VELFP.OUT")
                 direction_file = os.path.join(flo2d_results_dir, "VELDIREC.OUT")
                 self.process_vectors(name, vector, value_file, direction_file, crs, bv_group, self.max_vector_scale)
-                self._tick(dlg, "Maximum Velocity Vector")
+                self.tick(dlg, "Maximum Velocity Vector")
 
             # Final Velocity Vector
             if flood_rbs.get(r"FINALDIR.OUT"):
@@ -344,7 +361,7 @@ class FloodMaps:
                 value_file = os.path.join(flo2d_results_dir, "FINALVEL.OUT")
                 direction_file = os.path.join(flo2d_results_dir, "FINALDIR.OUT")
                 self.process_vectors(name, vector, value_file, direction_file, crs, bv_group, self.min_vector_scale)
-                self._tick(dlg, "Final Velocity Vector")
+                self.tick(dlg, "Final Velocity Vector")
 
             # Uncheck & collapse newly added layers
             allLayers = mapping_group.findLayers()
@@ -360,22 +377,15 @@ class FloodMaps:
         finally:
             dlg.close()
 
-
-
     def process_maps(self, name, raster, file, crs, mapping_group, style):
         """
         Function to process the maps
         """
-
-        raster_processed = read_ASCII(
-            file, raster, name, crs
-        )
+        raster_processed = read_ASCII(file, raster, name, crs)
 
         if raster_processed:
-
             QgsProject.instance().addMapLayer(raster_processed, False)
             set_raster_style(raster_processed, style, self.toler_value, units_switch=None)
-
             mapping_group.insertLayer(0, raster_processed)
 
     def process_vectors(self, name, shapefile, value_file, direction_file, crs, mapping_group, vector_scale):

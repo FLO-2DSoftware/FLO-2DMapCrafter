@@ -287,6 +287,7 @@ class HazardMaps:
 
         dlg = self.make_progress("Preparing…", max(1, total_steps))
         try:
+            combined_vel_file = self.veloc_velfp(flo2d_results_dir, map_output_dir)
             # ----------------- setup / groups -----------------
             mapping_group_name = check_project_id("Hazard Maps", project_id)
             mapping_group = check_mapping_group(mapping_group_name, mapping_group)
@@ -329,7 +330,7 @@ class HazardMaps:
                 name = check_project_id("ARR_FLOOD_HAZARD", project_id)
                 name, raster = check_raster_file(name, map_output_dir)
                 depth_file = os.path.join(flo2d_results_dir, "DEPTH.OUT")
-                vel_file = os.path.join(flo2d_results_dir, "VELFP.OUT")
+                vel_file = combined_vel_file
                 vel_x_depth_file = os.path.join(flo2d_results_dir, "VEL_X_DEPTH.OUT")
 
                 hydro_risk_raster = self.create_arr_map(
@@ -353,7 +354,7 @@ class HazardMaps:
                 QApplication.processEvents()
 
                 depth_file = os.path.join(flo2d_results_dir, "DEPTH.OUT")
-                vel_file = os.path.join(flo2d_results_dir, "VELFP.OUT")
+                vel_file = combined_vel_file
 
                 if index == 0:
                     name = check_project_id("AUSTRIAN_FLOOD_INTENSITY", project_id)
@@ -374,7 +375,7 @@ class HazardMaps:
                 QApplication.processEvents()
 
                 depth_file = os.path.join(flo2d_results_dir, "DEPTH.OUT")
-                vel_file = os.path.join(flo2d_results_dir, 'VELFP.OUT')
+                vel_file = combined_vel_file
 
                 name = check_project_id("UK_FLOOD_HAZARD", project_id)
                 name, raster = check_raster_file(name, map_output_dir)
@@ -398,7 +399,7 @@ class HazardMaps:
                 QApplication.processEvents()
 
                 depth_file = os.path.join(flo2d_results_dir, "DEPTH.OUT")
-                vel_file = os.path.join(flo2d_results_dir, "VELFP.OUT")
+                vel_file = combined_vel_file
 
                 vel_data = np.loadtxt(vel_file, skiprows=0)
                 depth_data = np.loadtxt(depth_file, skiprows=0)
@@ -435,7 +436,7 @@ class HazardMaps:
                 QApplication.processEvents()
 
                 depth_file = os.path.join(flo2d_results_dir, "DEPTH.OUT")
-                vel_file = os.path.join(flo2d_results_dir, "VELFP.OUT")
+                vel_file = combined_vel_file
                 vel_x_depth_file = os.path.join(flo2d_results_dir, "VEL_X_DEPTH.OUT")
                 vel_x_depth_data = np.loadtxt(vel_x_depth_file, skiprows=0)
                 depth_data = np.loadtxt(depth_file, skiprows=0)
@@ -462,7 +463,7 @@ class HazardMaps:
                 QApplication.processEvents()
 
                 depth_file = os.path.join(flo2d_results_dir, "DEPTH.OUT")
-                vel_file = os.path.join(flo2d_results_dir, "VELFP.OUT")
+                vel_file = combined_vel_file
 
                 name = check_project_id("FEMA_HAZARD", project_id)
                 name, raster = check_raster_file(name, map_output_dir)
@@ -482,7 +483,7 @@ class HazardMaps:
                 name = check_project_id("PIER SCOUR", project_id)
                 name, raster = check_raster_file(name, map_output_dir)
                 depth_file = os.path.join(flo2d_results_dir, "DEPTH.OUT")
-                vel_file = os.path.join(flo2d_results_dir, "VELFP.OUT")
+                vel_file = combined_vel_file
                 timdep_file = os.path.join(flo2d_results_dir, "TIMDEP.HDF5")
 
                 hydro_risk_raster = self.create_pier_scour_map(raster, depth_file, vel_file, timdep_file, crs, pier_params)
@@ -505,6 +506,34 @@ class HazardMaps:
             return
         finally:
             dlg.close()
+
+    def veloc_velfp(self, results_dir, map_output_dir, vel_fp_name="VELFP.OUT", vel_ch_name="VELOC.OUT", vel_out_name="VEL_COMBINED.OUT"):
+        """
+        Combine VELFP.OUT and VELOC.OUT using the maximum velocity per cell.
+        Writes the combined file into the MapCrafter folder.
+        """
+        vel_fp_path = os.path.join(results_dir, vel_fp_name)
+        vel_ch_path = os.path.join(results_dir, vel_ch_name)
+        vel_out_path = os.path.join(map_output_dir, vel_out_name)
+
+        with open(vel_fp_path, "r") as f_fp, \
+                open(vel_ch_path, "r") as f_ch, \
+                open(vel_out_path, "w") as f_out:
+            for line_fp, line_ch in zip(f_fp, f_ch):
+                fp = line_fp.split()
+                ch = line_ch.split()
+                cell = fp[0]
+                x = fp[1]
+                y = fp[2]
+
+                v_fp = float(fp[3])
+                v_ch = float(ch[3])
+                v = max(v_fp, v_ch)
+
+                f_out.write(f"{cell} {x} {y} {v}\n")
+
+        return vel_out_path
+
 
     def create_swiss_map(self, name, hydro_risk, depth_data, vel_data, vel_x_depth_data, map_type, crs):
         """Create the SWISS flood intensity map"""
@@ -654,7 +683,7 @@ class HazardMaps:
                 if len(cell_size_data) < 2:
                     cell_size_data.append((x, y))
 
-            # Austrian Debris intensity
+        # Austrian Debris intensity
         if map_type == 1:
             for cell, (x, y, depth_val) in depth_map.items():
                 velocity_val = vel_map.get(cell, 0.0)

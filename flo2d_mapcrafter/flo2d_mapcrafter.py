@@ -11,7 +11,7 @@
         copyright            : (C) 2023 by FLO-2D
         email                : contact@flo-2d.com
  ***************************************************************************/
-
+]
 /***************************************************************************
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -21,8 +21,8 @@
  *                                                                         *
  ***************************************************************************/
 """
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QColor
+from PyQt5.QtCore import Qt, QUrl
+from PyQt5.QtGui import QColor, QDesktopServices
 from qgis.PyQt import QtWidgets
 from PyQt5.QtWidgets import QMessageBox, QApplication, QCheckBox, QTableWidgetItem, QHeaderView, QSizePolicy
 from PyQt5.QtXml import QDomDocument
@@ -42,6 +42,7 @@ from qgis._core import (
     QgsMessageLog, QgsProcessingUtils, Qgis,
 )
 from qgis._gui import QgsProjectionSelectionDialog
+
 from .mapping.flood import FloodMaps
 from .mapping.hazard import HazardMaps
 from .mapping.mudflow import MudflowMaps
@@ -164,6 +165,11 @@ class FLO2DMapCrafter:
 
         # Storm Drain subplots
         self.dlg.see_nodes_results_btn.clicked.connect(self.see_nodes_results)
+
+        self._cell_size = None
+        self._cell_size_label = None
+
+        self.dlg.help_btn.clicked.connect(self.show_mapcrafter_help)
 
     def tr(self, message):
         """Get the translation for a string using Qt translation API.
@@ -509,13 +515,18 @@ class FLO2DMapCrafter:
                 break
 
         # Project Summary: Grid (Cell) Size
-        cell = None
+        cell_value = None
+        cell_label = None
         pat_cell = re.compile(r"GRID\s+ELEMENT\s+SIZE\s*:\s*([0-9]+(?:\.[0-9]+)?)\s*([A-Za-z]+)", re.IGNORECASE)
         for line in summary_lines:
             m = pat_cell.search(line)
             if m:
-                cell = f"{m.group(1)} {m.group(2).upper()}"
+                cell_value = float(m.group(1))
+                cell_label = f"{m.group(1)} {m.group(2).upper()}"
                 break
+
+        self._cell_size = cell_value
+        self._cell_size_label = cell_label
 
         # Project Summary: No. of Elements
         nelems = None
@@ -589,7 +600,8 @@ class FLO2DMapCrafter:
 
         # Project Summary: Computer Run Time
         comp_run_time = None
-        pat_comp_run_time = re.compile(r"COMPUTER\s+RUN\s+TIME(?:\s+IS)?\s*:\s*([0-9]+(?:\.[0-9]+)?)\s*HRS", re.IGNORECASE)
+        pat_comp_run_time = re.compile(r"COMPUTER\s+RUN\s+TIME(?:\s+IS)?\s*:\s*([0-9]+(?:\.[0-9]+)?)\s*HRS",
+                                       re.IGNORECASE)
         for line in summary_lines:
             m = pat_comp_run_time.search(line)
             if not m:
@@ -619,7 +631,7 @@ class FLO2DMapCrafter:
         # Fill values
         self.dlg.sumUnits.setText(units or "----")
         self.dlg.sumBuild.setText(build or "----")
-        self.dlg.sumCellSize.setText(cell or "----")
+        self.dlg.sumCellSize.setText(cell_label or "----")
         self.dlg.sumNElems.setText(nelems or "----")
         self.dlg.sumSimType.setText(simtype or "----")
         self.dlg.sumSimDate.setText(simdate or "----")
@@ -696,7 +708,9 @@ class FLO2DMapCrafter:
                             break
 
                         # stop if reached a new main section
-                        if re.search(r"\b(UNITS|BUILD|GRID SIZE|NO\.? OF ELEMENTS|SIMULATION TYPE|COORD\.?|FLO-2D|SUMMARY)\b", raw, re.IGNORECASE):
+                        if re.search(
+                                r"\b(UNITS|BUILD|GRID SIZE|NO\.? OF ELEMENTS|SIMULATION TYPE|COORD\.?|FLO-2D|SUMMARY)\b",
+                                raw, re.IGNORECASE):
                             break
 
                         # split into up to 3 columns by 2+ spaces
@@ -722,7 +736,8 @@ class FLO2DMapCrafter:
 
                 # Build19 or earlier
                 if major_build is not None and major_build <= 19:
-                    self.show_sim_summary_placeholder(tbl, "---- Simulation Summary not available for Build19 or earlier ----")
+                    self.show_sim_summary_placeholder(tbl,
+                                                      "---- Simulation Summary not available for Build19 or earlier ----")
                     return
 
                 # Build > 19 and Batch mode selected
@@ -984,7 +999,6 @@ class FLO2DMapCrafter:
 
         self._sim_type = None
 
-
         # Flood simulation
         if mud_switch == "0" and sed_switch == "0":
             self._sim_type = "Flood"
@@ -1006,6 +1020,7 @@ class FLO2DMapCrafter:
             flood_rbs = {
                 r"TOPO.DAT": self.dlg.ge_cw_cb,
                 r"TOPO_SDElev.RGH": self.dlg.mge_cw_cb,
+                r"GRID_ID": self.dlg.gid_cw_cb,
                 r"DEPTH.OUT": self.dlg.md_cw_cb,
                 r"VELFP.OUT": self.dlg.mv_cw_cb,
                 r"VELDIREC.OUT": self.dlg.mvv_cw_cb,
@@ -1056,6 +1071,7 @@ class FLO2DMapCrafter:
             sediment_rbs = {
                 r"TOPO.DAT": self.dlg.ge_sd_cb,
                 r"TOPO_SDElev.RGH": self.dlg.mge_sd_cb,
+                r"GRID_ID": self.dlg.gid_sd_cb,
                 r"DEPTH.OUT": self.dlg.md_sd_cb,
                 r"VELFP.OUT": self.dlg.mv_sd_cb,
                 r"VELDIREC.OUT": self.dlg.mvv_sd_cb,
@@ -1119,6 +1135,7 @@ class FLO2DMapCrafter:
             mudflow_rbs = {
                 r"TOPO.DAT": self.dlg.ge_mf_cb,
                 r"TOPO_SDElev.RGH": self.dlg.mge_mf_cb,
+                r"GRID_ID": self.dlg.gid_mf_cb,
                 r"DEPTH.OUT": self.dlg.md_mf_cb,
                 r"VELFP.OUT": self.dlg.mv_mf_cb,
                 r"VELDIREC.OUT": self.dlg.mvv_mf_cb,
@@ -1170,6 +1187,7 @@ class FLO2DMapCrafter:
             twophase_rbs = {
                 r"TOPO.DAT": self.dlg.ge_tp_cb,
                 r"TOPO_SDElev.RGH": self.dlg.mge_tp_cb,
+                r"GRID_ID": self.dlg.gid_tp_cb,
                 r"DEPTH.OUT": self.dlg.mfd_tp_cb,
                 r"DEPFPMAX_MUD.OUT": self.dlg.mmd_tp_cb,
                 r"DEPTHMAX_2PHASE_COMBINED.OUT": self.dlg.cmd_tp_cb,
@@ -1242,7 +1260,7 @@ class FLO2DMapCrafter:
 
         hazard_rbs = {
             "ARR": self.dlg.fh_australian_cb,
-            "Austrian": [self.dlg.fh_austrian_cb,self.dlg.de_austrian_cb],
+            "Austrian": [self.dlg.fh_austrian_cb, self.dlg.de_austrian_cb],
             "FLO-2D": self.dlg.flo_hm_cb,
             "Swiss": [self.dlg.fi_swiss_cb, self.dlg.di_swiss_cb],
             "UK": self.dlg.fh_uk_cb,
@@ -1352,8 +1370,15 @@ class FLO2DMapCrafter:
         """
         Run method that performs all the real work
         """
-
+        progress = None
         try:
+            progress = QtWidgets.QProgressDialog("Creating maps...", "Cancel", 0, 100, self.dlg)
+            progress.setWindowTitle("FLO-2D MapCrafter")
+            progress.setWindowModality(Qt.WindowModal)
+            progress.setMinimumDuration(0)
+            progress.setAutoClose(True)
+            progress.setAutoReset(True)
+            progress.show()
 
             QApplication.setOverrideCursor(Qt.WaitCursor)
 
@@ -1374,6 +1399,7 @@ class FLO2DMapCrafter:
                 map_output_dir = QgsProcessingUtils.tempFolder()
 
             if not self.check_checkboxes():
+                progress.close()
                 QApplication.restoreOverrideCursor()  # restore cursor
                 return
 
@@ -1405,6 +1431,7 @@ class FLO2DMapCrafter:
                 flood_rbs = {
                     r"TOPO.DAT": self.dlg.ge_cw_cb.isChecked(),
                     r"TOPO_SDElev.RGH": self.dlg.mge_cw_cb.isChecked(),
+                    r"GRID_ID": self.dlg.gid_cw_cb.isChecked(),
                     r"DEPTH.OUT": self.dlg.md_cw_cb.isChecked(),
                     r"VELFP.OUT": self.dlg.mv_cw_cb.isChecked(),
                     r"VELDIREC.OUT": self.dlg.mvv_cw_cb.isChecked(),
@@ -1429,8 +1456,17 @@ class FLO2DMapCrafter:
                 }
 
                 flood_maps = FloodMaps(self.iface, self.units_switch, vector_scale, self.toler_value)
+
+                # Cell size (used for GRID_ID polygons)
+                # cell_text = self.dlg.sumCellSize.text()
+                # try:
+                #     cell_size = float(cell_text.split()[0])
+                # except Exception:
+                #     raise ValueError("Invalid cell size summary tab")
+                cell_size = getattr(self, "_cell_size", None)
                 flood_maps.create_maps(
-                    flood_rbs, flo2d_results_dir, map_output_dir, mapping_group, self.crs, project_id, sim_type=self._sim_type
+                    flood_rbs, flo2d_results_dir, map_output_dir, mapping_group, self.crs, project_id,
+                    sim_type=self._sim_type, cell_size=cell_size
                 )
 
             """
@@ -1441,6 +1477,7 @@ class FLO2DMapCrafter:
                 sediment_rbs = {
                     r"TOPO.DAT": self.dlg.ge_sd_cb.isChecked(),
                     r"TOPO_SDElev.RGH": self.dlg.mge_sd_cb.isChecked(),
+                    r"GRID_ID": self.dlg.gid_sd_cb.isChecked(),
                     r"DEPTH.OUT": self.dlg.md_sd_cb.isChecked(),
                     r"VELFP.OUT": self.dlg.mv_sd_cb.isChecked(),
                     r"VELDIREC.OUT": self.dlg.mvv_sd_cb.isChecked(),
@@ -1469,9 +1506,11 @@ class FLO2DMapCrafter:
                     r"FINAL_WSE.DAT": self.dlg.fwse_sd_cb.isChecked(),
                 }
 
+                cell_size = getattr(self, "_cell_size", None)
                 sediment_maps = SedimentMaps(self.iface, self.units_switch, vector_scale, self.toler_value)
                 sediment_maps.create_maps(
-                    sediment_rbs, flo2d_results_dir, map_output_dir, mapping_group, self.crs, project_id, sim_type=self._sim_type
+                    sediment_rbs, flo2d_results_dir, map_output_dir, mapping_group, self.crs, project_id,
+                    sim_type=self._sim_type, cell_size=cell_size
                 )
 
             """"
@@ -1482,6 +1521,7 @@ class FLO2DMapCrafter:
                 mudflow_rbs = {
                     r"TOPO.DAT": self.dlg.ge_mf_cb.isChecked(),
                     r"TOPO_SDElev.RGH": self.dlg.mge_mf_cb.isChecked(),
+                    r"GRID_ID": self.dlg.gid_mf_cb.isChecked(),
                     r"DEPTH.OUT": self.dlg.md_mf_cb.isChecked(),
                     r"VELFP.OUT": self.dlg.mv_mf_cb.isChecked(),
                     r"VELDIREC.OUT": self.dlg.mvv_mf_cb.isChecked(),
@@ -1507,9 +1547,11 @@ class FLO2DMapCrafter:
                     r"FINAL_WSE.DAT": self.dlg.fwse_mf_cb.isChecked(),
                 }
 
+                cell_size = getattr(self, "_cell_size", None)
                 mudflow_maps = MudflowMaps(self.iface, self.units_switch, vector_scale, self.toler_value)
                 mudflow_maps.create_maps(
-                    mudflow_rbs, flo2d_results_dir, map_output_dir, mapping_group, self.crs, project_id, sim_type=self._sim_type
+                    mudflow_rbs, flo2d_results_dir, map_output_dir, mapping_group, self.crs, project_id,
+                    sim_type=self._sim_type, cell_size=cell_size
                 )
 
             """"
@@ -1520,6 +1562,7 @@ class FLO2DMapCrafter:
                 twophase_rbs = {
                     r"TOPO.DAT": self.dlg.ge_tp_cb.isChecked(),
                     r"TOPO_SDElev.RGH": self.dlg.mge_tp_cb.isChecked(),
+                    r"GRID_ID": self.dlg.gid_tp_cb.isChecked(),
                     r"DEPTH.OUT": self.dlg.mfd_tp_cb.isChecked(),
                     r"DEPFPMAX_MUD.OUT": self.dlg.mmd_tp_cb.isChecked(),
                     r"DEPTHMAX_2PHASE_COMBINED.OUT": self.dlg.cmd_tp_cb.isChecked(),
@@ -1561,9 +1604,11 @@ class FLO2DMapCrafter:
                     r"FINAL_WSE.DAT": self.dlg.fwse_tp_cb.isChecked(),
                 }
 
+                cell_size = getattr(self, "_cell_size", None)
                 twophase_maps = TwophaseMaps(self.iface, self.units_switch, vector_scale, self.toler_value)
                 twophase_maps.create_maps(
-                    twophase_rbs, flo2d_results_dir, map_output_dir, mapping_group, self.crs, project_id, sim_type=self._sim_type
+                    twophase_rbs, flo2d_results_dir, map_output_dir, mapping_group, self.crs, project_id,
+                    sim_type=self._sim_type, cell_size=cell_size
                 )
 
             """
@@ -1608,11 +1653,11 @@ class FLO2DMapCrafter:
             if at_least_one_checked:
                 hazard_maps = HazardMaps(self.iface, self.units_switch, self.toler_value)
                 hazard_maps.create_maps(
-                    hazard_rbs, 
-                    flo2d_results_dir, 
-                    map_output_dir, 
-                    mapping_group, 
-                    self.crs, 
+                    hazard_rbs,
+                    flo2d_results_dir,
+                    map_output_dir,
+                    mapping_group,
+                    self.crs,
                     project_id,
                     pier_params
                 )
@@ -1685,7 +1730,7 @@ class FLO2DMapCrafter:
 
                 model = self._load_swmm_model(inp_file, rpt_file)
 
-                # Give the cached model to StormDrainPlots so it never re-parses
+                # Give the cached model to StormDrainPlots so it never reparses
                 storm_drain_plots = StormDrainPlots(self.units_switch, self.iface, swmm_model=model)
                 t0 = time.perf_counter()
                 plots = storm_drain_plots.create_plots(storm_drain_rbs, flo2d_results_dir, sd_output_dir)
@@ -1699,14 +1744,29 @@ class FLO2DMapCrafter:
                 t3 = time.perf_counter()
                 QgsMessageLog.logMessage(
                     f"SD timings: create_plots={t1 - t0:.2f}s, plot_graphics={t2 - t1:.2f}s, profile={t3 - t2:.2f}s",
-                    'FLO-2D', Qgis.Info)
+                    'FLO-2D', Qgis.MessageLevel.Info)
 
             QApplication.restoreOverrideCursor()
-            msg_box = QMessageBox()
-            msg_box.setIcon(QMessageBox.Information)
-            msg_box.setWindowTitle("Mapping complete!")
-            msg_box.setText("The selected maps were created!")
-            msg_box.exec_()
+
+            msg = QMessageBox(self.dlg)
+            msg.setIcon(QMessageBox.Information)
+            msg.setWindowTitle("Mapping complete!")
+            msg.setText("The selected maps were created!")
+            msg.setWindowModality(Qt.WindowModal)
+            msg.show()
+
+            # Uncheck the "Check all available maps" checkbox after clicking "OK" button on the mapping success window.
+            master_checkboxes = [
+                self.dlg.check_cw_cb,
+                self.dlg.check_sd_cb,
+                self.dlg.check_mf_cb,
+                self.dlg.check_tp_cb,
+                self.dlg.check_hm_cb,
+                self.dlg.check_storm_drain_chbox
+            ]
+            for cb in master_checkboxes:
+                if cb.isChecked():
+                    cb.setChecked(False)
 
         except Exception as e:
             QApplication.restoreOverrideCursor()
@@ -1715,7 +1775,16 @@ class FLO2DMapCrafter:
                 duration=5)
             QgsMessageLog.logMessage(str(e))
 
+            QMessageBox.information(
+                self.dlg,
+                "Mapping Complete!",
+                "Maps created successfully!"
+            )
+
         finally:
+            if progress is not None:
+                progress.close()
+
             QApplication.restoreOverrideCursor()
 
         # Keep dialog visible and in place
@@ -2078,10 +2147,10 @@ class FLO2DMapCrafter:
         """
         Function to check all available flood maps
         """
-
         flood_rbs = [
             self.dlg.ge_cw_cb,
             self.dlg.mge_cw_cb,
+            self.dlg.gid_cw_cb,
             self.dlg.md_cw_cb,
             self.dlg.mv_cw_cb,
             self.dlg.mwse_cw_cb,
@@ -2122,6 +2191,7 @@ class FLO2DMapCrafter:
         sediment_rbs = [
             self.dlg.ge_sd_cb,
             self.dlg.mge_sd_cb,
+            self.dlg.gid_sd_cb,
             self.dlg.md_sd_cb,
             self.dlg.mv_sd_cb,
             self.dlg.mwse_sd_cb,
@@ -2225,6 +2295,7 @@ class FLO2DMapCrafter:
         mudflow_rbs = [
             self.dlg.ge_mf_cb,
             self.dlg.mge_mf_cb,
+            self.dlg.gid_mf_cb,
             self.dlg.md_mf_cb,
             self.dlg.mv_mf_cb,
             self.dlg.mvv_mf_cb,
@@ -2267,6 +2338,7 @@ class FLO2DMapCrafter:
         twophase_rbs = [
             self.dlg.ge_tp_cb,
             self.dlg.mge_tp_cb,
+            self.dlg.gid_tp_cb,
             self.dlg.mfd_tp_cb,
             self.dlg.mmd_tp_cb,
             self.dlg.cmd_tp_cb,
@@ -2501,9 +2573,8 @@ class FLO2DMapCrafter:
             for cb in page.findChildren(QtWidgets.QCheckBox):
                 cb.setChecked(False)
 
-
     def refresh_project_files(self):
-        output_directory = self.dlg.flo2d_out_folder.filePath() # Get the currently selected project folder
+        output_directory = self.dlg.flo2d_out_folder.filePath()  # Get the currently selected project folder
         if not output_directory or not os.path.isdir(output_directory):
             QMessageBox.warning(
                 self.dlg,
@@ -2526,7 +2597,7 @@ class FLO2DMapCrafter:
             self.iface.messageBar().pushMessage(
                 "MapCrafter",
                 "Project refreshed from disk.",
-                level = Qgis.Info,
+                level=Qgis.Info,
                 duration=3
             )
 
@@ -2536,8 +2607,9 @@ class FLO2DMapCrafter:
                 "Refresh failed",
                 f"An error occurred while refreshing the project:\n\n{e}"
             )
-        
 
+    def show_mapcrafter_help(self):
+        QDesktopServices.openUrl(QUrl("https://documentation.flo-2d.com/Build25/flo-2d_mapcrafter/index.html"))
 
 
 

@@ -14,6 +14,9 @@ repository=https://github.com/FLO-2DSoftware/FLO-2DMapCrafter
 hasProcessingProvider=no
 
 changelog=
+    <p>2.5.4
+        - Add Grid ID check box to site characteristics
+        - Add Help button
     <p>2.5.3
         - Add Austrian Debris map
     <p>2.5.2
