@@ -1659,7 +1659,8 @@ class FLO2DMapCrafter:
                     mapping_group,
                     self.crs,
                     project_id,
-                    pier_params
+                    pier_params,
+                    cell_size=self._cell_size
                 )
 
             # remove empty groups
