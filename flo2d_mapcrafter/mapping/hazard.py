@@ -70,21 +70,6 @@ class HazardMaps:
         dlg.setValue(dlg.value() + 1)
         QApplication.processEvents()
 
-    def compute_cell_size(self, xy_points):
-        """
-        Compute FLO-2D grid cell size from at least two (x, y) points.
-        """
-        if len(xy_points) < 2:
-            raise ValueError("At least two points required to compute cell size")
-
-        dx = abs(xy_points[1][0] - xy_points[0][0])
-        dy = abs(xy_points[1][1] - xy_points[0][1])
-
-        dx = dx if dx > 0 else 9999
-        dy = dy if dy > 0 else 9999
-
-        return min(dx, dy)
-
     def points_to_raster_array(self, points, cell_size, nodata=-9999, extent_points=None):
         """
         Convert (x, y, value) points to raster array and georeferencing info
@@ -263,7 +248,11 @@ class HazardMaps:
 
         return hazard_maps
 
-    def create_maps(self, hazard_rbs, flo2d_results_dir, map_output_dir, mapping_group, crs, project_id, pier_params=None):
+    def create_maps(self, hazard_rbs, flo2d_results_dir, map_output_dir, mapping_group, crs, project_id, pier_params=None, cell_size=None):
+        self.cell_size = cell_size
+        if self.cell_size is None:
+            raise ValueError("Cell size is not initialized")
+
         pier_params = pier_params or {}
         """
         Function to create the maps
@@ -537,8 +526,8 @@ class HazardMaps:
 
     def create_swiss_map(self, name, hydro_risk, depth_data, vel_data, vel_x_depth_data, map_type, crs):
         """Create the SWISS flood intensity map"""
+
         values = []
-        cell_size_data = []
 
         # Flood Intensity
         if map_type == 0:
@@ -550,18 +539,14 @@ class HazardMaps:
                     # low intensity
                     if depth > 2 or depth_x_velocity > 2:
                         values.append((x, y, 3))
-                        if len(cell_size_data) < 2:
-                            cell_size_data.append((x, y))
+
                     # moderate intensity
                     elif 0.5 < depth < 2 or 0.5 < depth_x_velocity < 2:
                         values.append((x, y, 2))
-                        if len(cell_size_data) < 2:
-                            cell_size_data.append((x, y))
+
                     # high intensity
                     else:
                         values.append((x, y, 1))
-                        if len(cell_size_data) < 2:
-                            cell_size_data.append((x, y))
 
         # Debris Intensity
         if map_type == 1:
@@ -573,17 +558,18 @@ class HazardMaps:
                     # high intensity
                     if depth > 1 and velocity > 1:
                         values.append((x, y, 3))
-                        if len(cell_size_data) < 2:
-                            cell_size_data.append((x, y))
+
                     # moderate intensity
                     elif depth < 1 or velocity < 1:
                         values.append((x, y, 2))
-                        if len(cell_size_data) < 2:
-                            cell_size_data.append((x, y))
 
-        cell_size = self.compute_cell_size(cell_size_data)
-        raster_data, geotransform = self.points_to_raster_array(values, cell_size)  # Convert (x, y, value) points into raster array + geotransform
-        self.write_geotiff(hydro_risk, raster_data, geotransform, crs)  # Write GeoTIFF
+        if not values:
+            all_xy = [(x, y) for (_, x, y, _) in depth_data ] if len(depth_data) > 0 else [(0, 0), (1, 0)]
+            raster_data, geotransform = self.points_to_raster_array([], self.cell_size, extent_points=all_xy)
+        else:
+            raster_data, geotransform = self.points_to_raster_array(values, self.cell_size)
+
+        self.write_geotiff(hydro_risk, raster_data, geotransform, crs)
         return QgsRasterLayer(hydro_risk, name)
 
     def create_arr_map(self, map_output_dir, hydro_risk, depth_file, vel_file, vel_x_depth_file, crs, project_id):
@@ -654,7 +640,6 @@ class HazardMaps:
             WG (Yellow Zone): Low hazard
         """
         values = []
-        cell_size_data = []
 
         depth_data = self.read_flo2d_ascii_xyv(depth_file)
         vel_data = self.read_flo2d_ascii_xyv(vel_file)
@@ -680,8 +665,6 @@ class HazardMaps:
                     cls = 1 # GW
 
                 values.append((x, y, cls))
-                if len(cell_size_data) < 2:
-                    cell_size_data.append((x, y))
 
         # Austrian Debris intensity
         if map_type == 1:
@@ -701,18 +684,13 @@ class HazardMaps:
                     cls = 1  # GW
 
                 values.append((x, y, cls))
-                if len(cell_size_data) < 2:
-                    cell_size_data.append((x, y))
-            if not values:
-                all_xy = [(x, y) for (_, x, y, _) in depth_data] if depth_data else [(0, 0), (1, 0)]
-                cell_size = self.compute_cell_size(all_xy)
-                raster_data, geotransform = self.points_to_raster_array([], cell_size)
-                self.write_geotiff(hydro_risk, raster_data, geotransform, crs)
-                return QgsRasterLayer(hydro_risk, name)
 
-        cell_size = self.compute_cell_size(cell_size_data if len(cell_size_data) >= 2 else [(x, y) for (_, x, y, _) in depth_data])
+        if not values:
+            all_xy = [(x, y) for (_, x, y, _) in depth_data] if depth_data else [(0, 0), (1, 0)]
+            raster_data, geotransform = self.points_to_raster_array([], self.cell_size, extent_points=all_xy)
+        else:
+            raster_data, geotransform = self.points_to_raster_array(values, self.cell_size)
 
-        raster_data, geotransform = self.points_to_raster_array(values, cell_size)
         self.write_geotiff(hydro_risk, raster_data, geotransform, crs)
         return QgsRasterLayer(hydro_risk, name)
 
@@ -724,7 +702,6 @@ class HazardMaps:
         vel_map = {cell: v for (cell, _, _, v) in vel_data}
 
         values = []
-        cell_size_data = []
 
         for cell, (x, y, depth) in depth_map.items():
             velocity = vel_map.get(cell, 0.0)
@@ -749,20 +726,16 @@ class HazardMaps:
                 cls = 4         # Danger for all
 
             values.append((x,y, cls))
-            if len(cell_size_data) < 2:
-                cell_size_data.append((x,y))
 
         # Raster creation
         if not values:
-            all_xy = [(x,y,) for (_, x, y, _) in depth_data]
-            cell_size = self.compute_cell_size(all_xy)
-            raster_data, geotransform = self.points_to_raster_array([], cell_size)
+            all_xy = [(x,y) for (_, x, y, _) in depth_data] if depth_data else [(0, 0), (1,0)]
+            raster_data, geotransform = self.points_to_raster_array([], self.cell_size, extent_points=all_xy)
         else:
-            cell_size = self.compute_cell_size(cell_size_data)
+            cell_size = self.cell_size
             raster_data, geotransform = self.points_to_raster_array(values, cell_size)
 
         self.write_geotiff(hydro_risk, raster_data, geotransform, crs)
-
         return QgsRasterLayer(hydro_risk, name)
 
     def create_usbr_map(self, name, hydro_risk, depth_data, vel_data, map_type, crs):
@@ -774,7 +747,7 @@ class HazardMaps:
             uc = 1
 
         values = []
-        cell_size_data = []
+
         for (id_v, x, y, velocity), (_, _, _, depth) in zip(vel_data, depth_data):
 
             if depth != 0 and velocity != 0:
@@ -807,18 +780,14 @@ class HazardMaps:
                 # low danger
                 if depth < low_curve_value:
                     values.append((x, y, 1))
-                    if len(cell_size_data) < 2:
-                        cell_size_data.append((x, y))
+
                 # high danger
                 elif depth > high_curve_value:
                     values.append((x, y, 3))
-                    if len(cell_size_data) < 2:
-                        cell_size_data.append((x, y))
+
                 # judgment
                 else:
                     values.append((x, y, 2))
-                    if len(cell_size_data) < 2:
-                        cell_size_data.append((x, y))
 
                 # Fix maximums:
                 if map_type == 0 and (depth > 10 or velocity > 25):
@@ -832,8 +801,13 @@ class HazardMaps:
                 if map_type == 4 and (depth > 4 or velocity > 8):
                     values.append((x, y, 3))
 
-        cell_size = self.compute_cell_size(cell_size_data)
-        raster_data, geotransform = self.points_to_raster_array(values, cell_size)
+        if not values:
+            all_xy = [(x, y) for (_, x, y, _) in depth_data] if len(depth_data) > 0 else [(0, 0), (0, 1)]
+            raster_data, geotransform = self.points_to_raster_array([], self.cell_size, extent_points=all_xy)
+
+        else:
+            raster_data, geotransform = self.points_to_raster_array(values, self.cell_size)
+
         self.write_geotiff(hydro_risk, raster_data, geotransform, crs)
         return QgsRasterLayer(hydro_risk, name)
 
@@ -845,7 +819,6 @@ class HazardMaps:
         vel_map = {cell: v for (cell, x, y, v) in vel_data}
 
         values = []
-        cell_size_data = []
 
         for cell, (x, y, depth_val) in depth_map.items():
             velocity_val = vel_map.get(cell, 0.0)
@@ -869,19 +842,14 @@ class HazardMaps:
                 cls = 5 # Extreme
 
             values.append((x, y, cls))
-            if len(cell_size_data) < 2:
-                cell_size_data.append((x, y))
 
-            if not values:
-                all_xy = [(x, y) for (_, x, y, _) in depth_data] if depth_data else [(0, 0), (1, 0)]
-                cell_size = self.compute_cell_size(all_xy)
-                raster_data, geotransform = self.points_to_raster_array([], cell_size)
-                self.write_geotiff(hydro_risk, raster_data, geotransform, crs)
-                return QgsRasterLayer(hydro_risk, name)
+        if not values:
+            all_xy = [(x, y) for (_, x, y, _) in depth_data] if depth_data else [(0, 0), (1, 0)]
+            raster_data, geotransform = self.points_to_raster_array([], self.cell_size, extent_points=all_xy)
 
-        cell_size = self.compute_cell_size(cell_size_data if len(cell_size_data) >= 2 else [(x, y) for (_, x, y, _) in depth_data])
+        else:
+            raster_data, geotransform = self.points_to_raster_array(values, self.cell_size)
 
-        raster_data, geotransform = self.points_to_raster_array(values, cell_size)
         self.write_geotiff(hydro_risk, raster_data, geotransform, crs)
         return QgsRasterLayer(hydro_risk, name)
 
@@ -932,8 +900,12 @@ class HazardMaps:
                 if s > 0.0:
                     values.append((x, y, float(s)))
 
-        cell_size = self.compute_cell_size(all_xy)
-        raster_data, geotransform = self.points_to_raster_array(values, cell_size, extent_points=all_xy)
+        if not values:
+            all_xy = [(x, y) for (_, x, y, _) in depth_data] if len(depth_data) > 0 else [(0, 0), (1, 0)]
+            raster_data, geotransform = self.points_to_raster_array([], self.cell_size, extent_points=all_xy)
+        else:
+            raster_data, geotransform = self.points_to_raster_array(values, self.cell_size, extent_points=all_xy)
+
         self.write_geotiff(hydro_risk, raster_data, geotransform, crs)
         layer_name = os.path.splitext(os.path.basename(hydro_risk))[0]
         return QgsRasterLayer(hydro_risk, layer_name)
