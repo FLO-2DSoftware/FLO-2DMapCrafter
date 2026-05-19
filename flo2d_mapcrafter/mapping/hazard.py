@@ -919,8 +919,9 @@ class HazardMaps:
 
         scour = (
                 2.0 * k1 * k2 * k3 * k4 * a
-                * (depth / a) ** 0.35
-                * (Fr / 0.65) ** 0.43
+                ** 0.65
+                * (depth) ** 0.35
+                * (Fr) ** 0.43
         )
 
         return np.nan_to_num(scour, nan=0.0)
