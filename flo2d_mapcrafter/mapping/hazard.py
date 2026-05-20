@@ -499,11 +499,26 @@ class HazardMaps:
     def veloc_velfp(self, results_dir, map_output_dir, vel_fp_name="VELFP.OUT", vel_ch_name="VELOC.OUT", vel_out_name="VEL_COMBINED.OUT"):
         """
         Combine VELFP.OUT and VELOC.OUT using the maximum velocity per cell.
+        If VELOC.OUT is missing, use VELFP.OUT only
         Writes the combined file into the MapCrafter folder.
         """
         vel_fp_path = os.path.join(results_dir, vel_fp_name)
         vel_ch_path = os.path.join(results_dir, vel_ch_name)
         vel_out_path = os.path.join(map_output_dir, vel_out_name)
+
+        if not os.path.exists(vel_ch_path):
+            with open(vel_fp_path, "r") as f_fp, open(vel_out_path, "w") as f_out:
+                for line_fp in f_fp:
+                    fp = line_fp.split()
+                    if len(fp) < 4:
+                        continue
+                    cell = fp[0]
+                    x = fp[1]
+                    y = fp[2]
+                    v_fp = float(fp[3])
+
+                    f_out.write(f"{cell} {x} {y} {v_fp}\n")
+            return vel_out_path
 
         with open(vel_fp_path, "r") as f_fp, \
                 open(vel_ch_path, "r") as f_ch, \
