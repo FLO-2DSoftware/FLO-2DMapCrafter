@@ -21,14 +21,14 @@
  *                                                                         *
  ***************************************************************************/
 """
-import os
-import processing
-import numpy as np
-
 try:
     import h5py
 except ImportError:
     h5py = None
+
+import os
+import processing
+import numpy as np
 from osgeo import gdal
 from qgis._core import QgsProject, QgsRasterLayer
 from qgis.PyQt.QtWidgets import QProgressDialog, QApplication

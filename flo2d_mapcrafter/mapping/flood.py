@@ -21,7 +21,11 @@
  *                                                                         *
  ***************************************************************************/
 """
-import h5py
+try:
+    import h5py
+except ImportError:
+    h5py = None
+
 import os
 from qgis.core import QgsMessageLog, Qgis
 from qgis.PyQt.QtWidgets import QProgressDialog, QApplication

@@ -21,7 +21,11 @@
  *                                                                         *
  ***************************************************************************/
 """
-import h5py
+try:
+    import h5py
+except ImportError:
+    h5py = None
+
 from PyQt5.QtCore import Qt, QUrl
 from PyQt5.QtGui import QColor, QDesktopServices
 from qgis.PyQt import QtWidgets
@@ -930,7 +934,6 @@ class FLO2DMapCrafter:
         hdf5_path = os.path.join(results_dir, "Input.hdf5")
         if os.path.isfile(hdf5_path):
             try:
-                import h5py
                 with h5py.File(hdf5_path, "r") as hdf:
                     has_hdf5_topo = ("/Input/Grid/COORDINATES" in hdf and "/Input/Grid/ELEVATION" in hdf)
             except Exception as e:
@@ -955,7 +958,6 @@ class FLO2DMapCrafter:
         hdf5_path = os.path.join(results_dir, "Input.hdf5")
         if os.path.isfile(hdf5_path):
             try:
-                import h5py
                 with h5py.File(hdf5_path, "r") as hdf:
                     has_hdf5_topo = (
                             "/Input/Grid/COORDINATES" in hdf
