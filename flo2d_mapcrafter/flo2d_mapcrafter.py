@@ -11,7 +11,7 @@
         copyright            : (C) 2023 by FLO-2D
         email                : contact@flo-2d.com
  ***************************************************************************/
-]
+
 /***************************************************************************
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -21,6 +21,7 @@
  *                                                                         *
  ***************************************************************************/
 """
+import h5py
 from PyQt5.QtCore import Qt, QUrl
 from PyQt5.QtGui import QColor, QDesktopServices
 from qgis.PyQt import QtWidgets
@@ -418,11 +419,19 @@ class FLO2DMapCrafter:
 
         # Path to CONT.DAT file
         cont_path = None
+        hdf5_path = None
+
         if base:
             for name in ("CONT.DAT", "cont.dat"):
                 p = os.path.join(base, name)
                 if os.path.isfile(p):
                     cont_path = p
+                    break
+
+            for name in ("Input.hdf5", "input.hdf5"):
+                p = os.path.join(base, name)
+                if os.path.isfile(p):
+                    hdf5_path = p
                     break
 
         # Read CONT.DAT tokens (line 1) once
@@ -435,6 +444,21 @@ class FLO2DMapCrafter:
                     cont_toks = first_line.split()
             except Exception:
                 cont_toks = []
+
+        elif hdf5_path and os.path.isfile(hdf5_path):
+            try:
+                with h5py.File(hdf5_path, "r") as hdf:
+                    cont = hdf["/Input/Control Parameters/CONT"][:]
+                cont_toks = [
+                    str(cont[0]),
+                    str(cont[1]),
+                    str(int(cont[2])),
+                    str(int(cont[3])),
+                    str(int(cont[4])),
+                ]
+
+            except Exception:
+                cont_toks = None
 
         # Path to SUMMARY.OUT file
         summary_path = None
@@ -897,31 +921,58 @@ class FLO2DMapCrafter:
         if not results_dir or not os.path.isdir(results_dir):
             return False
         files_results = set(os.listdir(results_dir))
-        files_map = set()
-        try:
-            files_map = set(os.listdir(self.dlg.mapper_out_folder.filePath()))
-        except Exception:
-            pass
-        has_mge = "TOPO_SDElev.RGH" in files_results or "TOPO_SDElev.RGH" in files_map
-        can_generate_mge = "TOPO.DAT" in files_results and "FPREV.NEW" in files_results
+
+        has_mge = "TOPO_SDElev.RGH" in files_results
+        has_fprev = "FPREV.NEW" in files_results
+        has_topo = "TOPO.DAT" in files_results
+
+        has_hdf5_topo = False
+        hdf5_path = os.path.join(results_dir, "Input.hdf5")
+        if os.path.isfile(hdf5_path):
+            try:
+                import h5py
+                with h5py.File(hdf5_path, "r") as hdf:
+                    has_hdf5_topo = ("/Input/Grid/COORDINATES" in hdf and "/Input/Grid/ELEVATION" in hdf)
+            except Exception as e:
+                QgsMessageLog.logMessage(
+                    message=f"Could not inspect HDF5 grid data. Details: {e}"
+                )
+        can_generate_mge = has_fprev and (has_topo or has_hdf5_topo)
         return has_mge or can_generate_mge
 
     # Custom logic for FINAL_WSE.DAT availability
     def final_wse_availability(self, results_dir: str) -> bool:
         if not results_dir or not os.path.isdir(results_dir):
             return False
+
         files_results = set(os.listdir(results_dir))
-        files_map = set()
-        try:
-            files_map = set(os.listdir(self.dlg.mapper_out_folder.filePath()))
-        except Exception:
-            pass
+
         has_finaldep = "FINALDEP.OUT" in files_results
-        has_final_wse = "FINAL_WSE.DAT" in files_map
-        has_topo_sd = "TOPO_SDElev.RGH" in files_results or "TOPO_SDElev.RGH" in files_map
-        can_generate_topo_sd = "TOPO.DAT" in files_results and "FPREV.NEW" in files_results
         has_topo = "TOPO.DAT" in files_results
-        return has_final_wse or (has_finaldep and (has_topo_sd or can_generate_topo_sd or has_topo))
+        has_topo_sd = "TOPO_SDElev.RGH" in files_results
+        has_hdf5_topo = False
+
+        hdf5_path = os.path.join(results_dir, "Input.hdf5")
+        if os.path.isfile(hdf5_path):
+            try:
+                import h5py
+                with h5py.File(hdf5_path, "r") as hdf:
+                    has_hdf5_topo = (
+                            "/Input/Grid/COORDINATES" in hdf
+                            and "/Input/Grid/ELEVATION" in hdf
+                    )
+            except Exception as e:
+                QgsMessageLog.logMessage(
+                    message=f"Could not inspect HDF5 grid data. Details: {e}",
+                    tag="FLO-2D",
+                    level=Qgis.Warning,
+                )
+
+        return has_finaldep and (
+                has_topo_sd
+                or has_topo
+                or has_hdf5_topo
+        )
 
     def check_files(self):
         """Function to check the type of files present on the simulation"""
@@ -935,11 +986,24 @@ class FLO2DMapCrafter:
         if not output_directory or not os.path.isdir(output_directory):
             return
 
+        self.toler_value = None
+
+        # Add MapCrafter to the output folder
+        map_output_dir = output_directory + r"\MapCrafter"
+        self.dlg.mapper_out_folder.setFilePath(map_output_dir)
+        if not os.path.exists(map_output_dir):
+            os.makedirs(map_output_dir)
+
         files_in_directory = os.listdir(output_directory)
 
         # --- Decide sim type FIRST (from CONT.DAT) ---
         self._sim_type = None  # reset for new folder
         cont_path = os.path.join(output_directory, "CONT.DAT")
+        hdf5_path = os.path.join(output_directory, "Input.hdf5")
+
+        mud_switch = None
+        sed_switch = None
+
         try:
             if os.path.isfile(cont_path):
                 with open(cont_path, "r") as f:
@@ -949,17 +1013,23 @@ class FLO2DMapCrafter:
                 mud_switch = elements[3]
                 sed_switch = elements[4]
 
-                if mud_switch == "0" and sed_switch == "0":
-                    self._sim_type = "Flood"
-                elif mud_switch == "0" and sed_switch == "1":
-                    self._sim_type = "Sediment"
-                elif mud_switch == "1" and sed_switch == "0":
-                    self._sim_type = "Mudflow"
-                elif mud_switch == "2" and sed_switch == "0":
-                    self._sim_type = "Two-phase"
-                # else: leave as None
+            elif os.path.isfile(hdf5_path):
+                with h5py.File(hdf5_path, "r") as hdf:
+                    cont = hdf["/Input/Control Parameters/CONT"][:]
+                self.units_switch = str(int(cont[3]))
+                mud_switch = str(int(cont[13]))
+                sed_switch = str(int(cont[14]))
+
+            if mud_switch == "0" and sed_switch == "0":
+                self._sim_type = "Flood"
+            elif mud_switch == "0" and sed_switch == "1":
+                self._sim_type = "Sediment"
+            elif mud_switch == "1" and sed_switch == "0":
+                self._sim_type = "Mudflow"
+            elif mud_switch == "2" and sed_switch == "0":
+                self._sim_type = "Two-phase"
+
         except Exception:
-            # Leave _sim_type = None on any parsing issue
             pass
 
         toler_path = os.path.join(output_directory, "TOLER.DAT")
@@ -968,11 +1038,24 @@ class FLO2DMapCrafter:
                 lines = f.readlines()
             self.toler_value = float(lines[0].split()[0])
 
+        elif os.path.isfile(hdf5_path):
+            try:
+                with h5py.File(hdf5_path, "r") as hdf:
+                    toler = hdf["/Input/Control Parameters/TOLER"][:]
+                self.toler_value = float(toler[0])
+            except Exception as e:
+                self.toler_value = None
+                self.iface.messageBar().pushMessage(
+                    f"Could not read TOLER from Input.hdf5. Raster styling may fail. Details: {e}",
+                    level=Qgis.Warning,
+                    duration=6
+                )
+
         # --- Refresh the Summary tab with the NEW sim type ---
         self.update_summary_fields()
 
         # In future version, calculate the Cell size from the DEPTH.OUT file
-        if "DEPTH.OUT" in files_in_directory and "CONT.DAT" in files_in_directory:
+        if ("DEPTH.OUT" in files_in_directory and "CONT.DAT" in files_in_directory) or ("Input.hdf5" in files_in_directory and "DEPTH.OUT" in files_in_directory):
             self.dlg.runButton.setEnabled(True)
             self.dlg.label_2.setEnabled(True)
             self.dlg.mapper_out_folder.setEnabled(True)
@@ -981,17 +1064,41 @@ class FLO2DMapCrafter:
             msg_box = QMessageBox()
             msg_box.setIcon(QMessageBox.Warning)
             msg_box.setWindowTitle("Warning")
-            msg_box.setText("No CONT.DAT and *.OUT files were found in this directory!")
+            msg_box.setText(
+                "No valid FLO-2D project files were found in this directory!\n\n"
+                "Expected either:\n"
+                " - CONT.DAT + DEPTH.OUT\n"
+                " - or\n"
+                " - Input.hdf5 + DEPTH.OUT\n"
+                " - or\n"
+                " - Input.hdf5 + FLO-2DFLOPRO.hdf5"
+            )
             msg_box.exec_()
             return
 
-        with open(output_directory + r"\CONT.DAT", "r") as file:
-            lines = file.readlines()
-            elements = lines[2].split()
-            self.units_switch = lines[0].split()[3]
-            mud_switch = elements[3]
-            sed_switch = elements[4]
-            file.close()
+        cont_path = os.path.join(output_directory, "CONT.DAT")
+        hdf5_path = os.path.join(output_directory, "Input.hdf5")
+
+        if os.path.isfile(cont_path):
+            with open(cont_path, "r") as file:
+                lines = file.readlines()
+                elements = lines[2].split()
+                self.units_switch = lines[0].split()[3]
+                mud_switch = elements[3]
+                sed_switch = elements[4]
+
+        elif os.path.isfile(hdf5_path):
+            with h5py.File(hdf5_path, "r") as hdf:
+                cont = hdf["Input/Control Parameters/CONT"][:]
+            self.units_switch = str(int(cont[3]))
+            mud_switch = str(int(cont[13]))
+            sed_switch = str(int(cont[14]))
+
+        else:
+            QMessageBox.warning(
+                self.dlg,
+                "Missing project file! Neither CONT.DAT nor Input.hdf5 could not be found."
+            )
 
         max_vector_scale = self.dlg.max_vector_scale_sb.value()
         min_vector_scale = self.dlg.min_vector_scale_sb.value()
@@ -1300,11 +1407,11 @@ class FLO2DMapCrafter:
         if not has_timdep:
             self.dlg.use_timdep_hdf5_cb.setChecked(False)
 
-        # Add MapCrafter to the output folder
-        map_output_dir = output_directory + r"\MapCrafter"
-        self.dlg.mapper_out_folder.setFilePath(map_output_dir)
-        if not os.path.exists(map_output_dir):
-            os.makedirs(map_output_dir)
+        # # Add MapCrafter to the output folder
+        # map_output_dir = output_directory + r"\MapCrafter"
+        # self.dlg.mapper_out_folder.setFilePath(map_output_dir)
+        # if not os.path.exists(map_output_dir):
+        #     os.makedirs(map_output_dir)
 
         inp_present = False
         rpt_present = False
@@ -1403,13 +1510,29 @@ class FLO2DMapCrafter:
                 QApplication.restoreOverrideCursor()  # restore cursor
                 return
 
-            with open(flo2d_results_dir + r"\CONT.DAT", "r") as file:
-                lines = file.readlines()
-                self.units_switch = lines[0].split()[3]
-                elements = lines[2].split()
-                mud_switch = elements[3]
-                sed_switch = elements[4]
-                file.close()
+            cont_path = os.path.join(flo2d_results_dir, "CONT.DAT")
+            hdf5_path = os.path.join(flo2d_results_dir, "Input.hdf5")
+
+            if os.path.isfile(cont_path):
+                with open(cont_path, "r") as file:
+                    lines = file.readlines()
+                    self.units_switch = lines[0].split()[3]
+                    elements = lines[2].split()
+                    mud_switch = elements[3]
+                    sed_switch = elements[4]
+
+            elif os.path.isfile(hdf5_path):
+                with h5py.File(hdf5_path, "r") as hdf:
+                    cont = hdf["/Input/Control Parameters/CONT"][:]
+                self.units_switch = str(int(cont[3]))
+                mud_switch = str(int(cont[13]))
+                sed_switch = str(int(cont[14]))
+
+            else:
+                QMessageBox.warning(
+                    self.dlg,
+                    "Missing project file! Neither CONT.DAT nor Input.hdf5 could be found."
+                )
 
             """
             GROUPS CREATION
@@ -2574,6 +2697,8 @@ class FLO2DMapCrafter:
             for cb in page.findChildren(QtWidgets.QCheckBox):
                 cb.setChecked(False)
 
+
+
     def refresh_project_files(self):
         output_directory = self.dlg.flo2d_out_folder.filePath()  # Get the currently selected project folder
         if not output_directory or not os.path.isdir(output_directory):
@@ -2611,22 +2736,3 @@ class FLO2DMapCrafter:
 
     def show_mapcrafter_help(self):
         QDesktopServices.openUrl(QUrl("https://documentation.flo-2d.com/Build25/flo-2d_mapcrafter/index.html"))
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
