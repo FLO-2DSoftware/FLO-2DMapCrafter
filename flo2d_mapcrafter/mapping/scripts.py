@@ -21,6 +21,7 @@
  *                                                                         *
  ***************************************************************************/
 """
+import h5py
 import os
 import numpy as np
 import pandas as pd
@@ -638,35 +639,73 @@ def set_renderer(layer, color_list, raster_shader, min, max):
     layer.setRenderer(myPseudoRenderer)
 
 
-def modified_ground_elev(results_dir, map_output_dir, sim_type=None, topo_name="TOPO.DAT", fprev_name="FPREV.NEW", mge_name="TOPO_SDElev.RGH"):
+def modified_ground_elev(results_dir, map_output_dir, sim_type=None):
     """
     Priority rules:
     1) Use results_dir/TOPO_SDElev.RGH if it exists
-    2) Else use results_dir/MapCrafter/TOPO_SDElev.RGH if exists
-    3) Else generate results_dir/MapCrafter/TOPO_SDElev.RGH if valid TOPO.DAT and FPREV.NEW exists and use it.
-    4) Otherwise, return None.
+    2) Else generate results_dir/MapCrafter/TOPO_SDElev.RGH if valid TOPO.DAT/Input.hdf5 grid data and FPREV.NEW exists and use it.
+    3) Otherwise, return None.
     """
-    # File paths
-    topo_path = os.path.join(results_dir, topo_name)
-    fprev_path = os.path.join(results_dir, fprev_name)
+    topo_path = os.path.join(results_dir, "TOPO.DAT")
+    fprev_path = os.path.join(results_dir, "FPREV.NEW")
+    flo2d_mge_path = os.path.join(results_dir, "TOPO_SDElev.RGH")
+    mapcrafter_mge_path = os.path.join(map_output_dir, "TOPO_SDElev.RGH")
 
     # prefer FLO-2D-generated TOPO_SDElev.RGH if it exists
-    flo2d_mge_path = os.path.join(results_dir, mge_name)
     if os.path.isfile(flo2d_mge_path):
         return flo2d_mge_path
 
     # Otherwise, generate MapCrafter-owned file
-    mapcrafter_mge_path = os.path.join(map_output_dir, mge_name)
     if os.path.isfile(mapcrafter_mge_path):
         return mapcrafter_mge_path
 
-    if (not os.path.isfile(topo_path)) or (not os.path.isfile(fprev_path)):
-        QgsMessageLog.logMessage("TOPO_SDElev.RGH could not be generated (missing either TOPO.DAT or FRPREV.NEW)", level=Qgis.Warning)
+    if not os.path.isfile(fprev_path):
+        QgsMessageLog.logMessage(
+            message="TOPO_SDElev.RGH could not be generated missing: FRPREV.NEW",
+            tag="FLO-2D",
+            level=Qgis.Warning
+        )
         return None
 
     try:
-        # Build TOPO_SDElev.RGH from TOPO.DAT and FPREV.NEW
-        df_topo = pd.read_csv(topo_path, sep=r"\s+", engine="python", header=None, names=["X", "Y", "Z"])
+        if os.path.isfile(topo_path):
+            df_topo = pd.read_csv(topo_path, sep=r"\s+", engine="python", header=None, names=["X", "Y", "Z"])
+
+        else:
+            hdf5_path = os.path.join(results_dir, "Input.hdf5")
+            if not os.path.isfile(hdf5_path):
+                QgsMessageLog.logMessage(
+                    message="TOPO_SDElev.RGH could not be generated: missing TOPO.DAT and Input.hdf5.",
+                    tag="FLO-2D",
+                    level=Qgis.Warning
+                )
+                return None
+
+            try:
+                with h5py.File(hdf5_path, "r") as hdf:
+                    coords = hdf["/Input/Grid/COORDINATES"][:]
+                    elev = hdf["/Input/Grid/ELEVATION"][:]
+            except Exception as e:
+                QgsMessageLog.logMessage(
+                    message=f"TOPO_SDElev.RGH could not be generated: failed to read HDF5 grid data. Details: {e}",
+                    tag="FLO-2D",
+                    level=Qgis.Warning
+                )
+                return None
+
+            if len(coords) != len(elev):
+                QgsMessageLog.logMessage(
+                    message=f"HDF5 grid row mismatch. COORDINATES={len(coords)}, ELEVATION={len(elev)}.",
+                    tag="FLO-2D",
+                    level=Qgis.Warning
+                )
+                return None
+
+            df_topo = pd.DataFrame({
+                "X": coords[:, 0],
+                "Y": coords[:, 1],
+                "Z": elev[:]
+            })
 
         grid_count = len(df_topo)
 
@@ -699,71 +738,120 @@ def modified_ground_elev(results_dir, map_output_dir, sim_type=None, topo_name="
         return None
 
 
-def final_wse(results_dir, map_output_dir, topo_sd_name="TOPO_SDElev.RGH", topo_name="TOPO.DAT", finaldep_name="FINALDEP.OUT", out_name="FINAL_WSE.DAT"):
+def final_wse(results_dir, map_output_dir):
     """
-    FINAL_WSE = Z(in TOPO_SDElev.RGH (preferred)
-                or TOPO.DAT (fallback))
-                + dZ (from FINALDEP.OUT)
-
-    Priority:
-    1) results_dir/TOPO_SDElev.RGH
-    2) map_output_dir/TOPO_SDElev.RGH
-    4) map_output_dir/TOPO_SDElev.RGH (generated from TOPO.DAT, FPREV.NEW)
-    3) results_dir/TOPO.DAT
+    Priority rules:
+    1) Use results_dir/FINAL_WSE.DAT if it exists
+    2) Else use results_dir/Modified Ground Elevation if it exists + Final depth
+    3) Else use results_dir/TOPO.DAT if it exists + final depth
+    3) Else use results_dir/Input.hdf5 grid data if it exists + Final depth
+    4) Otherwise, return None.
     """
+    results_fwse_path = os.path.join(results_dir, "FINAL_WSE.DAT")
+    topo_path = os.path.join(results_dir, "TOPO.DAT")
+    finaldep_path = os.path.join(results_dir, "FINALDEP.OUT")
+    mapcrafter_fwse_path = os.path.join(map_output_dir, "FINAL_WSE.DAT")
+    hdf5_path = os.path.join(results_dir, "Input.hdf5")
 
-    topo_path = os.path.join(results_dir, topo_name)
-    finaldep_path = os.path.join(results_dir, finaldep_name)
+    elev_path = None
+    topo_df = None
+    elev_source = None
 
-    flo2d_topo_sd_path = os.path.join(results_dir, topo_sd_name)
-    mapcrafter_topo_sd_path = os.path.join(map_output_dir, topo_sd_name)
+    # use FINAL_WSE.DAT directly if it already exists.
+    if os.path.isfile(results_fwse_path):
+        return results_fwse_path
 
-    fwse_path = os.path.join(map_output_dir, out_name)
-
-    if not os.path.isfile(flo2d_topo_sd_path) and not os.path.isfile(mapcrafter_topo_sd_path):
-        mge_path = modified_ground_elev(results_dir=results_dir, map_output_dir=map_output_dir)
-        if mge_path:
-            mapcrafter_topo_sd_path = mge_path
-
-    if os.path.isfile(flo2d_topo_sd_path):
-        elev_path = flo2d_topo_sd_path
-    elif os.path.isfile(mapcrafter_topo_sd_path):
-        elev_path = mapcrafter_topo_sd_path
-    elif os.path.isfile(topo_path):
-        elev_path = topo_path
-    else:
-        QgsMessageLog.logMessage("Final WSE could not be created (missing TOPO_SDElev.RGH and TOPO.DAT)", level=Qgis.Warning)
+    if not os.path.isfile(finaldep_path):
+        QgsMessageLog.logMessage(
+            message="FINAL_WSE.DAT could not be generated: missing FINALDEP.OUT.",
+            tag="FLO-2D",
+            level=Qgis.Warning,
+        )
         return None
 
-    # Check FINALDEP.OUT
-    if not os.path.isfile(finaldep_path):
-        QgsMessageLog.logMessage("FINAL_WSE.DAT could not be generated (missing FINALDEP.OUT)", level=Qgis.Warning)
+    # Prefer modified ground elevation.
+    mge_path = modified_ground_elev(results_dir=results_dir, map_output_dir=map_output_dir)
+
+    if mge_path and os.path.isfile(mge_path):
+        elev_path = mge_path
+        elev_source = os.path.basename(mge_path)
+
+    elif os.path.isfile(topo_path):
+        elev_path = topo_path
+        elev_source = "TOPO.DAT"
+
+    elif os.path.isfile(hdf5_path):
+        try:
+            with h5py.File(hdf5_path, "r") as hdf:
+                coords = hdf["/Input/Grid/COORDINATES"][:]
+                elev = hdf["/Input/Grid/ELEVATION"][:]
+
+            if len(coords) != len(elev):
+                QgsMessageLog.logMessage(
+                    message=f"HDF5 grid row mismatch. COORDINATES={len(coords)}, ELEVATION={len(elev)}.",
+                    tag="FLO-2D",
+                    level=Qgis.Warning,
+                )
+                return None
+
+            topo_df = pd.DataFrame({
+                "X": coords[:, 0],
+                "Y": coords[:, 1],
+                "Z": elev[:],
+            })
+            elev_source = "Input.hdf5"
+
+        except Exception as e:
+            QgsMessageLog.logMessage(
+                message=f"Failed to read HDF5 grid data. Details: {e}",
+                tag="FLO-2D",
+                level=Qgis.Warning,
+            )
+            return None
+
+    if elev_path is None and topo_df is None:
+        QgsMessageLog.logMessage(
+            message="FINAL_WSE.DAT could not be generated: missing TOPO_SDElev.RGH, TOPO.DAT, and Input.hdf5.",
+            tag="FLO-2D",
+            level=Qgis.Warning,
+        )
         return None
 
     try:
-        # Read elevation source
-        topo_df = pd.read_csv(elev_path, sep=r"\s+", engine="python", header=None)
-        topo_df.columns = ["X", "Y", "Z"]
+        if topo_df is None:
+            topo_df = pd.read_csv(elev_path, sep=r"\s+", engine="python", header=None)
+            topo_df.columns = ["X", "Y", "Z"]
 
-        # Read FINALDEP.OUT
         finaldep_df = pd.read_csv(finaldep_path, sep=r"\s+", engine="python", header=None)
         finaldep_df.columns = ["CellID", "X_fd", "Y_fd", "dZ"]
 
         if len(topo_df) != len(finaldep_df):
-            raise ValueError(f"Row count mismatch between {os.path.basename(elev_path)} and FINALDEP.OUT")
+            raise ValueError(
+                f"Row count mismatch between {elev_source} and FINALDEP.OUT. "
+                f"{elev_source} rows={len(topo_df)}, FINALDEP.OUT rows={len(finaldep_df)}."
+            )
 
-        # Compute Final WSE
-        topo_df["WSE"] = topo_df["Z"] + finaldep_df["dZ"]
-        # Write FINAL_WSE.DAT
-        with open(fwse_path, "w") as f:
+        topo_df["WSE"] = topo_df["Z"].astype(float) + finaldep_df["dZ"].astype(float)
+
+        os.makedirs(map_output_dir, exist_ok=True)
+
+        with open(mapcrafter_fwse_path, "w") as f:
             for _, r in topo_df.iterrows():
                 f.write(f"{r.X:14.3f} {r.Y:14.3f} {r.WSE:10.4f}\n")
 
-        QgsMessageLog.logMessage(message=f"Created FINAL_WSE.DAT: {fwse_path}", tag="FLO-2D", level=Qgis.Info)
-        return fwse_path
+        QgsMessageLog.logMessage(
+            message=f"Created FINAL_WSE.DAT using {elev_source}: {mapcrafter_fwse_path}",
+            tag="FLO-2D",
+            level=Qgis.Info,
+        )
+        return mapcrafter_fwse_path
 
     except Exception as e:
-        QgsMessageLog.logMessage(f"Failed to generate FINAL_WSE.DAT: {e}", level=Qgis.Critical)
+        QgsMessageLog.logMessage(
+            message=f"Failed to generate FINAL_WSE.DAT: {e}",
+            tag="FLO-2D",
+            level=Qgis.Critical,
+        )
         return None
 
 
