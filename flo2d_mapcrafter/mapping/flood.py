@@ -21,6 +21,10 @@
  *                                                                         *
  ***************************************************************************/
 """
+try:
+    import h5py
+except ImportError:
+    h5py = None
 
 import os
 from qgis.core import QgsMessageLog, Qgis
@@ -65,9 +69,6 @@ class FloodMaps:
         dlg.setValue(dlg.value() + 1)
         QApplication.processEvents()
 
-
-
-
     def check_flood_files(self, output_dir):
         """
         Function to check the flood files and return a dictionary with the available maps
@@ -103,6 +104,23 @@ class FloodMaps:
             for key, value in flood_files.items():
                 if file.startswith(key):
                     flood_files[key] = True
+
+        hdf5_path = os.path.join(output_dir, "Input.hdf5")
+        if os.path.isfile(hdf5_path):
+            try:
+                with h5py.File(hdf5_path, "r") as hdf:
+                    has_hdf5_topo = ("/Input/Grid/COORDINATES" in hdf and "/Input/Grid/ELEVATION" in hdf)
+                if has_hdf5_topo:
+                    flood_files[r"TOPO.DAT"] = True
+                    if "FPREV.NEW" in files:
+                        flood_files[r"TOPO_SDElev.RGH"] = True
+
+            except Exception as e:
+                QgsMessageLog.logMessage(
+                    message=f"Could not inspect HDF5 grid elevation data. Details: {e}",
+                    tag="FLO-2D",
+                    level=Qgis.Warning
+                )
 
         return flood_files
 
@@ -156,7 +174,34 @@ class FloodMaps:
             if flood_rbs.get(r"TOPO.DAT"):
                 name = check_project_id("GROUND_ELEVATION", project_id)
                 name, raster = check_raster_file(name, map_output_dir)
-                file = os.path.join(flo2d_results_dir, "TOPO.DAT")
+
+                topo_path = os.path.join(flo2d_results_dir, "TOPO.DAT")
+
+                if os.path.isfile(topo_path):
+                    file = topo_path
+
+                else:
+                    hdf5_path = os.path.join(flo2d_results_dir, "Input.hdf5")
+                    file = os.path.join(map_output_dir, "hdf5_topo")
+                    try:
+                        with h5py.File(hdf5_path, "r") as hdf:
+                            coords = hdf["/Input/Grid/COORDINATES"][:]
+                            elev = hdf["/Input/Grid/ELEVATION"][:]
+                        if len(coords) != len(elev):
+                            raise ValueError(f"HDF5 grid row mismatch: COORDINATES={len(coords)}, ELEVATION={len(elev)}")
+
+                        with open(file, "w") as f:
+                            for i in range(len(elev)):
+                                f.write(f"{coords[i][0]} {coords[i][1]} {elev[i]}\n")
+
+                    except Exception as e:
+                        QgsMessageLog.logMessage(
+                            message=f"Ground Elevation could not be created from Input.hdf5. Details: {e}",
+                            tag="FLO-2D",
+                            level=Qgis.Warning
+                        )
+                        raise
+
                 self.process_maps(name, raster, file, crs, sc_group, 6)
                 self.tick(dlg, "Ground Elevation")
 
@@ -170,6 +215,7 @@ class FloodMaps:
                 name = check_project_id("MODIFIED_GROUND_ELEVATION", project_id)
                 name, raster = check_raster_file(name, map_output_dir)
                 file = mge_path
+
                 self.process_maps(name, raster, file, crs, sc_group, 6)
                 self.tick(dlg, "Modified ground elevation")
 
