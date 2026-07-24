@@ -105,36 +105,51 @@ def read_ASCII(file_path, output_path, name, crs):
                     if len(cellSize_data) < 2:
                         cellSize_data.append((x, y))
 
-    sum_values = sum(value for _, _, value in values)
-    if sum_values == 0:
-        QgsMessageLog.logMessage(name + ' was empty!')
+    if all(value == 0.0 for _, _, value in values):
+        QgsMessageLog.logMessage(f"{name} was empty!")
         return None
 
-    # Calculate the differences in X and Y coordinates
-    dx = abs(cellSize_data[1][0] - cellSize_data[0][0])
-    dy = abs(cellSize_data[1][1] - cellSize_data[0][1])
+    sample_size = min(len(values), 10)
+    sample = values[:sample_size]
 
-    # If the coordinate difference is equal 0, assign a huge number
-    if dx == 0:
-        dx = 9999
-    if dy == 0:
-        dy = 9999
+    unique_x = sorted(set(x for x, _, _ in sample))
+    unique_y = sorted(set(y for _, y, _ in sample))
 
-    cellSize = min(dx, dy)
+    x_differences = [
+        unique_x[i + 1] - unique_x[i]
+        for i in range(len(unique_x) - 1)
+        if unique_x[i + 1] - unique_x[i] > 0
+    ]
+
+    y_differences = [
+        unique_y[i + 1] - unique_y[i]
+        for i in range(len(unique_y) - 1)
+        if unique_y[i + 1] - unique_y[i] > 0
+    ]
+
+    coordinate_differences = x_differences + y_differences
+
+    if not coordinate_differences:
+        QgsMessageLog.logMessage(
+            f"Could not determine the cell size for {name}."
+        )
+        return None
+
+    cellSize = min(coordinate_differences)
 
     # Get the extent and number of rows and columns
-    min_x = min(point[0] for point in values)
-    max_x = max(point[0] for point in values)
-    min_y = min(point[1] for point in values)
-    max_y = max(point[1] for point in values)
-    num_cols = int((max_x - min_x) / cellSize) + 1
-    num_rows = int((max_y - min_y) / cellSize) + 1
+    min_x = min(x for x, _, _ in values)
+    max_x = max(x for x, _, _ in values)
+    min_y = min(y for _, y, _ in values)
+    max_y = max(y for _, y, _ in values)
+    num_cols = int(round((max_x - min_x) / cellSize)) + 1
+    num_rows = int(round((max_y - min_y) / cellSize)) + 1
 
     # Convert the list of values to an array.
     raster_data = np.full((num_rows, num_cols), -9999, dtype=np.float32)
     for point in values:
-        col = int((point[0] - min_x) / cellSize)
-        row = int((max_y - point[1]) / cellSize)
+        col = int(round((point[0] - min_x) / cellSize))
+        row = int(round((max_y - point[1]) / cellSize))
         raster_data[row, col] = point[2]
 
     # Initialize the raster
@@ -142,10 +157,10 @@ def read_ASCII(file_path, output_path, name, crs):
     raster = driver.Create(output_path, num_cols, num_rows, 1, gdal.GDT_Float32)
     raster.SetGeoTransform(
         (
-            min_x - cellSize / 2,
+            min_x - cellSize / 2.0,
             cellSize,
             0,
-            max_y + cellSize / 2,
+            max_y + cellSize / 2.0,
             0,
             -cellSize,
         )
