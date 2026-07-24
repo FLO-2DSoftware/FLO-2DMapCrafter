@@ -2,7 +2,7 @@
 name=FLO-2D MapCrafter
 qgisMinimumVersion=3.0
 description=This plugin creates maps and plots from FLO-2D output files.
-version=2.5.0
+version=2.6.0
 author=FLO-2D Software, Inc.
 email=contact@flo-2d.com
 
@@ -14,6 +14,9 @@ repository=https://github.com/FLO-2DSoftware/FLO-2DMapCrafter
 hasProcessingProvider=no
 
 changelog=
+    <p>2.6.0
+        - Fix pier scour equation
+        - Fix grid misalignment 
     <p>2.5.4
         - Add Grid ID check box to site characteristics
         - Add Help button
