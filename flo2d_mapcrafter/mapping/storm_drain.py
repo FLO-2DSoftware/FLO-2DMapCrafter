@@ -56,7 +56,7 @@ class StormDrainPlots:
     def _make_progress(self, text: str, maximum: int) -> QProgressDialog:
         dlg = QProgressDialog(text, "Cancel", 0, max(1, int(maximum)), self.iface.mainWindow())
         dlg.setWindowTitle("QGIS3")
-        dlg.setWindowModality(Qt.WindowModal)
+        dlg.setWindowModality(Qt.WindowModality.WindowModal)
         dlg.setMinimumDuration(0)
         dlg.setAutoClose(True)
         dlg.setAutoReset(True)
@@ -551,7 +551,7 @@ class StormDrainPlots:
                 if filtered:
                     QgsMessageLog.logMessage(
                         f"[Graphics] {plot}: no nodes > {threshold}; exporting top {len(filtered)} by {field_name}.",
-                        'FLO-2D', Qgis.Warning
+                        'FLO-2D', Qgis.MessageLevel.Warning
                     )
 
             if not filtered:
@@ -659,7 +659,7 @@ class StormDrainPlots:
             except Exception as e:
                 QgsMessageLog.logMessage(
                     f"[Graphics] {plot}: overview PNG failed: {e}",
-                    'FLO-2D', Qgis.Warning
+                    'FLO-2D', Qgis.MessageLevel.Warning
                 )
 
     def storm_drain_profile(self, storm_drain_rbs, flo2d_results_dir, sd_output_dir, plot=False):

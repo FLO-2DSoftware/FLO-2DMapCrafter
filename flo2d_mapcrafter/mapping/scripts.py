@@ -25,8 +25,8 @@ import h5py
 import os
 import numpy as np
 import pandas as pd
-from PyQt5.QtCore import QMetaType
-from PyQt5.QtGui import QColor, QIcon
+from qgis.PyQt.QtCore import QMetaType
+from qgis.PyQt.QtGui import QColor, QIcon
 from qgis.core import QgsFields, QgsWkbTypes
 from qgis.core import (
     QgsProject,
@@ -296,7 +296,7 @@ def set_raster_style(layer, style, toler_value, units_switch=None):
     # Hydrodynamic Risk ARR
     elif style == 2:
         shader = QgsColorRampShader()
-        shader.setColorRampType(QgsColorRampShader.Discrete)
+        shader.setColorRampType(QgsColorRampShader.Type.Discrete)
         items = [
             QgsColorRampShader.ColorRampItem(1, QColor(colDic["arr1"]), "Very Low Hazard"),
             QgsColorRampShader.ColorRampItem(2, QColor(colDic["arr2"]), "Low Hazard"),
@@ -406,7 +406,7 @@ def set_raster_style(layer, style, toler_value, units_switch=None):
         ]
         ramp_shader = QgsColorRampShader()
         ramp_shader.setColorRampItemList(items)
-        ramp_shader.setColorRampType(QgsColorRampShader.Interpolated)
+        ramp_shader.setColorRampType(QgsColorRampShader.Type.Interpolated)
         shader = QgsRasterShader()
         shader.setRasterShaderFunction(ramp_shader)
         renderer = QgsSingleBandPseudoColorRenderer(layer.dataProvider(), 1, shader)
@@ -427,7 +427,7 @@ def set_raster_style(layer, style, toler_value, units_switch=None):
     # FEMA
     elif style == 16:
         shader = QgsColorRampShader()
-        shader.setColorRampType(QgsColorRampShader.Discrete)
+        shader.setColorRampType(QgsColorRampShader.Type.Discrete)
         items = [
             QgsColorRampShader.ColorRampItem(1, QColor(colDic["fema_low"]), "Low Hazard"),
             QgsColorRampShader.ColorRampItem(2, QColor(colDic["fema_medium"]), "Medium Hazard"),
@@ -446,7 +446,7 @@ def set_raster_style(layer, style, toler_value, units_switch=None):
     # UK
     elif style == 17:
         shader = QgsColorRampShader()
-        shader.setColorRampType(QgsColorRampShader.Discrete)
+        shader.setColorRampType(QgsColorRampShader.Type.Discrete)
         items = [
             QgsColorRampShader.ColorRampItem(1, QColor(colDic["white"]), "Very Low Hazard"),
             QgsColorRampShader.ColorRampItem(2, QColor(colDic["yellow"]), "Danger for Some"),
@@ -464,7 +464,7 @@ def set_raster_style(layer, style, toler_value, units_switch=None):
     # Austrian
     elif style == 18:
         shader = QgsColorRampShader()
-        shader.setColorRampType(QgsColorRampShader.Discrete)
+        shader.setColorRampType(QgsColorRampShader.Type.Discrete)
         items = [
             QgsColorRampShader.ColorRampItem(1, QColor(colDic["WG"]), "Yellow Zone"),
             QgsColorRampShader.ColorRampItem(2, QColor(colDic["WR"]), "Red Zone"),
@@ -480,7 +480,7 @@ def set_raster_style(layer, style, toler_value, units_switch=None):
     # Swiss
     elif style == 19:
         shader = QgsColorRampShader()
-        shader.setColorRampType(QgsColorRampShader.Discrete)
+        shader.setColorRampType(QgsColorRampShader.Type.Discrete)
         items = [
             QgsColorRampShader.ColorRampItem(1, QColor(colDic["blue"]), "Low Hazard"),
             QgsColorRampShader.ColorRampItem(2, QColor(colDic["yellow"]), "Moderate Hazard"),
@@ -497,7 +497,7 @@ def set_raster_style(layer, style, toler_value, units_switch=None):
     # USBR
     elif style == 20:
         shader = QgsColorRampShader()
-        shader.setColorRampType(QgsColorRampShader.Discrete)
+        shader.setColorRampType(QgsColorRampShader.Type.Discrete)
         items = [
             QgsColorRampShader.ColorRampItem(1, QColor(colDic["blue"]), "Low Danger"),
             QgsColorRampShader.ColorRampItem(2, QColor(colDic["yellow"]), "Judgement"),
@@ -528,15 +528,15 @@ def set_velocity_vector_style(layer_name, vector_scale):
 
     svg_symbol_layer = QgsSvgMarkerSymbolLayer(vector_style_directory + r"\Arrow_06.svg")
 
-    svg_symbol_layer.setDataDefinedProperty(QgsSymbolLayer.PropertyAngle,
+    svg_symbol_layer.setDataDefinedProperty(QgsSymbolLayer.Property.PropertyAngle,
                                             QgsProperty().fromField("Direction"))
 
     expression = f'"Velocity" * {vector_scale}'
-    svg_symbol_layer.setDataDefinedProperty(QgsSymbolLayer.PropertyHeight,
+    svg_symbol_layer.setDataDefinedProperty(QgsSymbolLayer.Property.PropertyHeight,
                                             QgsProperty().fromExpression(expression))
-    svg_symbol_layer.setDataDefinedProperty(QgsSymbolLayer.PropertyWidth,
+    svg_symbol_layer.setDataDefinedProperty(QgsSymbolLayer.Property.PropertyWidth,
                                             QgsProperty().fromValue(4, True))
-    svg_symbol_layer.setDataDefinedProperty(QgsSymbolLayer.PropertyStrokeWidth,
+    svg_symbol_layer.setDataDefinedProperty(QgsSymbolLayer.Property.PropertyStrokeWidth,
                                             QgsProperty().fromValue(0, True))
 
     # Create a symbol using the SVGMarker layer
@@ -678,7 +678,7 @@ def modified_ground_elev(results_dir, map_output_dir, sim_type=None):
         QgsMessageLog.logMessage(
             message="TOPO_SDElev.RGH could not be generated missing: FRPREV.NEW",
             tag="FLO-2D",
-            level=Qgis.Warning
+            level=Qgis.MessageLevel.Warning
         )
         return None
 
@@ -692,7 +692,7 @@ def modified_ground_elev(results_dir, map_output_dir, sim_type=None):
                 QgsMessageLog.logMessage(
                     message="TOPO_SDElev.RGH could not be generated: missing TOPO.DAT and Input.hdf5.",
                     tag="FLO-2D",
-                    level=Qgis.Warning
+                    level=Qgis.MessageLevel.Warning
                 )
                 return None
 
@@ -704,7 +704,7 @@ def modified_ground_elev(results_dir, map_output_dir, sim_type=None):
                 QgsMessageLog.logMessage(
                     message=f"TOPO_SDElev.RGH could not be generated: failed to read HDF5 grid data. Details: {e}",
                     tag="FLO-2D",
-                    level=Qgis.Warning
+                    level=Qgis.MessageLevel.Warning
                 )
                 return None
 
@@ -712,7 +712,7 @@ def modified_ground_elev(results_dir, map_output_dir, sim_type=None):
                 QgsMessageLog.logMessage(
                     message=f"HDF5 grid row mismatch. COORDINATES={len(coords)}, ELEVATION={len(elev)}.",
                     tag="FLO-2D",
-                    level=Qgis.Warning
+                    level=Qgis.MessageLevel.Warning
                 )
                 return None
 
@@ -733,9 +733,9 @@ def modified_ground_elev(results_dir, map_output_dir, sim_type=None):
             df_fprev_use = df_fprev # Non-sediment run
         else:
             if sim_type == "Sediment":
-                QgsMessageLog.logMessage(message=f"FPREV.NEW has {len(df_fprev)} rows; expected {grid_count} (intermediate) or {2 * grid_count} (final).", tag="FLO-2D", level=Qgis.Warning)
+                QgsMessageLog.logMessage(message=f"FPREV.NEW has {len(df_fprev)} rows; expected {grid_count} (intermediate) or {2 * grid_count} (final).", tag="FLO-2D", level=Qgis.MessageLevel.Warning)
             else:
-                QgsMessageLog.logMessage(message=f"FPREV.NEW row count ({len(df_fprev)}) does not match TOPO.DAT row count ({grid_count}).", tag="FLO-2D", level=Qgis.Warning)
+                QgsMessageLog.logMessage(message=f"FPREV.NEW row count ({len(df_fprev)}) does not match TOPO.DAT row count ({grid_count}).", tag="FLO-2D", level=Qgis.MessageLevel.Warning)
             return None
 
         df_topo["Z"] = df_fprev_use["Z_mod"] # Replace ground elevation with modified ground elevation
@@ -745,11 +745,11 @@ def modified_ground_elev(results_dir, map_output_dir, sim_type=None):
             for _, r in df_topo.iterrows():
                 f.write(f"{r.X:14.3f} {r.Y:14.3f} {r.Z:10.4f}\n")
 
-        QgsMessageLog.logMessage(message=f"Created MapCrafter TOPO_SDElev.RGH: {mapcrafter_mge_path}", tag="FLO-2D", level=Qgis.Info)
+        QgsMessageLog.logMessage(message=f"Created MapCrafter TOPO_SDElev.RGH: {mapcrafter_mge_path}", tag="FLO-2D", level=Qgis.MessageLevel.Info)
         return mapcrafter_mge_path
 
     except Exception as e:
-        QgsMessageLog.logMessage(message=f"Failed to create TOPO_SDElev.RGH: {e}", tag="FLO-2D", level=Qgis.Critical)
+        QgsMessageLog.logMessage(message=f"Failed to create TOPO_SDElev.RGH: {e}", tag="FLO-2D", level=Qgis.MessageLevel.Critical)
         return None
 
 
@@ -780,7 +780,7 @@ def final_wse(results_dir, map_output_dir):
         QgsMessageLog.logMessage(
             message="FINAL_WSE.DAT could not be generated: missing FINALDEP.OUT.",
             tag="FLO-2D",
-            level=Qgis.Warning,
+            level=Qgis.MessageLevel.Warning,
         )
         return None
 
@@ -805,7 +805,7 @@ def final_wse(results_dir, map_output_dir):
                 QgsMessageLog.logMessage(
                     message=f"HDF5 grid row mismatch. COORDINATES={len(coords)}, ELEVATION={len(elev)}.",
                     tag="FLO-2D",
-                    level=Qgis.Warning,
+                    level=Qgis.MessageLevel.Warning,
                 )
                 return None
 
@@ -820,7 +820,7 @@ def final_wse(results_dir, map_output_dir):
             QgsMessageLog.logMessage(
                 message=f"Failed to read HDF5 grid data. Details: {e}",
                 tag="FLO-2D",
-                level=Qgis.Warning,
+                level=Qgis.MessageLevel.Warning,
             )
             return None
 
@@ -828,7 +828,7 @@ def final_wse(results_dir, map_output_dir):
         QgsMessageLog.logMessage(
             message="FINAL_WSE.DAT could not be generated: missing TOPO_SDElev.RGH, TOPO.DAT, and Input.hdf5.",
             tag="FLO-2D",
-            level=Qgis.Warning,
+            level=Qgis.MessageLevel.Warning,
         )
         return None
 
@@ -857,7 +857,7 @@ def final_wse(results_dir, map_output_dir):
         QgsMessageLog.logMessage(
             message=f"Created FINAL_WSE.DAT using {elev_source}: {mapcrafter_fwse_path}",
             tag="FLO-2D",
-            level=Qgis.Info,
+            level=Qgis.MessageLevel.Info,
         )
         return mapcrafter_fwse_path
 
@@ -865,7 +865,7 @@ def final_wse(results_dir, map_output_dir):
         QgsMessageLog.logMessage(
             message=f"Failed to generate FINAL_WSE.DAT: {e}",
             tag="FLO-2D",
-            level=Qgis.Critical,
+            level=Qgis.MessageLevel.Critical,
         )
         return None
 
@@ -894,7 +894,7 @@ def process_grid_id_polygons(name, file, crs, mapping_group, cell_size, map_outp
     ]
 
     fields = QgsFields()
-    fields.append(QgsField("GRID_ID", QMetaType.Int))
+    fields.append(QgsField("GRID_ID", QMetaType.Type.Int))
 
     options = QgsVectorFileWriter.SaveVectorOptions()
     options.driverName = "ESRI Shapefile"
@@ -902,13 +902,13 @@ def process_grid_id_polygons(name, file, crs, mapping_group, cell_size, map_outp
     writer = QgsVectorFileWriter.create(
         out_path,
         fields,
-        QgsWkbTypes.Polygon,
+        QgsWkbTypes.Type.Polygon,
         crs,
         QgsProject.instance().transformContext(),
         options
     )
 
-    if writer.hasError() != QgsVectorFileWriter.NoError:
+    if writer.hasError() != QgsVectorFileWriter.WriterError.NoError:
         raise Exception(writer.errorMessage())
 
     with open(file, "r") as f:

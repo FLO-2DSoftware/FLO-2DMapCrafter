@@ -24,7 +24,7 @@
 
 import os
 
-from PyQt5.QtGui import QPixmap
+from qgis.PyQt.QtGui import QPixmap
 from qgis.PyQt import uic
 
 uiDialog, qtBaseClass = uic.loadUiType(os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "ui", "sd_results_viewer.ui"))

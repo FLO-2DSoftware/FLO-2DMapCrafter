@@ -29,7 +29,7 @@ except ImportError:
 import os
 from qgis.core import QgsMessageLog, Qgis
 from qgis.PyQt.QtWidgets import QProgressDialog, QApplication
-from PyQt5.QtCore import QMetaType, QVariant, Qt
+from qgis.PyQt.QtCore import QMetaType, QVariant, Qt
 from qgis.core import QgsProject, QgsVectorLayer, QgsField, QgsFeature, QgsGeometry, QgsPointXY, \
     QgsVectorFileWriter
 
@@ -55,7 +55,7 @@ class FloodMaps:
     def make_progress(self, text: str, maximum: int) -> QProgressDialog:
         dlg = QProgressDialog(text, "Cancel", 0, max(1, int(maximum)), self.iface.mainWindow())
         dlg.setWindowTitle("QGIS3")
-        dlg.setWindowModality(Qt.WindowModal)
+        dlg.setWindowModality(Qt.WindowModality.WindowModal)
         dlg.setMinimumDuration(0)
         dlg.setAutoClose(True)
         dlg.setAutoReset(True)
@@ -119,7 +119,7 @@ class FloodMaps:
                 QgsMessageLog.logMessage(
                     message=f"Could not inspect HDF5 grid elevation data. Details: {e}",
                     tag="FLO-2D",
-                    level=Qgis.Warning
+                    level=Qgis.MessageLevel.Warning
                 )
 
         return flood_files
@@ -198,7 +198,7 @@ class FloodMaps:
                         QgsMessageLog.logMessage(
                             message=f"Ground Elevation could not be created from Input.hdf5. Details: {e}",
                             tag="FLO-2D",
-                            level=Qgis.Warning
+                            level=Qgis.MessageLevel.Warning
                         )
                         raise
 
