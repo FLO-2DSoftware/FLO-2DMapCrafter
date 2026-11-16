@@ -17,6 +17,11 @@ changelog=
     <p>2.6.0
         - Fix pier scour equation
         - Fix grid misalignment 
+        - Add hdf5 for importing project when input.hdf5 exists
+        - Improve velocity output handling
+        - Add grid id layer in basic maps
+        - Improve flood hazard mapping and reuse cell size from summary.output
+        - Update refresh controls and help button on summary page
     <p>2.5.4
         - Add Grid ID check box to site characteristics
         - Add Help button
