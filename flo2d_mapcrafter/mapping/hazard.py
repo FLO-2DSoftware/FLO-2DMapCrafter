@@ -32,7 +32,7 @@ import numpy as np
 from osgeo import gdal
 from qgis._core import QgsProject, QgsRasterLayer
 from qgis.PyQt.QtWidgets import QProgressDialog, QApplication
-from PyQt5.QtCore import Qt
+from qgis.PyQt.QtCore import Qt
 from flo2d_mapcrafter.mapping.check_data import check_project_id, check_mapping_group, check_raster_file
 from flo2d_mapcrafter.mapping.scripts import read_ASCII, remove_layer, set_raster_style
 
@@ -56,7 +56,7 @@ class HazardMaps:
     def make_progress(self, text: str, maximum: int) -> QProgressDialog:
         dlg = QProgressDialog(text, "Cancel", 0, max(1, int(maximum)), self.iface.mainWindow())
         dlg.setWindowTitle("QGIS3")
-        dlg.setWindowModality(Qt.WindowModal)
+        dlg.setWindowModality(Qt.WindowModality.WindowModal)
         dlg.setMinimumDuration(0)
         dlg.setAutoClose(True)
         dlg.setAutoReset(True)

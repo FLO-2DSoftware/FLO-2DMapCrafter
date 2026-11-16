@@ -26,11 +26,11 @@ try:
 except ImportError:
     h5py = None
 
-from PyQt5.QtCore import Qt, QUrl
-from PyQt5.QtGui import QColor, QDesktopServices
+from qgis.PyQt.QtCore import Qt, QUrl
+from qgis.PyQt.QtGui import QColor, QDesktopServices
 from qgis.PyQt import QtWidgets
-from PyQt5.QtWidgets import QMessageBox, QApplication, QCheckBox, QTableWidgetItem, QHeaderView, QSizePolicy
-from PyQt5.QtXml import QDomDocument
+from qgis.PyQt.QtWidgets import QMessageBox, QApplication, QCheckBox, QTableWidgetItem, QHeaderView, QSizePolicy
+from qgis.PyQt.QtXml import QDomDocument
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction
@@ -301,12 +301,12 @@ class FLO2DMapCrafter:
         is_geographic = self.crs.isGeographic()
         while is_geographic:
             dialog = QgsProjectionSelectionDialog()
-            if dialog.exec_():
+            if dialog.exec():
                 self.crs = dialog.crs()
                 is_geographic = self.crs.isGeographic()
                 if is_geographic:
                     self.iface.messageBar().pushMessage("MapCrafter requires a projected Coordinate Reference System!",
-                                                        level=Qgis.Info, duration=5)
+                                                        level=Qgis.MessageLevel.Info, duration=5)
                 else:
                     self.dlg.crsselector.setCrs(self.crs)
                     QgsProject.instance().setCrs(self.crs)
@@ -367,9 +367,9 @@ class FLO2DMapCrafter:
 
             h = tbl.horizontalHeader()
             # Use the SAME modes in all states for consistency:
-            h.setSectionResizeMode(0, QHeaderView.Stretch)
-            h.setSectionResizeMode(1, QHeaderView.ResizeToContents)
-            h.setSectionResizeMode(2, QHeaderView.Stretch)
+            h.setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
+            h.setSectionResizeMode(1, QHeaderView.ResizeMode.ResizeToContents)
+            h.setSectionResizeMode(2, QHeaderView.ResizeMode.Stretch)
             h.setMinimumSectionSize(80)  # keeps "Status" from collapsing
             h.setStretchLastSection(False)
 
@@ -386,8 +386,8 @@ class FLO2DMapCrafter:
         f = item.font();
         f.setItalic(True);
         item.setFont(f)
-        item.setTextAlignment(Qt.AlignCenter)
-        item.setFlags(Qt.ItemIsEnabled)
+        item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+        item.setFlags(Qt.ItemFlag.ItemIsEnabled)
         tbl.setItem(0, 0, item)
         tbl.setSpan(0, 0, 1, 3)  # this span will be cleared next rebuild
 
@@ -397,7 +397,7 @@ class FLO2DMapCrafter:
         if not tbl:
             return
         # keep it a good height even when empty
-        tbl.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.MinimumExpanding)
+        tbl.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.MinimumExpanding)
         tbl.setMinimumHeight(220)
         self.reset_sim_summary_table(tbl)
 
@@ -807,7 +807,7 @@ class FLO2DMapCrafter:
             if not out_dir:
                 self.iface.messageBar().pushMessage(
                     "Please set an output folder (MapCrafter or FLO-2D Export Folder) before exporting.",
-                    level=Qgis.Warning, duration=5
+                    level=Qgis.MessageLevel.Warning, duration=5
                 )
                 return
 
@@ -817,20 +817,20 @@ class FLO2DMapCrafter:
             # If file exists, ask user whether to overwrite or cancel
             if os.path.exists(out_path):
                 mb = QMessageBox(self.dlg)
-                mb.setIcon(QMessageBox.Warning)
+                mb.setIcon(QMessageBox.Icon.Warning)
                 mb.setWindowTitle("File already exists")
                 mb.setText(
                     f"A file named 'report_proj.rpt' already exists in:\n\n{out_dir}\n\n"
                     "Do you want to overwrite it?"
                 )
-                overwrite_btn = mb.addButton("Overwrite", QMessageBox.YesRole)
-                cancel_btn = mb.addButton("Cancel", QMessageBox.RejectRole)
+                overwrite_btn = mb.addButton("Overwrite", QMessageBox.ButtonRole.YesRole)
+                cancel_btn = mb.addButton("Cancel", QMessageBox.ButtonRole.RejectRole)
                 mb.setDefaultButton(cancel_btn)
-                mb.exec_()
+                mb.exec()
 
                 if mb.clickedButton() is not overwrite_btn:
                     # User cancelled the export
-                    self.iface.messageBar().pushMessage("Export cancelled.", level=Qgis.Info, duration=4)
+                    self.iface.messageBar().pushMessage("Export cancelled.", level=Qgis.MessageLevel.Info, duration=4)
                     return
 
             # Gather fields from the Summary tab
@@ -908,7 +908,7 @@ class FLO2DMapCrafter:
 
         except Exception as e:
             self.iface.messageBar().pushMessage(
-                f"Export failed: {e}", level=Qgis.Critical, duration=6
+                f"Export failed: {e}", level=Qgis.MessageLevel.Critical, duration=6
             )
 
     def _load_swmm_model(self, inp_file, rpt_file):
@@ -967,7 +967,7 @@ class FLO2DMapCrafter:
                 QgsMessageLog.logMessage(
                     message=f"Could not inspect HDF5 grid data. Details: {e}",
                     tag="FLO-2D",
-                    level=Qgis.Warning,
+                    level=Qgis.MessageLevel.Warning,
                 )
 
         return has_finaldep and (
@@ -1049,7 +1049,7 @@ class FLO2DMapCrafter:
                 self.toler_value = None
                 self.iface.messageBar().pushMessage(
                     f"Could not read TOLER from Input.hdf5. Raster styling may fail. Details: {e}",
-                    level=Qgis.Warning,
+                    level=Qgis.MessageLevel.Warning,
                     duration=6
                 )
 
@@ -1064,7 +1064,7 @@ class FLO2DMapCrafter:
             self.dlg.tab4.setEnabled(True)
         else:
             msg_box = QMessageBox()
-            msg_box.setIcon(QMessageBox.Warning)
+            msg_box.setIcon(QMessageBox.Icon.Warning)
             msg_box.setWindowTitle("Warning")
             msg_box.setText(
                 "No valid FLO-2D project files were found in this directory!\n\n"
@@ -1075,7 +1075,7 @@ class FLO2DMapCrafter:
                 " - or\n"
                 " - Input.hdf5 + FLO-2DFLOPRO.hdf5"
             )
-            msg_box.exec_()
+            msg_box.exec()
             return
 
         cont_path = os.path.join(output_directory, "CONT.DAT")
@@ -1483,13 +1483,13 @@ class FLO2DMapCrafter:
         try:
             progress = QtWidgets.QProgressDialog("Creating maps...", "Cancel", 0, 100, self.dlg)
             progress.setWindowTitle("FLO-2D MapCrafter")
-            progress.setWindowModality(Qt.WindowModal)
+            progress.setWindowModality(Qt.WindowModality.WindowModal)
             progress.setMinimumDuration(0)
             progress.setAutoClose(True)
             progress.setAutoReset(True)
             progress.show()
 
-            QApplication.setOverrideCursor(Qt.WaitCursor)
+            QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
 
             # input & output directories
             flo2d_results_dir = self.dlg.flo2d_out_folder.filePath()
@@ -1875,10 +1875,10 @@ class FLO2DMapCrafter:
             QApplication.restoreOverrideCursor()
 
             msg = QMessageBox(self.dlg)
-            msg.setIcon(QMessageBox.Information)
+            msg.setIcon(QMessageBox.Icon.Information)
             msg.setWindowTitle("Mapping complete!")
             msg.setText("The selected maps were created!")
-            msg.setWindowModality(Qt.WindowModal)
+            msg.setWindowModality(Qt.WindowModality.WindowModal)
             msg.show()
 
             # Uncheck the "Check all available maps" checkbox after clicking "OK" button on the mapping success window.
@@ -1897,7 +1897,7 @@ class FLO2DMapCrafter:
         except Exception as e:
             QApplication.restoreOverrideCursor()
             self.iface.messageBar().pushMessage(
-                "ERROR: Error while creating the maps! See log messages for more information.", level=Qgis.Critical,
+                "ERROR: Error while creating the maps! See log messages for more information.", level=Qgis.MessageLevel.Critical,
                 duration=5)
             QgsMessageLog.logMessage(str(e))
 
@@ -1979,7 +1979,7 @@ class FLO2DMapCrafter:
             node_results=node_results,
             link_results=link_results
         )
-        sd_results_viewer.exec_()
+        sd_results_viewer.exec()
 
     def set_raster_style(self, layer, style):
         """Define the raster styles"""
@@ -2029,7 +2029,7 @@ class FLO2DMapCrafter:
 
         # Other styles
         else:
-            stats = provider.bandStatistics(1, QgsRasterBandStats.All, extent, 0)
+            stats = provider.bandStatistics(1, QgsRasterBandStats.Stats.All, extent, 0)
             if stats.minimumValue <= 0.001:
                 min = 0.001
             else:
@@ -2101,7 +2101,7 @@ class FLO2DMapCrafter:
             myColorRamp = QgsColorRampShader(minimumValue=min, maximumValue=max)
 
             myColorRamp.setColorRampItemList(style_dict[style])
-            myColorRamp.setColorRampType(QgsColorRampShader.Interpolated)
+            myColorRamp.setColorRampType(QgsColorRampShader.Type.Interpolated)
             myColorRamp.setClip(True)
 
             myRasterShader.setRasterShaderFunction(myColorRamp)
@@ -2174,10 +2174,10 @@ class FLO2DMapCrafter:
 
         if none_checked:
             msg_box = QMessageBox()
-            msg_box.setIcon(QMessageBox.Warning)
+            msg_box.setIcon(QMessageBox.Icon.Warning)
             msg_box.setWindowTitle("Warning")
             msg_box.setText("Check at least one map option!")
-            msg_box.exec_()
+            msg_box.exec()
             return False
         else:
             return True
@@ -2214,9 +2214,9 @@ class FLO2DMapCrafter:
 
         if template_source == "":
             msg = QMessageBox()
-            msg.setIcon(QMessageBox.Warning)
+            msg.setIcon(QMessageBox.Icon.Warning)
             msg.setText("Please, select a layout.")
-            msg.exec_()
+            msg.exec()
             return
 
         # template_source = template_directory + r"/FLO-2D A4 Landscape.qpt"
@@ -2246,13 +2246,13 @@ class FLO2DMapCrafter:
         # Open and show the layout in designer
         # try:
         self.iface.openLayoutDesigner(l)
-        # except:
+        # except Exception as e:
         #     msg = QMessageBox()
-        #     msg.setIcon(QMessageBox.Warning)
+        #     msg.setIcon(QMessageBox.Icon.Warning)
         #     msg.setText(self.tr(
         #         f'Error trying to open the layout ({l.name()}) returned errors.'
         #             ))
-        #     msg.exec_()
+        #     msg.exec()
 
     def layout_exists(self, layout_name):
         """Check if a layout already exists and return a correct name"""
@@ -2725,7 +2725,7 @@ class FLO2DMapCrafter:
             self.iface.messageBar().pushMessage(
                 "MapCrafter",
                 "Project refreshed from disk.",
-                level=Qgis.Info,
+                level=Qgis.MessageLevel.Info,
                 duration=3
             )
 
