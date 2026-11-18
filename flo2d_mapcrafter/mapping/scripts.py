@@ -21,7 +21,10 @@
  *                                                                         *
  ***************************************************************************/
 """
-import h5py
+try:
+    import h5py
+except ImportError:
+    h5py = None
 import os
 import numpy as np
 import pandas as pd
